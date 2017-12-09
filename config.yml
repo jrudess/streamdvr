@@ -1,0 +1,33 @@
+captureDirectory: capturing
+completeDirectory: captured
+streamerSubdir: true
+scanInterval: 300
+autoConvertType: mp4
+keepTsFile: false
+minByteSize: 0
+maxByteSize: 0
+dateFormat: YYYYMMDD_HHmmss
+debug: false
+logshown: true
+listshown: true
+namecolor: magenta
+statecolor: yellow
+offlinecolor: blue
+filecolor: green
+timecolor: grey
+sitecolor: green
+debugcolor: yellow
+errorcolor: red
+includeSiteInFile: false
+includeSiteInDir: false
+enableMFC: true
+enableCB: true
+enableTwitch: true
+mfc:
+  - 3623822
+  - 12513225
+cb:
+  - aynmarie
+  - theemilygrey
+twitch:
+  - peyzki
