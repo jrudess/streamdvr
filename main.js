@@ -5,6 +5,7 @@ require("events").EventEmitter.prototype._maxListeners = 100;
 // 3rd Party Libraries
 const Promise    = require("bluebird");
 const fs         = require("fs");
+const util       = require("util");
 const yaml       = require("js-yaml");
 const mkdirp     = require("mkdirp");
 const colors     = require("colors/safe");
@@ -23,6 +24,12 @@ let mfc = null;
 let cb = null;
 let twitch = null;
 const SITES = [];
+
+const logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: "w"});
+
+console.log = function(msg) {
+    logFile.write(util.format(msg) + "\n");
+};
 
 let total = 0;
 let inst = 1;
@@ -69,6 +76,7 @@ const inputBar = blessed.textbox({
 function log(text) {
     logbody.pushLine(text);
     screen.render();
+    console.log(text);
 }
 
 function showlist() {
@@ -180,11 +188,16 @@ function exit() {
         tryingToExit = 1;
         if (busy()) {
             log("Waiting for ffmpeg captures to terminate.");
-            for (let i = 0; i < SITES.length; i++) {
-                SITES[i].haltAllCaptures();
-            }
         }
         tryExit();
+    }
+
+    // Allow this to execute multiple times so that SIGINT
+    // can get passed again to ffmpeg in case some get hung.
+    if (busy()) {
+        for (let i = 0; i < SITES.length; i++) {
+            SITES[i].haltAllCaptures();
+        }
     }
 }
 

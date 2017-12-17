@@ -157,7 +157,7 @@ class Mfc extends site.Site {
                     msg += " is away.";
                 } else if (streamer.vs === mfc.STATE.Online) {
                     listitem.streamerState = "Away";
-                    msg += colors.name("'s") + " cam is off.";
+                    msg += colors.name("'s") + " stream is off.";
                 } else if (streamer.vs === mfc.STATE.Offline) {
                     listitem.streamerState = "Offline";
                     msg += " has logged off.";

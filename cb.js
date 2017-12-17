@@ -86,7 +86,7 @@ class Cb extends site.Site {
         let isBroadcasting = 0;
 
         return Promise.try(function() {
-            return fetch(url);
+            return fetch(url, {timeout: me.timeOut});
         }).then((res) => res.json()).then(function(json) {
             const listitem = me.streamerList.get(nm);
 
@@ -117,7 +117,7 @@ class Cb extends site.Site {
                     msg += " is in a group show.";
                     listitem.streamerState = "Group Show";
                 } else if (currState === "away") {
-                    msg += colors.name("'s") + " cam is off.";
+                    msg += colors.name("'s") + " stream is off.";
                     listitem.streamerState = "Away";
                 } else if (currState === "hidden") {
                     msg += " is online but hidden.";
