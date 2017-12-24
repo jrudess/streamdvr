@@ -68,25 +68,26 @@ class Mfc extends site.Site {
     }
 
     updateList(nm, add) {
-        const me = this;
-
         // Fetch the UID. The streamer does not have to be online for this.
         return this.queryUser(nm).then((streamer) => {
-            let rc = false;
+            let update = false;
             if (typeof streamer !== "undefined") {
-                if (super.updateList(streamer, me.config.mfc, add)) {
+                if (super.updateList(streamer, this.config.mfc, add)) {
+                    this.dbgMsg("wtf");
                     if (add) {
-                        me.config.mfc.push(streamer.uid);
-                        rc = true;
-                    } else if (this.config.cb.indexOf(nm) !== -1) {
+                        this.dbgMsg("wtf2");
+                        this.config.mfc.push(streamer.uid);
+                        update = true;
+                    } else if (this.config.mfc.indexOf(streamer.uid) !== -1) {
+                        this.dbgMsg("wtf3");
                         this.config.mfc = _.without(this.config.mfc, streamer.uid);
-                        rc = true;
+                        update = true;
                     }
                 }
             } else {
-                me.errMsg("Could not find " + colors.name(nm));
+                this.errMsg("Could not find " + colors.name(nm));
             }
-            return rc;
+            return update;
         });
     }
 

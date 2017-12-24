@@ -48,17 +48,20 @@ class Twitch extends site.Site {
     }
 
     updateList(nm, add) {
-        let rc = false;
-        if (super.updateList({nm: nm, uid: nm}, this.config.twitch, add)) {
+        let update = false;
+        if (this.super.updateList({nm: nm, uid: nm}, this.config.twitch, add)) {
             if (add) {
                 this.config.twitch.push(nm);
-                rc = true;
+                update = true;
             } else if (this.config.twitch.indexOf(nm) !== -1) {
                 this.config.twitch = _.without(this.config.twitch, nm);
-                rc = true;
+                update = true;
             }
         }
-        return rc;
+
+        return Promise.try(function() {
+            return update;
+        });
     }
 
     checkStreamerState(nm) {

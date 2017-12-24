@@ -112,8 +112,13 @@ function updateList(cmd, site, nm) {
     for (let i = 0; i < SITES.length; i++) {
         const siteName = SITES[i].siteName.trim().toLowerCase();
         if (site === siteName) {
-            SITES[i].updateList(nm, cmd === "add" ? 1 : 0);
-            SITES[i].writeConfig();
+            const queries = [];
+            queries.push(SITES[i].updateList(nm, cmd === "add" ? 1 : 0));
+            Promise.all(queries).then(function(update) {
+                if (update) {
+                    SITES[i].writeConfig();
+                }
+            });
         }
     }
 }

@@ -50,16 +50,20 @@ class Cb extends site.Site {
     }
 
     updateList(nm, add) {
+        let update = false;
         if (super.updateList({nm: nm, uid: nm}, this.config.cb, add)) {
             if (add) {
                 this.config.cb.push(nm);
-                return true;
+                update = true;
             } else if (this.config.cb.indexOf(nm) !== -1) {
                 this.config.cb = _.without(this.config.cb, nm);
-                return true;
+                update = true;
             }
         }
-        return false;
+
+        return Promise.try(function() {
+            return update;
+        });
     }
 
     checkStreamerState(nm) {
