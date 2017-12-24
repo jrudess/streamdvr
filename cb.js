@@ -15,68 +15,51 @@ class Cb extends site.Site {
 
     processUpdates() {
         const stats = fs.statSync("updates.yml");
+        if (!stats.isFile()) {
+            this.dbgMsg("updates.yml does not exist");
+            return {includeStreamers: [], excludeStreamers: [], dirty: false};
+        }
 
         let includeStreamers = [];
         let excludeStreamers = [];
 
-        if (stats.isFile()) {
-            const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
+        const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
 
-            if (!updates.includeCb) {
-                updates.includeCb = [];
-            } else if (updates.includeCb.length > 0) {
-                this.msg(updates.includeCb.length + " streamer(s) to include");
-                includeStreamers = updates.includeCb;
-                updates.includeCb = [];
-            }
+        if (!updates.includeCb) {
+            updates.includeCb = [];
+        } else if (updates.includeCb.length > 0) {
+            this.msg(updates.includeCb.length + " streamer(s) to include");
+            includeStreamers = updates.includeCb;
+            updates.includeCb = [];
+        }
 
-            if (!updates.excludeCb) {
-                updates.excludeCb = [];
-            } else if (updates.excludeCb.length > 0) {
-                this.msg(updates.excludeCb.length + " streamer(s) to exclude");
-                excludeStreamers = updates.excludeCb;
-                updates.excludeCb = [];
-            }
+        if (!updates.excludeCb) {
+            updates.excludeCb = [];
+        } else if (updates.excludeCb.length > 0) {
+            this.msg(updates.excludeCb.length + " streamer(s) to exclude");
+            excludeStreamers = updates.excludeCb;
+            updates.excludeCb = [];
+        }
 
-            // if there were some updates, then rewrite updates.yml
-            if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
-                fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
-            }
+        // if there were some updates, then rewrite updates.yml
+        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
+            fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
         }
 
         return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
-    addStreamer(streamer) {
-        if (super.addStreamer(streamer, this.config.cb)) {
-            this.config.cb.push(streamer.uid);
-            return true;
-        }
-        return false;
-    }
-
-    addStreamers(bundle) {
-        for (let i = 0; i < bundle.includeStreamers.length; i++) {
-            bundle.dirty |= this.addStreamer({nm: bundle.includeStreamers[i], uid: bundle.includeStreamers[i]});
-        }
-        return bundle;
-    }
-
-    removeStreamer(streamer) {
-        this.config.cb = _.without(this.config.cb, streamer.uid);
-        return super.removeStreamer(streamer);
-    }
-
-    removeStreamers(bundle) {
-        for (let i = 0; i < bundle.excludeStreamers.length; i++) {
-            const nm = bundle.excludeStreamers[i];
-            const index = this.config.cb.indexOf(nm);
-
-            if (index !== -1) {
-                bundle.dirty |= this.removeStreamer({nm: nm, uid: nm});
+    updateList(nm, add) {
+        if (super.updateList({nm: nm, uid: nm}, this.config.cb, add)) {
+            if (add) {
+                this.config.cb.push(nm);
+                return true;
+            } else if (this.config.cb.indexOf(nm) !== -1) {
+                this.config.cb = _.without(this.config.cb, nm);
+                return true;
             }
         }
-        return bundle.dirty;
+        return false;
     }
 
     checkStreamerState(nm) {
@@ -198,22 +181,23 @@ class Cb extends site.Site {
     }
 
     recordStreamers(streamersToCap, tryingToExit) {
-        if (streamersToCap !== null && streamersToCap.length > 0) {
-            const caps = [];
-            const me = this;
-
-            this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-            for (let i = 0; i < streamersToCap.length; i++) {
-                const cap = this.setupCapture(streamersToCap[i], tryingToExit).then(function(bundle) {
-                    if (bundle.spawnArgs !== "") {
-                        me.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer, tryingToExit);
-                    }
-                });
-                caps.push(cap);
-            }
-            return Promise.all(caps);
+        if (streamersToCap === null || streamersToCap.length === 0) {
+            return null;
         }
-        return null;
+
+        const caps = [];
+        const me = this;
+
+        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
+        for (let i = 0; i < streamersToCap.length; i++) {
+            const cap = this.setupCapture(streamersToCap[i], tryingToExit).then(function(bundle) {
+                if (bundle.spawnArgs !== "") {
+                    me.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer, tryingToExit);
+                }
+            });
+            caps.push(cap);
+        }
+        return Promise.all(caps);
     }
 }
 

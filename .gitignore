@@ -1,4 +1,5 @@
-node_modules/
-capturing/
 captured/
+capturing/
+node_modules/
+Session.vim
 streamdvr.log

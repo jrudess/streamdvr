@@ -20,6 +20,7 @@ debugcolor: yellow
 errorcolor: red
 includeSiteInFile: false
 includeSiteInDir: false
+batchSizeCB: 10
 enableMFC: true
 enableCB: true
 enableTwitch: true

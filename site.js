@@ -134,15 +134,16 @@ class Site {
 
     checkFileSize() {
         const maxByteSize = this.config.maxByteSize;
+        if (maxByteSize === 0) {
+            return;
+        }
 
-        if (maxByteSize > 0) {
-            for (const capInfo of this.currentlyCapping.values()) {
-                const stat = fs.statSync(this.config.captureDirectory + "/" + capInfo.filename + ".ts");
-                this.dbgMsg(colors.name(capInfo.nm) + " file size (" + capInfo.filename + ".ts), size=" + stat.size + ", maxByteSize=" + maxByteSize);
-                if (stat.size >= maxByteSize) {
-                    this.msg(colors.name(capInfo.nm) + " recording has exceeded file size limit (size=" + stat.size + " > maxByteSize=" + maxByteSize + ")");
-                    capInfo.captureProcess.kill("SIGINT");
-                }
+        for (const capInfo of this.currentlyCapping.values()) {
+            const stat = fs.statSync(this.config.captureDirectory + "/" + capInfo.filename + ".ts");
+            this.dbgMsg(colors.name(capInfo.nm) + " file size (" + capInfo.filename + ".ts), size=" + stat.size + ", maxByteSize=" + maxByteSize);
+            if (stat.size >= maxByteSize) {
+                this.msg(colors.name(capInfo.nm) + " recording has exceeded file size limit (size=" + stat.size + " > maxByteSize=" + maxByteSize + ")");
+                capInfo.captureProcess.kill("SIGINT");
             }
         }
     }
@@ -166,8 +167,28 @@ class Site {
         ];
     }
 
-    addStreamer(streamer, streamers) {
-        const index = streamers.indexOf(streamer.uid);
+    updateList(streamer, list, add) {
+        let rc;
+        if (add) {
+            rc = this.addStreamer(streamer, list);
+        } else {
+            rc = this.removeStreamer(streamer, list);
+        }
+        return rc;
+    }
+
+    updateStreamers(bundle, add) {
+        const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
+
+        for (let i = 0; i < list.length; i++) {
+            bundle.dirty |= this.updateList(list[i], add);
+        }
+
+        return bundle;
+    }
+
+    addStreamer(streamer, list) {
+        const index = list.indexOf(streamer.uid);
         let rc = false;
         if (index === -1) {
             this.msg(colors.name(streamer.nm) + " added to capture list");
@@ -177,8 +198,8 @@ class Site {
         }
         if (!this.streamerList.has(streamer.nm)) {
             this.streamerList.set(streamer.nm, {uid: streamer.uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
+            this.render();
         }
-        this.render();
         return rc;
     }
 
@@ -218,11 +239,9 @@ class Site {
         }
     }
 
-    writeConfig(dirty) {
-        if (dirty) {
-            this.dbgMsg("Rewriting config.yml");
-            fs.writeFileSync("config.yml", yaml.safeDump(this.config), "utf8");
-        }
+    writeConfig() {
+        this.dbgMsg("Rewriting config.yml");
+        fs.writeFileSync("config.yml", yaml.safeDump(this.config), "utf8");
     }
 
     setupCapture(streamer, tryingToExit) {

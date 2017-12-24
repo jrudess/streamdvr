@@ -34,89 +34,73 @@ class Mfc extends site.Site {
 
     processUpdates() {
         const stats = fs.statSync("updates.yml");
+        if (!stats.isFile()) {
+            return {includeStreamers: [], excludeStreamers: [], dirty: false};
+        }
 
         let includeStreamers = [];
         let excludeStreamers = [];
 
-        if (stats.isFile()) {
-            const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
+        const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
 
-            if (!updates.includeMfc) {
-                updates.includeMfc = [];
-            } else if (updates.includeMfc.length > 0) {
-                this.msg(updates.includeMfc.length + " streamer(s) to include");
-                includeStreamers = updates.includeMfc;
-                updates.includeMfc = [];
-            }
+        if (!updates.includeMfc) {
+            updates.includeMfc = [];
+        } else if (updates.includeMfc.length > 0) {
+            this.msg(updates.includeMfc.length + " streamer(s) to include");
+            includeStreamers = updates.includeMfc;
+            updates.includeMfc = [];
+        }
 
-            if (!updates.excludeMfc) {
-                updates.excludeMfc = [];
-            } else if (updates.excludeMfc.length > 0) {
-                this.msg(updates.excludeMfc.length + " streamer(s) to exclude");
-                excludeStreamers = updates.excludeMfc;
-                updates.excludeMfc = [];
-            }
+        if (!updates.excludeMfc) {
+            updates.excludeMfc = [];
+        } else if (updates.excludeMfc.length > 0) {
+            this.msg(updates.excludeMfc.length + " streamer(s) to exclude");
+            excludeStreamers = updates.excludeMfc;
+            updates.excludeMfc = [];
+        }
 
-            // if there were some updates, then rewrite updates.yml
-            if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
-                fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
-            }
+        // if there were some updates, then rewrite updates.yml
+        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
+            fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
         }
 
         return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
-    addStreamer(streamer) {
-        if (super.addStreamer(streamer, this.config.mfc)) {
-            this.config.mfc.push(streamer.uid);
-            return true;
-        }
-        return false;
+    updateList(nm, add) {
+        const me = this;
+
+        // Fetch the UID. The streamer does not have to be online for this.
+        return this.queryUser(nm).then((streamer) => {
+            let rc = false;
+            if (typeof streamer !== "undefined") {
+                if (super.updateList(streamer, me.config.mfc, add)) {
+                    if (add) {
+                        me.config.mfc.push(streamer.uid);
+                        rc = true;
+                    } else if (this.config.cb.indexOf(nm) !== -1) {
+                        this.config.mfc = _.without(this.config.mfc, streamer.uid);
+                        rc = true;
+                    }
+                }
+            } else {
+                me.errMsg("Could not find " + colors.name(nm));
+            }
+            return rc;
+        });
     }
 
-    addStreamers(bundle) {
-        // Fetch the UID of new streamer to add to capture list.
-        // The streamer does not have to be online for this.
+    updateStreamers(bundle, add) {
         const queries = [];
+        const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
 
-        for (let i = 0; i < bundle.includeStreamers.length; i++) {
-            this.dbgMsg("Checking if " + colors.name(bundle.includeStreamers[i]) + " exists.");
-            const query = this.queryUser(bundle.includeStreamers[i]).then((streamer) => {
-                if (typeof streamer !== "undefined") {
-                    bundle.dirty |= this.addStreamer(streamer);
-                } else {
-                    this.errMsg("Could not find streamer");
-                }
-            });
-            queries.push(query);
+        for (let i = 0; i < list.length; i++) {
+            this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
+            queries.push(this.updateList(list[i], add));
         }
 
         return Promise.all(queries).then(function() {
             return bundle;
-        });
-    }
-
-    removeStreamer(streamer) {
-        this.config.mfc = _.without(this.config.mfc, streamer.uid);
-        return super.removeStreamer(streamer);
-    }
-
-    removeStreamers(bundle) {
-        // Fetch the UID of current streamer to be excluded from capture list.
-        // The streamer does not have to be online for this.
-        const queries = [];
-
-        for (let i = 0; i < bundle.excludeStreamers.length; i++) {
-            const query = this.queryUser(bundle.excludeStreamers[i]).then((streamer) => {
-                if (typeof streamer !== "undefined") {
-                    bundle.dirty |= this.removeStreamer(streamer);
-                }
-            });
-            queries.push(query);
-        }
-
-        return Promise.all(queries).then(function() {
-            return bundle.dirty;
         });
     }
 
@@ -219,22 +203,23 @@ class Mfc extends site.Site {
     }
 
     recordStreamers(streamersToCap, tryingToExit) {
-        if (streamersToCap !== null && streamersToCap.length > 0) {
-            const caps = [];
-            const me = this;
-
-            this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-            for (let i = 0; i < streamersToCap.length; i++) {
-                const cap = this.setupCapture(streamersToCap[i], tryingToExit).then(function(bundle) {
-                    if (bundle.spawnArgs !== "") {
-                        me.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer, tryingToExit);
-                    }
-                });
-                caps.push(cap);
-            }
-            return Promise.all(caps);
+        if (streamersToCap === null || streamersToCap.length === 0) {
+            return null;
         }
-        return null;
+
+        const caps = [];
+        const me = this;
+
+        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
+        for (let i = 0; i < streamersToCap.length; i++) {
+            const cap = this.setupCapture(streamersToCap[i], tryingToExit).then(function(bundle) {
+                if (bundle.spawnArgs !== "") {
+                    me.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer, tryingToExit);
+                }
+            });
+            caps.push(cap);
+        }
+        return Promise.all(caps);
     }
 }
 

@@ -79,52 +79,78 @@ function log(text) {
     console.log(text);
 }
 
-function showlist() {
-    for (let i = 0; i < SITES.length; i++) {
-        SITES[i].show();
+function display(cmd, window) {
+    switch (window) {
+    case "list":
+        for (let i = 0; i < SITES.length; i++) {
+            switch (cmd) {
+            case "show": SITES[i].show(); break;
+            case "hide": SITES[i].hide(); break;
+            }
+        }
+        switch (cmd) {
+        case "show": logbody.top = "66%"; logbody.height = "34%";    break;
+        case "hide": logbody.top = 0;     logbody.height = "100%-1"; break;
+        }
+        break;
+    case "log":
+        switch (cmd) {
+        case "show": logbody.show(); break;
+        case "hide": logbody.hide(); break;
+        }
+        for (let i = 0; i < SITES.length; i++) {
+            switch (cmd) {
+            case "show": SITES[i].restore(); break;
+            case "hide": SITES[i].full();    break;
+            }
+        }
+        break;
     }
-    logbody.top = "66%";
-    logbody.height = "34%";
 }
 
-function hidelist() {
+function updateList(cmd, site, nm) {
     for (let i = 0; i < SITES.length; i++) {
-        SITES[i].hide();
-    }
-    logbody.top = 0;
-    logbody.height = "100%-1";
-}
-
-function showlog() {
-    logbody.show();
-    for (let i = 0; i < SITES.length; i++) {
-        SITES[i].restore();
-    }
-}
-
-function hidelog() {
-    logbody.hide();
-    for (let i = 0; i < SITES.length; i++) {
-        SITES[i].full();
+        const siteName = SITES[i].siteName.trim().toLowerCase();
+        if (site === siteName) {
+            SITES[i].updateList(nm, cmd === "add" ? 1 : 0);
+            SITES[i].writeConfig();
+        }
     }
 }
 
 inputBar.on("submit", (text) => {
-    if (text === "hide list") {
-        hidelist();
-    } else if (text === "show list") {
-        showlist();
-    } else if (text === "hide log") {
-        hidelog();
-    } else if (text === "show log") {
-        showlog();
-    } else if (text === "help") {
-        logbody.pushLine("Commands:");
-        logbody.pushLine("show [log|list]");
-        logbody.pushLine("hide [log|list]");
-        logbody.setScrollPerc(100);
-    }
     inputBar.clearValue();
+
+    const tokens = text.split(" ");
+    if (tokens.length === 0) {
+        screen.render();
+        return;
+    }
+
+    switch (tokens[0]) {
+    case "add":
+    case "remove":
+        if (tokens.length >= 3) {
+            updateList(tokens[0], tokens[1], tokens[2]);
+        }
+        break;
+
+    case "show":
+    case "hide":
+        if (tokens.length >= 2) {
+            display(tokens[0], tokens[1]);
+        }
+        break;
+
+    case "help":
+        logbody.pushLine("Commands:");
+        logbody.pushLine("add    [site] [streamer]");
+        logbody.pushLine("remove [site] [streamer]");
+        logbody.pushLine("show   [log|list]");
+        logbody.pushLine("hide   [log|list]");
+        logbody.setScrollPerc(100);
+        break;
+    }
     screen.render();
 });
 
@@ -139,11 +165,13 @@ function mainSiteLoop(site) {
     }).then(function() {
         return site.processUpdates();
     }).then(function(bundle) {
-        return site.addStreamers(bundle);
+        return site.updateStreamers(bundle, 1);
     }).then(function(bundle) {
-        return site.removeStreamers(bundle);
-    }).then(function(dirty) {
-        return site.writeConfig(dirty);
+        return site.updateStreamers(bundle, 0);
+    }).then(function(bundle) {
+        if (bundle.dirty) {
+            site.writeConfig();
+        }
     }).then(function() {
         return site.getStreamersToCap();
     }).then(function(streamersToCap) {
@@ -272,11 +300,11 @@ if (config.enableTwitch) {
 }
 
 if (!config.listshown) {
-    hidelist();
+    display("hide", "list");
 }
 
 if (!config.logshown) {
-    hidelog();
+    display("hide", "log");
 }
 
 screen.append(logbody);

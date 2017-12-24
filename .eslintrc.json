@@ -52,7 +52,7 @@
         "consistent-return": "error",
         "consistent-this": "off",
         "curly": "error",
-        "default-case": "error",
+        "default-case": "off",
         "dot-location": "error",
         "dot-notation": [
             "error",
