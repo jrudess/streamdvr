@@ -73,13 +73,10 @@ class Mfc extends site.Site {
             let update = false;
             if (typeof streamer !== "undefined") {
                 if (super.updateList(streamer, this.config.mfc, add)) {
-                    this.dbgMsg("wtf");
                     if (add) {
-                        this.dbgMsg("wtf2");
                         this.config.mfc.push(streamer.uid);
                         update = true;
                     } else if (this.config.mfc.indexOf(streamer.uid) !== -1) {
-                        this.dbgMsg("wtf3");
                         this.config.mfc = _.without(this.config.mfc, streamer.uid);
                         update = true;
                     }
