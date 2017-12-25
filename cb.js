@@ -144,9 +144,7 @@ class Cb extends site.Site {
             queries.push(this.checkStreamerState(batch[i]));
         }
 
-        return Promise.all(queries).then(function() {
-            return true;
-        }).catch(function(err) {
+        return Promise.all(queries).then(() => true).catch((err) => {
             me.errMsg(err.toString());
         });
     }
@@ -163,7 +161,7 @@ class Cb extends site.Site {
         this.render();
 
         const nms = [];
-        this.streamerList.forEach(function(value) {
+        this.streamerList.forEach((value) => {
             nms.push(value.nm);
         });
 

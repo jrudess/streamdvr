@@ -41,7 +41,7 @@ const logbody = blessed.box({
     height: "34%",
     width: "100%",
     keys: true,
-    mouse: true,
+    mouse: false,
     alwaysScroll: true,
     scrollable: true,
     scrollbar: {
@@ -55,7 +55,7 @@ const inputBar = blessed.textbox({
     height: 1,
     width: "100%",
     keys: true,
-    mouse: true,
+    mouse: false,
     inputOnFocus: true,
     style: {
         fg: "white",
@@ -157,14 +157,11 @@ function sleep(time) {
 
 function mainSiteLoop(site) {
 
-    Promise.try(() => {
+    Promise.try(()  => {
         site.checkFileSize(config.captureDirectory, config.maxByteSize);
-    }).then(() =>
-        site.processUpdates()
-    ).then((bundle) =>
-        site.updateStreamers(bundle, 1)
-    ).then((bundle) =>
-        site.updateStreamers(bundle, 0)
+    }).then(()      => site.processUpdates()
+    ).then((bundle) => site.updateStreamers(bundle, 1)
+    ).then((bundle) => site.updateStreamers(bundle, 0)
     ).then((bundle) => {
         let streamersToCap = [];
         if (bundle.dirty) {

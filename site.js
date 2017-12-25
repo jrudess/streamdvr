@@ -91,7 +91,7 @@ class Site {
             height: height,
             width: width,
             keys: true,
-            mouse: true,
+            mouse: false,
             alwaysScroll: true,
             scrollable: true,
             draggable: false,
