@@ -14,12 +14,8 @@ class Mfc extends site.Site {
     }
 
     connect() {
-        const me = this;
-
-        return Promise.try(function() {
-            return me.mfcGuest.connectAndWaitForModels();
-        }).catch(function(err) {
-            me.errMsg(err.toString());
+        return Promise.try(() => this.mfcGuest.connectAndWaitForModels()).catch((err) => {
+            this.errMsg(err.toString());
             return err;
         });
     }
@@ -94,34 +90,31 @@ class Mfc extends site.Site {
 
         for (let i = 0; i < list.length; i++) {
             this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
-            queries.push(this.updateList(list[i], add));
+            queries.push(this.updateList(list[i], add).then((dirty) => {
+                bundle.dirty |= dirty;
+            }));
         }
 
-        return Promise.all(queries).then(function() {
-            return bundle;
-        });
+        return Promise.all(queries).then(() => bundle);
     }
 
     checkStreamerState(uid) {
-        const me = this;
 
-        return Promise.try(function() {
-            return me.mfcGuest.queryUser(uid);
-        }).then(function(streamer) {
+        return Promise.try(() => this.mfcGuest.queryUser(uid)).then((streamer) => {
             if (typeof streamer !== "undefined") {
                 let isBroadcasting = 0;
                 let msg = colors.name(streamer.nm);
 
-                if (!me.streamerList.has(streamer.nm)) {
-                    me.streamerList.set(streamer.nm, {uid: uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
+                if (!this.streamerList.has(streamer.nm)) {
+                    this.streamerList.set(streamer.nm, {uid: uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
                 }
 
-                const listitem = me.streamerList.get(streamer.nm);
+                const listitem = this.streamerList.get(streamer.nm);
 
                 if (streamer.vs === mfc.STATE.FreeChat) {
                     listitem.streamerState = "Public Chat";
                     msg += " is in public chat!";
-                    me.streamersToCap.push(streamer);
+                    this.streamersToCap.push(streamer);
                     isBroadcasting = 1;
                 } else if (streamer.vs === mfc.STATE.GroupShow) {
                     listitem.streamerState = "Group Show";
@@ -144,75 +137,69 @@ class Mfc extends site.Site {
                     listitem.streamerState = "Offline";
                     msg += " has logged off.";
                 }
-                me.streamerList.set(streamer.nm, listitem);
-                me.render();
-                if ((me.streamerState.has(uid) || streamer.vs !== mfc.STATE.Offline) && streamer.vs !== me.streamerState.get(uid)) {
-                    me.msg(msg);
+                this.streamerList.set(streamer.nm, listitem);
+                this.render();
+                if ((this.streamerState.has(uid) || streamer.vs !== mfc.STATE.Offline) && streamer.vs !== this.streamerState.get(uid)) {
+                    this.msg(msg);
                 }
-                me.streamerState.set(uid, streamer.vs);
-                if (me.currentlyCapping.has(streamer.uid) && isBroadcasting === 0) {
+                this.streamerState.set(uid, streamer.vs);
+                if (this.currentlyCapping.has(streamer.uid) && isBroadcasting === 0) {
                     // Sometimes the ffmpeg process doesn't end when a streamer
                     // stops broadcasting, so terminate it.
-                    me.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
-                    me.haltCapture(streamer.uid);
+                    this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
+                    this.haltCapture(streamer.uid);
                 }
             }
             return true;
-        }).catch(function(err) {
-            me.errMsg(err.toString());
+        }).catch((err) => {
+            this.errMsg(err.toString());
             return err;
         });
     }
 
     getStreamersToCap() {
         const queries = [];
-        const me = this;
 
-        me.streamersToCap = [];
+        this.streamersToCap = [];
 
         for (let i = 0; i < this.config.mfc.length; i++) {
             queries.push(this.checkStreamerState(this.config.mfc[i]));
         }
 
-        return Promise.all(queries).then(function() {
-            return me.streamersToCap;
-        });
+        return Promise.all(queries).then(() => this.streamersToCap);
     }
 
-    setupCapture(streamer, tryingToExit) {
-        const me = this;
+    setupCapture(streamer) {
 
-        if (!super.setupCapture(streamer, tryingToExit)) {
-            return Promise.try(function() {
-                return {spawnArgs: "", filename: "", streamer: ""};
-            });
+        if (!super.setupCapture(streamer)) {
+            const empty = {spawnArgs: "", filename: "", streamer: ""};
+            return Promise.try(() => empty);
         }
 
-        return Promise.try(function() {
-            const filename = me.getFileName(streamer.nm);
+        return Promise.try(() => {
+            const filename = this.getFileName(streamer.nm);
             const url = "http://video" + (streamer.u.camserv - 500) + ".myfreecams.com:1935/NxServer/ngrp:mfc_" + (100000000 + streamer.uid) + ".f4v_mobile/playlist.m3u8";
-            const spawnArgs = me.getCaptureArguments(url, filename);
+            const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
-        }).catch(function(err) {
-            me.errMsg(colors.name(streamer.nm) + " " + err.toString());
+        }).catch((err) => {
+            this.errMsg(colors.name(streamer.nm) + " " + err.toString());
             return err;
         });
     }
 
-    recordStreamers(streamersToCap, tryingToExit) {
+    recordStreamers(streamersToCap) {
         if (streamersToCap === null || streamersToCap.length === 0) {
             return null;
         }
 
         const caps = [];
-        const me = this;
 
         this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
         for (let i = 0; i < streamersToCap.length; i++) {
-            const cap = this.setupCapture(streamersToCap[i], tryingToExit).then(function(bundle) {
+            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
                 if (bundle.spawnArgs !== "") {
-                    me.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer, tryingToExit);
+                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
                 }
             });
             caps.push(cap);

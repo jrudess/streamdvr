@@ -73,7 +73,7 @@
             "error",
             "declaration"
         ],
-        "function-paren-newline": "error",
+        "function-paren-newline": "off",
         "generator-star-spacing": "error",
         "getter-return": "error",
         "global-require": "error",
@@ -83,7 +83,7 @@
         "id-length": "off",
         "id-match": "error",
         "implicit-arrow-linebreak": [
-            "error",
+            "off",
             "beside"
         ],
         "indent": "error",

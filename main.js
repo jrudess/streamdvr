@@ -31,17 +31,8 @@ console.log = function(msg) {
     logFile.write(util.format(msg) + "\n");
 };
 
-let total = 0;
+const total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch);
 let inst = 1;
-if (config.enableMFC) {
-    total++;
-}
-if (config.enableCB) {
-    total++;
-}
-if (config.enableTwitch) {
-    total++;
-}
 
 const screen = blessed.screen();
 const logbody = blessed.box({
@@ -79,6 +70,7 @@ function log(text) {
     console.log(text);
 }
 
+// Runtime UI adjustments
 function display(cmd, window) {
     switch (window) {
     case "list":
@@ -108,13 +100,12 @@ function display(cmd, window) {
     }
 }
 
+// Add and remove streamers
 function updateList(cmd, site, nm) {
     for (let i = 0; i < SITES.length; i++) {
         const siteName = SITES[i].siteName.trim().toLowerCase();
         if (site === siteName) {
-            const queries = [];
-            queries.push(SITES[i].updateList(nm, cmd === "add" ? 1 : 0));
-            Promise.all(queries).then(function(update) {
+            SITES[i].updateList(nm, cmd === "add" ? 1 : 0).then((update) => {
                 if (update) {
                     SITES[i].writeConfig();
                 }
@@ -123,6 +114,7 @@ function updateList(cmd, site, nm) {
     }
 }
 
+// CLI
 inputBar.on("submit", (text) => {
     inputBar.clearValue();
 
@@ -165,27 +157,32 @@ function sleep(time) {
 
 function mainSiteLoop(site) {
 
-    Promise.try(function() {
+    Promise.try(() => {
         site.checkFileSize(config.captureDirectory, config.maxByteSize);
-    }).then(function() {
-        return site.processUpdates();
-    }).then(function(bundle) {
-        return site.updateStreamers(bundle, 1);
-    }).then(function(bundle) {
-        return site.updateStreamers(bundle, 0);
-    }).then(function(bundle) {
+    }).then(() =>
+        site.processUpdates()
+    ).then((bundle) =>
+        site.updateStreamers(bundle, 1)
+    ).then((bundle) =>
+        site.updateStreamers(bundle, 0)
+    ).then((bundle) => {
+        let streamersToCap = [];
         if (bundle.dirty) {
             site.writeConfig();
         }
-    }).then(function() {
-        return site.getStreamersToCap();
-    }).then(function(streamersToCap) {
-        return site.recordStreamers(streamersToCap, tryingToExit);
-    }).catch(function(err) {
+        if (tryingToExit) {
+            site.dbgMsg("Skipping lookup while exit in progress...");
+        } else {
+            streamersToCap = site.getStreamersToCap();
+        }
+        return streamersToCap;
+    }).then((streamersToCap) =>
+        site.recordStreamers(streamersToCap)
+    ).catch((err) => {
         site.errMsg(err);
-    }).finally(function() {
+    }).finally(() => {
         site.dbgMsg("Done, waiting " + config.scanInterval + " seconds.");
-        setTimeout(function() { mainSiteLoop(site); }, config.scanInterval * 1000);
+        setTimeout(() => { mainSiteLoop(site); }, config.scanInterval * 1000);
     });
 }
 
@@ -244,21 +241,21 @@ screen.key(["q", "C-c"], () => (
     exit()
 ));
 
-process.on("SIGINT", function() {
+process.on("SIGINT", () => {
     exit();
 });
 
 config.captureDirectory  = path.resolve(config.captureDirectory);
 config.completeDirectory = path.resolve(config.completeDirectory);
 
-mkdirp(config.captureDirectory, function(err) {
+mkdirp(config.captureDirectory, (err) => {
     if (err) {
         log(err.toString());
         process.exit(1);
     }
 });
 
-mkdirp(config.completeDirectory, function(err) {
+mkdirp(config.completeDirectory, (err) => {
     if (err) {
         log(err.toString());
         process.exit(1);
@@ -280,11 +277,9 @@ if (config.enableMFC) {
     mfc = new MFC.Mfc(config, screen, logbody, inst, total);
     inst++;
     SITES.push(mfc);
-    Promise.try(function() {
-        return mfc.connect();
-    }).then(function() {
+    Promise.try(() => mfc.connect()).then(() => {
         mainSiteLoop(mfc);
-    }).catch(function(err) {
+    }).catch((err) => {
         mfc.errMsg(err);
         return err;
     });
@@ -315,9 +310,9 @@ if (!config.logshown) {
 screen.append(logbody);
 screen.append(inputBar);
 
+// Have to render screen once before printouts work
 screen.render();
 
-// Have to render screen once before printouts work
 if (config.enableMFC) {
     mfc.msg(config.mfc.length + " streamer(s) in config");
 }
