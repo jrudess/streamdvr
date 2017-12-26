@@ -1,9 +1,6 @@
 const Promise      = require("bluebird");
 const colors       = require("colors/safe");
 const fetch        = require("node-fetch");
-const _            = require("underscore");
-const fs           = require("fs");
-const yaml         = require("js-yaml");
 const childProcess = require("child_process");
 const site         = require("./site");
 
@@ -12,54 +9,8 @@ class Twitch extends site.Site {
         super("TWITCH", config, "_twitch", screen, logbody, inst, total);
     }
 
-    processUpdates() {
-        const stats = fs.statSync("updates.yml");
-        if (!stats.isFile()) {
-            return {includeStreamers: [], excludeStreamers: [], dirty: false};
-        }
-
-        let includeStreamers = [];
-        let excludeStreamers = [];
-
-        const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
-
-        if (!updates.includeTwitch) {
-            updates.includeTwitch = [];
-        } else if (updates.includeTwitch.length > 0) {
-            this.msg(updates.includeTwitch.length + " streamer(s) to include");
-            includeStreamers = updates.includeTwitch;
-            updates.includeTwitch = [];
-        }
-
-        if (!updates.excludeTwitch) {
-            updates.excludeTwitch = [];
-        } else if (updates.excludeTwitch.length > 0) {
-            this.msg(updates.excludeTwitch.length + " streamer(s) to exclude");
-            excludeStreamers = updates.excludeTwitch;
-            updates.excludeTwitch = [];
-        }
-
-        // if there were some updates, then rewrite updates.yml
-        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
-            fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
-        }
-
-        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
-    }
-
-    updateList(nm, add) {
-        let update = false;
-        if (super.updateList({nm: nm, uid: nm}, this.config.twitch, add)) {
-            if (add) {
-                this.config.twitch.push(nm);
-                update = true;
-            } else if (this.config.twitch.indexOf(nm) !== -1) {
-                this.config.twitch = _.without(this.config.twitch, nm);
-                update = true;
-            }
-        }
-
-        return Promise.try(() => update);
+    updateList(nm, add, isTemp) {
+        return Promise.try(() => super.updateList({nm: nm, uid: nm}, add, isTemp));
     }
 
     checkStreamerState(nm) {
@@ -105,9 +56,10 @@ class Twitch extends site.Site {
         this.streamersToCap = [];
 
         // TODO: This should be somewhere else
-        for (let i = 0; i < this.config.twitch.length; i++) {
-            if (!this.streamerList.has(this.config.twitch[i])) {
-                this.streamerList.set(this.config.twitch[i], {uid: this.config.twitch[i], nm: this.config.twitch[i], streamerState: "Offline", filename: ""});
+        for (let i = 0; i < this.listConfig.streamers.length; i++) {
+            const nm = this.listConfig.streamers[i];
+            if (!this.streamerList.has(nm)) {
+                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
             }
         }
         this.render();

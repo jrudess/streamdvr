@@ -101,11 +101,12 @@ function display(cmd, window) {
 }
 
 // Add and remove streamers
-function updateList(cmd, site, nm) {
+function updateList(cmd, site, nm, isTemp) {
     for (let i = 0; i < SITES.length; i++) {
         const siteName = SITES[i].siteName.trim().toLowerCase();
         if (site === siteName) {
-            SITES[i].updateList(nm, cmd === "add" ? 1 : 0).then((update) => {
+            const isAdd = cmd === "add" || cmd === "addtemp";
+            SITES[i].updateList(nm, isAdd, isTemp).then((update) => {
                 if (update) {
                     SITES[i].writeConfig();
                 }
@@ -126,9 +127,10 @@ inputBar.on("submit", (text) => {
 
     switch (tokens[0]) {
     case "add":
+    case "addtemp":
     case "remove":
         if (tokens.length >= 3) {
-            updateList(tokens[0], tokens[1], tokens[2]);
+            updateList(tokens[0], tokens[1], tokens[2], tokens[0] === "addtemp");
         }
         break;
 
@@ -170,6 +172,7 @@ function mainSiteLoop(site) {
         if (tryingToExit) {
             site.dbgMsg("Skipping lookup while exit in progress...");
         } else {
+            site.dbgMsg("type of tempList " + (typeof site.tempList));
             streamersToCap = site.getStreamersToCap();
         }
         return streamersToCap;
@@ -177,6 +180,7 @@ function mainSiteLoop(site) {
         site.recordStreamers(streamersToCap)
     ).catch((err) => {
         site.errMsg(err);
+        throw err;
     }).finally(() => {
         site.dbgMsg("Done, waiting " + config.scanInterval + " seconds.");
         setTimeout(() => { mainSiteLoop(site); }, config.scanInterval * 1000);
@@ -311,11 +315,11 @@ screen.append(inputBar);
 screen.render();
 
 if (config.enableMFC) {
-    mfc.msg(config.mfc.length + " streamer(s) in config");
+    mfc.msg(mfc.listConfig.streamers.length + " streamer(s) in config");
 }
 if (config.enableCB) {
-    cb.msg(config.cb.length + " streamer(s) in config");
+    cb.msg(cb.listConfig.streamers.length + " streamer(s) in config");
 }
 if (config.enableTwitch) {
-    twitch.msg(config.twitch.length + " streamer(s) in config");
+    twitch.msg(twitch.listConfig.streamers.length + " streamer(s) in config");
 }

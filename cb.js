@@ -1,9 +1,6 @@
 const Promise = require("bluebird");
 const colors  = require("colors/safe");
 const fetch   = require("node-fetch");
-const _       = require("underscore");
-const fs      = require("fs");
-const yaml    = require("js-yaml");
 const site    = require("./site");
 
 function promiseSerial(funcs) {
@@ -17,55 +14,8 @@ class Cb extends site.Site {
         this.timeOut = 20000;
     }
 
-    processUpdates() {
-        const stats = fs.statSync("updates.yml");
-        if (!stats.isFile()) {
-            this.dbgMsg("updates.yml does not exist");
-            return {includeStreamers: [], excludeStreamers: [], dirty: false};
-        }
-
-        let includeStreamers = [];
-        let excludeStreamers = [];
-
-        const updates = yaml.safeLoad(fs.readFileSync("updates.yml", "utf8"));
-
-        if (!updates.includeCb) {
-            updates.includeCb = [];
-        } else if (updates.includeCb.length > 0) {
-            this.msg(updates.includeCb.length + " streamer(s) to include");
-            includeStreamers = updates.includeCb;
-            updates.includeCb = [];
-        }
-
-        if (!updates.excludeCb) {
-            updates.excludeCb = [];
-        } else if (updates.excludeCb.length > 0) {
-            this.msg(updates.excludeCb.length + " streamer(s) to exclude");
-            excludeStreamers = updates.excludeCb;
-            updates.excludeCb = [];
-        }
-
-        // if there were some updates, then rewrite updates.yml
-        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
-            fs.writeFileSync("updates.yml", yaml.safeDump(updates), "utf8");
-        }
-
-        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
-    }
-
-    updateList(nm, add) {
-        let update = false;
-        if (super.updateList({nm: nm, uid: nm}, this.config.cb, add)) {
-            if (add) {
-                this.config.cb.push(nm);
-                update = true;
-            } else if (this.config.cb.indexOf(nm) !== -1) {
-                this.config.cb = _.without(this.config.cb, nm);
-                update = true;
-            }
-        }
-
-        return Promise.try(() => update);
+    updateList(nm, add, isTemp) {
+        return Promise.try(() =>  super.updateList({nm: nm, uid: nm}, add, isTemp));
     }
 
     checkStreamerState(nm) {
@@ -153,9 +103,16 @@ class Cb extends site.Site {
         this.streamersToCap = [];
 
         // TODO: This should be somewhere else
-        for (let i = 0; i < this.config.cb.length; i++) {
-            if (!this.streamerList.has(this.config.cb[i])) {
-                this.streamerList.set(this.config.cb[i], {uid: this.config.cb[i], nm: this.config.cb[i], streamerState: "Offline", filename: ""});
+        for (let i = 0; i < this.listConfig.streamers.length; i++) {
+            const nm = this.listConfig.streamers[i];
+            if (!this.streamerList.has(nm)) {
+                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
+            }
+        }
+        for (let i = 0; i < this.tempList.length; i++) {
+            const nm = this.tempList[i];
+            if (!this.streamerList.has(nm)) {
+                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
             }
         }
         this.render();
@@ -173,7 +130,7 @@ class Cb extends site.Site {
 
         while (count < nms.length) {
             const parBatch = [];
-            const batchSize = this.config.batchSizeCB === 0 ? nms.length : count + this.config.batchSizeCB;
+            const batchSize = this.listConfig.batchSizeCB === 0 ? nms.length : count + this.listConfig.batchSizeCB;
 
             for (let i = count; (i < batchSize) && (i < nms.length); i++) {
                 parBatch.push(nms[i]);
@@ -183,7 +140,6 @@ class Cb extends site.Site {
         }
 
         const funcs = serRuns.map((batch) => () => this.checkStreamersState(batch));
-
         return promiseSerial(funcs).then(() => this.streamersToCap).catch((err) => {
             this.errMsg(err.toString());
         });

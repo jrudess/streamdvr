@@ -1,6 +1,7 @@
 const yaml         = require("js-yaml");
 const mkdirp       = require("mkdirp");
 const fs           = require("fs");
+const _            = require("underscore");
 const mv           = require("mv");
 const moment       = require("moment");
 const colors       = require("colors/safe");
@@ -13,9 +14,13 @@ class Site {
         // Sitename includes spaces to align log columns easily.
         // Use .trim() as needed.
         this.siteName = siteName;
+        this.listName = siteName.trim().toLowerCase();
 
-        // Handle to the parsed config.yml
+        // Handle to the cross-site config.yml
         this.config = config;
+
+        // sitename.yml
+        this.listConfig = yaml.safeLoad(fs.readFileSync(this.listName + ".yml", "utf8"));
 
         // Custom site directory suffix
         this.siteDir = siteDir;
@@ -34,6 +39,9 @@ class Site {
         // Data accumulator for outstanding status lookup threads
         // reset on each loop
         this.streamersToCap = [];
+
+        // Streamers that are being temporarily captured for this session only
+        this.tempList = [];
 
         // Used for intelligent printouts to avoid log spam
         this.streamerState = new Map();
@@ -150,7 +158,7 @@ class Site {
         let filename = nm + "_";
 
         if (this.config.includeSiteInFile) {
-            filename += this.siteName.trim().toLowerCase() + "_";
+            filename += this.listName + "_";
         }
         filename += this.getDateTime();
         return filename;
@@ -191,31 +199,81 @@ class Site {
         ];
     }
 
-    updateList(streamer, list, add) {
-        let rc;
-        if (add) {
-            rc = this.addStreamer(streamer, list);
-        } else {
-            rc = this.removeStreamer(streamer, list);
+    processUpdates() {
+        const filename = this.listName + "_updates.yml";
+        const stats = fs.statSync(filename);
+        if (!stats.isFile()) {
+            this.dbgMsg(filename + " does not exist");
+            return {includeStreamers: [], excludeStreamers: [], dirty: false};
         }
-        return rc;
+
+        let includeStreamers = [];
+        let excludeStreamers = [];
+
+        const updates = yaml.safeLoad(fs.readFileSync(filename, "utf8"));
+
+        if (!updates.include) {
+            updates.include = [];
+        } else if (updates.include.length > 0) {
+            this.msg(updates.include.length + " streamer(s) to include");
+            includeStreamers = updates.include;
+            updates.include = [];
+        }
+
+        if (!updates.exclude) {
+            updates.exclude = [];
+        } else if (updates.exclude.length > 0) {
+            this.msg(updates.exclude.length + " streamer(s) to exclude");
+            excludeStreamers = updates.exclude;
+            updates.exclude = [];
+        }
+
+        // if there were some updates, then rewrite updates.yml
+        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
+            fs.writeFileSync(filename, yaml.safeDump(updates), "utf8");
+        }
+
+        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
+    }
+
+
+    updateList(streamer, add, isTemp) {
+        let dirty = false;
+        let list = isTemp ? this.tempList : this.listConfig.streamers;
+        if (add) {
+            if (this.addStreamer(streamer, list, isTemp)) {
+                list.push(streamer.uid);
+                dirty = !isTemp;
+            }
+        } else if (this.removeStreamer(streamer, list)) {
+            if (this.listConfig.streamers.indexOf(streamer.uid) !== -1) {
+                list = _.without(list, streamer.uid);
+                dirty = !isTemp;
+            }
+        }
+        if (isTemp) {
+            this.tempList = list;
+        } else {
+            this.listConfig.streamers = list;
+        }
+        return dirty;
     }
 
     updateStreamers(bundle, add) {
         const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
 
         for (let i = 0; i < list.length; i++) {
-            bundle.dirty |= this.updateList(list[i], add);
+            bundle.dirty |= this.updateList(list[i], add, false);
         }
 
         return bundle;
     }
 
-    addStreamer(streamer, list) {
+    addStreamer(streamer, list, isTemp) {
         const index = list.indexOf(streamer.uid);
         let rc = false;
         if (index === -1) {
-            this.msg(colors.name(streamer.nm) + " added to capture list");
+            this.msg(colors.name(streamer.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
             rc = true;
         } else {
             this.msg(colors.name(streamer.nm) + " is already in the capture list");
