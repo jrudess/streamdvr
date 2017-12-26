@@ -22,7 +22,7 @@
 		"colors": "latest",
 		"js-yaml": "^3.10.0",
 		"mkdirp": "^0.5.1",
-		"moment": "^2.19.2",
+		"moment": "^2.20.1",
 		"mv": "^2.1.1",
 		"MFCAuto": "ZombieAlex/MFCAuto#v4.2.2",
 		"node-fetch": "^1.7.3",

@@ -172,7 +172,6 @@ function mainSiteLoop(site) {
         if (tryingToExit) {
             site.dbgMsg("Skipping lookup while exit in progress...");
         } else {
-            site.dbgMsg("type of tempList " + (typeof site.tempList));
             streamersToCap = site.getStreamersToCap();
         }
         return streamersToCap;

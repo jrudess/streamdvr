@@ -65,16 +65,9 @@ class Cb extends site.Site {
                     msg += " has unknown state: " + currState;
                     listitem.streamerState = currState;
                 }
-                this.streamerList.set(nm, listitem);
-                if ((!this.streamerState.has(nm) && currState !== "offline") || (this.streamerState.has(nm) && currState !== this.streamerState.get(nm))) {
-                    this.msg(msg);
-                }
-                this.streamerState.set(nm, currState);
 
-                if (this.currentlyCapping.has(nm) && isBroadcasting === 0) {
-                    this.dbgMsg(colors.name(nm) + " is no longer broadcasting, ending ffmpeg process.");
-                    this.haltCapture(nm);
-                }
+                super.checkStreamerState({nm: nm, uid: nm}, listitem, msg, isBroadcasting, currState === "offline", currState);
+
             }
             this.render();
             return true;
@@ -115,6 +108,7 @@ class Cb extends site.Site {
                 this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
             }
         }
+
         this.render();
 
         const nms = [];
@@ -164,25 +158,6 @@ class Cb extends site.Site {
             }
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
         });
-    }
-
-    recordStreamers(streamersToCap) {
-        if (streamersToCap === null || streamersToCap.length === 0) {
-            return null;
-        }
-
-        const caps = [];
-
-        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-        for (let i = 0; i < streamersToCap.length; i++) {
-            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
-                if (bundle.spawnArgs !== "") {
-                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
-                }
-            });
-            caps.push(cap);
-        }
-        return Promise.all(caps);
     }
 }
 

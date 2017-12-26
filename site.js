@@ -295,12 +295,45 @@ class Site {
         return true;
     }
 
+    checkStreamerState(streamer, listitem, msg, isBroadcasting, isOffline, newState) {
+        this.streamerList.set(streamer.nm, listitem);
+        if ((this.streamerState.has(streamer.uid) || !isOffline) && newState !== this.streamerState.get(streamer.uid)) {
+            this.msg(msg);
+        }
+        this.streamerState.set(streamer.uid, newState);
+        if (this.currentlyCapping.has(streamer.uid) && isBroadcasting === 0) {
+            // Sometimes the ffmpeg process doesn't end when a streamer
+            // stops broadcasting, so terminate it.
+            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
+            this.haltCapture(streamer.uid);
+        }
+    }
+
     addStreamerToCapList(streamer, filename, captureProcess) {
         this.currentlyCapping.set(streamer.uid, {nm: streamer.nm, filename: filename, captureProcess: captureProcess});
     }
 
     removeStreamerFromCapList(streamer) {
         this.currentlyCapping.delete(streamer.uid);
+    }
+
+    recordStreamers(streamersToCap) {
+        if (streamersToCap === null || streamersToCap.length === 0) {
+            return null;
+        }
+
+        const caps = [];
+
+        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
+        for (let i = 0; i < streamersToCap.length; i++) {
+            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
+                if (bundle.spawnArgs !== "") {
+                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
+                }
+            });
+            caps.push(cap);
+        }
+        return Promise.all(caps);
     }
 
     getNumCapsInProgress() {
@@ -322,8 +355,9 @@ class Site {
     }
 
     writeConfig() {
-        this.dbgMsg("Rewriting config.yml");
-        fs.writeFileSync("config.yml", yaml.safeDump(this.config), "utf8");
+        const filename = this.listName + ".yml";
+        this.dbgMsg("Rewriting " + filename);
+        fs.writeFileSync(filename, yaml.safeDump(this.listConfig), "utf8");
     }
 
     setupCapture(streamer) {

@@ -32,16 +32,8 @@ class Twitch extends site.Site {
             }
 
             this.streamerState.set(nm, listitem.streamerState);
-            this.streamerList.set(nm, listitem);
-            if ((!this.streamerState.has(nm) && listitem.streamerState !== "Offline") || (this.streamerState.has(nm) && listitem.streamerState !== this.streamerState.get(nm))) {
-                this.msg(msg);
-            }
-            this.streamerState.set(nm, listitem.streamerState);
+            super.checkStreamerState({nm: nm, uid: nm}, listitem, msg, isBroadcasting, listitem.streamerState === "offline", listitem.streamerState);
 
-            if (this.currentlyCapping.has(nm) && isBroadcasting === 0) {
-                this.dbgMsg(colors.name(nm) + " is no longer broadcasting, ending ffmpeg process.");
-                this.haltCapture(nm);
-            }
             this.render();
             return true;
         }).catch((err) => {
@@ -58,6 +50,12 @@ class Twitch extends site.Site {
         // TODO: This should be somewhere else
         for (let i = 0; i < this.listConfig.streamers.length; i++) {
             const nm = this.listConfig.streamers[i];
+            if (!this.streamerList.has(nm)) {
+                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
+            }
+        }
+        for (let i = 0; i < this.tempList.length; i++) {
+            const nm = this.tempList[i];
             if (!this.streamerList.has(nm)) {
                 this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
             }
@@ -91,25 +89,6 @@ class Twitch extends site.Site {
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
         });
-    }
-
-    recordStreamers(streamersToCap) {
-        if (streamersToCap === null || streamersToCap.length === 0) {
-            return null;
-        }
-
-        const caps = [];
-
-        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-        for (let i = 0; i < streamersToCap.length; i++) {
-            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
-                if (bundle.spawnArgs !== "") {
-                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
-                }
-            });
-            caps.push(cap);
-        }
-        return Promise.all(caps);
     }
 }
 

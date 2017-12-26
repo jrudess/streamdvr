@@ -7,7 +7,7 @@ const colors  = require("colors/safe");
 class Mfc extends site.Site {
     constructor(config, screen, logbody, inst, total) {
         super("MFC   ", config, "_mfc", screen, logbody, inst, total);
-        mfc.setLogLevel(3);
+        mfc.setLogLevel(0);
         this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.listConfig.mfcWebsocket, camYou: false});
     }
 
@@ -48,55 +48,49 @@ class Mfc extends site.Site {
     checkStreamerState(uid) {
 
         return Promise.try(() => this.mfcGuest.queryUser(uid)).then((streamer) => {
-            if (typeof streamer !== "undefined") {
-                let isBroadcasting = 0;
-                let msg = colors.name(streamer.nm);
-
-                if (!this.streamerList.has(streamer.nm)) {
-                    this.streamerList.set(streamer.nm, {uid: uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
-                }
-
-                const listitem = this.streamerList.get(streamer.nm);
-
-                if (streamer.vs === mfc.STATE.FreeChat) {
-                    listitem.streamerState = "Public Chat";
-                    msg += " is in public chat!";
-                    this.streamersToCap.push(streamer);
-                    isBroadcasting = 1;
-                } else if (streamer.vs === mfc.STATE.GroupShow) {
-                    listitem.streamerState = "Group Show";
-                    msg += " is in a group show";
-                } else if (streamer.vs === mfc.STATE.Private) {
-                    if (streamer.truepvt === 1) {
-                        listitem.streamerState = "True Private";
-                        msg += " is in a true private show.";
-                    } else {
-                        listitem.streamerState = "Private";
-                        msg += " is in a private show.";
-                    }
-                } else if (streamer.vs === mfc.STATE.Away) {
-                    listitem.streamerState = "Away";
-                    msg += " is away.";
-                } else if (streamer.vs === mfc.STATE.Online) {
-                    listitem.streamerState = "Away";
-                    msg += colors.name("'s") + " stream is off.";
-                } else if (streamer.vs === mfc.STATE.Offline) {
-                    listitem.streamerState = "Offline";
-                    msg += " has logged off.";
-                }
-                this.streamerList.set(streamer.nm, listitem);
-                this.render();
-                if ((this.streamerState.has(uid) || streamer.vs !== mfc.STATE.Offline) && streamer.vs !== this.streamerState.get(uid)) {
-                    this.msg(msg);
-                }
-                this.streamerState.set(uid, streamer.vs);
-                if (this.currentlyCapping.has(streamer.uid) && isBroadcasting === 0) {
-                    // Sometimes the ffmpeg process doesn't end when a streamer
-                    // stops broadcasting, so terminate it.
-                    this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
-                    this.haltCapture(streamer.uid);
-                }
+            if (typeof streamer === "undefined") {
+                return true;
             }
+
+            let isBroadcasting = 0;
+            let msg = colors.name(streamer.nm);
+
+            if (!this.streamerList.has(streamer.nm)) {
+                this.streamerList.set(streamer.nm, {uid: uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
+            }
+
+            const listitem = this.streamerList.get(streamer.nm);
+
+            if (streamer.vs === mfc.STATE.FreeChat) {
+                listitem.streamerState = "Public Chat";
+                msg += " is in public chat!";
+                this.streamersToCap.push(streamer);
+                isBroadcasting = 1;
+            } else if (streamer.vs === mfc.STATE.GroupShow) {
+                listitem.streamerState = "Group Show";
+                msg += " is in a group show";
+            } else if (streamer.vs === mfc.STATE.Private) {
+                if (streamer.truepvt === 1) {
+                    listitem.streamerState = "True Private";
+                    msg += " is in a true private show.";
+                } else {
+                    listitem.streamerState = "Private";
+                    msg += " is in a private show.";
+                }
+            } else if (streamer.vs === mfc.STATE.Away) {
+                listitem.streamerState = "Away";
+                msg += " is away.";
+            } else if (streamer.vs === mfc.STATE.Online) {
+                listitem.streamerState = "Away";
+                msg += colors.name("'s") + " stream is off.";
+            } else if (streamer.vs === mfc.STATE.Offline) {
+                listitem.streamerState = "Offline";
+                msg += " has logged off.";
+            }
+
+            super.checkStreamerState(streamer, listitem, msg, isBroadcasting, streamer.vs === mfc.STATE.Offline, streamer.vs);
+
+            this.render();
             return true;
         }).catch((err) => {
             this.errMsg(err.toString());
@@ -141,25 +135,6 @@ class Mfc extends site.Site {
             this.errMsg(colors.name(streamer.nm) + " " + err.toString());
             return err;
         });
-    }
-
-    recordStreamers(streamersToCap) {
-        if (streamersToCap === null || streamersToCap.length === 0) {
-            return null;
-        }
-
-        const caps = [];
-
-        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-        for (let i = 0; i < streamersToCap.length; i++) {
-            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
-                if (bundle.spawnArgs !== "") {
-                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
-                }
-            });
-            caps.push(cap);
-        }
-        return Promise.all(caps);
     }
 }
 
