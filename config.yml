@@ -20,15 +20,6 @@ debugcolor: yellow
 errorcolor: red
 includeSiteInFile: false
 includeSiteInDir: false
-batchSizeCB: 10
 enableMFC: true
 enableCB: true
 enableTwitch: true
-mfc:
-  - 3623822
-  - 12513225
-cb:
-  - aynmarie
-  - theemilygrey
-twitch:
-  - peyzki
