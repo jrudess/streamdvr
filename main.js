@@ -143,10 +143,11 @@ inputBar.on("submit", (text) => {
 
     case "help":
         logbody.pushLine("Commands:");
-        logbody.pushLine("add    [site] [streamer]");
-        logbody.pushLine("remove [site] [streamer]");
-        logbody.pushLine("show   [log|list]");
-        logbody.pushLine("hide   [log|list]");
+        logbody.pushLine("add     [site] [streamer]");
+        logbody.pushLine("addtemp [site] [streamer]");
+        logbody.pushLine("remove  [site] [streamer]");
+        logbody.pushLine("show    [log|list]");
+        logbody.pushLine("hide    [log|list]");
         logbody.setScrollPerc(100);
         break;
     }
