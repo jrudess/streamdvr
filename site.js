@@ -10,7 +10,6 @@ const blessed      = require("blessed");
 
 class Site {
     constructor(siteName, config, siteDir, screen, logbody, inst, total) {
-
         // Sitename includes spaces to align log columns easily.
         // Use .trim() as needed.
         this.siteName = siteName;
@@ -36,20 +35,20 @@ class Site {
         // Counting semaphore to track outstanding post process ffmpeg jobs
         this.semaphore = 0;
 
-        // Data accumulator for outstanding status lookup threads
-        // reset on each loop
+        // Temporary data store used by child classes for outstanding status
+        // lookup threads.  Is cleared and repopulated during each loop
         this.streamersToCap = [];
 
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
 
-        // Used for intelligent printouts to avoid log spam
-        this.streamerState = new Map();
-
-        // Outstanding ffmpeg jobs
-        this.currentlyCapping = new Map();
-
         // Data used to render the displayed lists
+        // JSON data
+        //     uid
+        //     nm
+        //     state
+        //     filename
+        //     captureProcess
         this.streamerList = new Map();
 
         // Calculate this site's screen layout based on its instance number
@@ -170,12 +169,16 @@ class Site {
             return;
         }
 
-        for (const capInfo of this.currentlyCapping.values()) {
-            const stat = fs.statSync(this.config.captureDirectory + "/" + capInfo.filename + ".ts");
-            this.dbgMsg(colors.name(capInfo.nm) + " file size (" + capInfo.filename + ".ts), size=" + stat.size + ", maxByteSize=" + maxByteSize);
+        for (const streamers of this.streamerList.values()) {
+            if (streamers.captureProcess === null) {
+                continue;
+            }
+
+            const stat = fs.statSync(this.config.captureDirectory + "/" + streamers.filename);
+            this.dbgMsg(colors.name(streamers.nm) + " file size (" + streamers.filename + "), size=" + stat.size + ", maxByteSize=" + maxByteSize);
             if (stat.size >= maxByteSize) {
-                this.msg(colors.name(capInfo.nm) + " recording has exceeded file size limit (size=" + stat.size + " > maxByteSize=" + maxByteSize + ")");
-                capInfo.captureProcess.kill("SIGINT");
+                this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + stat.size + " > maxByteSize=" + maxByteSize + ")");
+                streamers.captureProcess.kill("SIGINT");
             }
         }
     }
@@ -236,7 +239,6 @@ class Site {
         return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
-
     updateList(streamer, add, isTemp) {
         let dirty = false;
         let list = isTemp ? this.tempList : this.listConfig.streamers;
@@ -278,8 +280,8 @@ class Site {
         } else {
             this.msg(colors.name(streamer.nm) + " is already in the capture list");
         }
-        if (!this.streamerList.has(streamer.nm)) {
-            this.streamerList.set(streamer.nm, {uid: streamer.uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
+        if (!this.streamerList.has(streamer.uid)) {
+            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, state: "Offline", filename: "", captureProcess: null});
             this.render();
         }
         return rc;
@@ -287,21 +289,19 @@ class Site {
 
     removeStreamer(streamer) {
         this.msg(colors.name(streamer.nm) + " removed from capture list.");
-        if (this.streamerList.has(streamer.nm)) {
-            this.streamerList.delete(streamer.nm);
+        if (this.streamerList.has(streamer.uid)) {
+            this.streamerList.delete(streamer.uid);
             this.render();
         }
         this.haltCapture(streamer.uid);
         return true;
     }
 
-    checkStreamerState(streamer, listitem, msg, isBroadcasting, isOffline, newState) {
-        this.streamerList.set(streamer.nm, listitem);
-        if ((this.streamerState.has(streamer.uid) || !isOffline) && newState !== this.streamerState.get(streamer.uid)) {
+    checkStreamerState(streamer, msg, isStreaming, prevState) {
+        if (streamer.state !== prevState) {
             this.msg(msg);
         }
-        this.streamerState.set(streamer.uid, newState);
-        if (this.currentlyCapping.has(streamer.uid) && isBroadcasting === 0) {
+        if (streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the ffmpeg process doesn't end when a streamer
             // stops broadcasting, so terminate it.
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
@@ -309,12 +309,13 @@ class Site {
         }
     }
 
-    addStreamerToCapList(streamer, filename, captureProcess) {
-        this.currentlyCapping.set(streamer.uid, {nm: streamer.nm, filename: filename, captureProcess: captureProcess});
-    }
-
-    removeStreamerFromCapList(streamer) {
-        this.currentlyCapping.delete(streamer.uid);
+    storeCapInfo(uid, filename, captureProcess) {
+        if (this.streamerList.has(uid)) {
+            const streamer = this.streamerList.get(uid);
+            streamer.filename = filename;
+            streamer.captureProcess = captureProcess;
+            this.render();
+        }
     }
 
     recordStreamers(streamersToCap) {
@@ -328,7 +329,7 @@ class Site {
         for (let i = 0; i < streamersToCap.length; i++) {
             const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
                 if (bundle.spawnArgs !== "") {
-                    this.startCapture(bundle.spawnArgs, bundle.filename, bundle.streamer);
+                    this.startCapture(bundle.streamer, bundle.filename, bundle.spawnArgs);
                 }
             });
             caps.push(cap);
@@ -337,20 +338,29 @@ class Site {
     }
 
     getNumCapsInProgress() {
-        return this.currentlyCapping.size;
+        let count = 0;
+
+        this.streamerList.forEach((value) => {
+            count += value.captureProcess !== null;
+        });
+
+        return count;
     }
 
     haltAllCaptures() {
-        this.currentlyCapping.forEach((value) => {
-            value.captureProcess.kill("SIGINT");
+        this.streamerList.forEach((value) => {
+            if (value.captureProcess !== null) {
+                value.captureProcess.kill("SIGINT");
+            }
         });
     }
 
     haltCapture(uid) {
-        if (this.currentlyCapping.has(uid)) {
-            const capInfo = this.currentlyCapping.get(uid);
-
-            capInfo.captureProcess.kill("SIGINT");
+        if (this.streamerList.has(uid)) {
+            const streamer = this.streamerList.get(uid);
+            if (streamer.captureProcess !== null) {
+                streamer.captureProcess.kill("SIGINT");
+            }
         }
     }
 
@@ -360,13 +370,16 @@ class Site {
         fs.writeFileSync(filename, yaml.safeDump(this.listConfig), "utf8");
     }
 
-    setupCapture(streamer) {
-        if (this.currentlyCapping.has(streamer.uid)) {
-            this.dbgMsg(colors.name(streamer.nm) + " is already capturing");
-            return false;
+    setupCapture(uid) {
+        if (this.streamerList.has(uid)) {
+            const streamer = this.streamerList.get(uid);
+            if (streamer.captureProcess !== null) {
+                this.dbgMsg(colors.name(streamer.nm) + " is already capturing");
+                return false;
+            }
+            return true;
         }
-
-        return true;
+        return false;
     }
 
     getCompleteDir(streamer) {
@@ -383,26 +396,20 @@ class Site {
         return completeDir;
     }
 
-    startCapture(spawnArgs, filename, streamer) {
+    startCapture(streamer, filename, spawnArgs) {
+        const fullname = filename + ".ts";
         const captureProcess = childProcess.spawn("ffmpeg", spawnArgs);
 
-        const listitem = this.streamerList.get(streamer.nm);
-        listitem.filename = filename + ".ts";
-        this.streamerList.set(streamer.nm, listitem);
+        if (captureProcess.pid) {
+            this.msg(colors.name(streamer.nm) + " recording started (" + filename + ".ts)");
+            this.storeCapInfo(streamer.uid, fullname, captureProcess);
+        }
 
         captureProcess.on("close", () => {
 
-            // When removing a streamer, the streamerList entry gets removed
-            // before the ffmpeg process ends, so check if it exists.
-            if (this.streamerList.has(streamer.nm)) {
-                const li = this.streamerList.get(streamer.nm);
-                li.filename = "";
-                this.streamerList.set(streamer.nm, li);
-            }
+            this.storeCapInfo(streamer.uid, "", null);
 
-            this.removeStreamerFromCapList(streamer);
-
-            fs.stat(this.config.captureDirectory + "/" + filename + ".ts", (err, stats) => {
+            fs.stat(this.config.captureDirectory + "/" + fullname, (err, stats) => {
                 if (err) {
                     if (err.code === "ENOENT") {
                         this.errMsg(colors.name(streamer.nm) + ", " + filename + ".ts not found in capturing directory, cannot convert to " + this.config.autoConvertType);
@@ -411,37 +418,30 @@ class Site {
                     }
                 } else if (stats.size <= this.config.minByteSize) {
                     this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + stats.size + " < minSizeBytes=" + this.config.minByteSize + ")");
-                    fs.unlinkSync(this.config.captureDirectory + "/" + filename + ".ts");
+                    fs.unlinkSync(this.config.captureDirectory + "/" + fullname);
                 } else {
-                    this.postProcess(filename, streamer);
+                    this.postProcess(streamer, filename);
                 }
             });
 
             // Refresh streamer status since streamer has likely changed state
-            if (this.streamerList.has(streamer.nm)) {
+            if (this.streamerList.has(streamer.uid)) {
                 const queries = [];
                 queries.push(this.checkStreamerState(streamer.uid));
                 Promise.all(queries).then(() => {
                     this.render();
                 });
             }
-
         });
-
-        if (captureProcess.pid) {
-            this.msg(colors.name(streamer.nm) + " recording started (" + filename + ".ts)");
-            this.render();
-            this.addStreamerToCapList(streamer, filename, captureProcess);
-        }
     }
 
-    postProcess(filename, streamer) {
+    postProcess(streamer, filename) {
+        const fullname = filename + ".ts";
         const completeDir = this.getCompleteDir(streamer);
-        let mySpawnArguments;
 
         if (this.config.autoConvertType !== "mp4" && this.config.autoConvertType !== "mkv") {
             this.dbgMsg(colors.name(streamer.nm) + " recording moved (" + this.config.captureDirectory + "/" + filename + ".ts to " + completeDir + "/" + filename + ".ts)");
-            mv(this.config.captureDirectory + "/" + filename + ".ts", completeDir + "/" + filename + ".ts", (err) => {
+            mv(this.config.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
                     this.errMsg(colors.site(filename) + ": " + err.toString());
                 }
@@ -449,57 +449,36 @@ class Site {
             return;
         }
 
+        const mySpawnArguments = [
+            "-hide_banner",
+            "-v",
+            "fatal",
+            "-i",
+            this.config.captureDirectory + "/" + fullname,
+            "-c",
+            "copy"
+        ];
+
         if (this.config.autoConvertType === "mp4") {
-            mySpawnArguments = [
-                "-hide_banner",
-                "-v",
-                "fatal",
-                "-i",
-                this.config.captureDirectory + "/" + filename + ".ts",
-                "-c",
-                "copy",
-                "-bsf:a",
-                "aac_adtstoasc",
-                "-copyts",
-                completeDir + "/" + filename + "." + this.config.autoConvertType
-            ];
-        } else if (this.config.autoConvertType === "mkv") {
-            mySpawnArguments = [
-                "-hide_banner",
-                "-v",
-                "fatal",
-                "-i",
-                this.config.captureDirectory + "/" + filename + ".ts",
-                "-c",
-                "copy",
-                "-copyts",
-                completeDir + "/" + filename + "." + this.config.autoConvertType
-            ];
+            mySpawnArguments.push("-bsf:a");
+            mySpawnArguments.push("aac_adtstoasc");
         }
 
-        this.semaphore++;
+        mySpawnArguments.push("-copyts");
+        mySpawnArguments.push(completeDir + "/" + filename + "." + this.config.autoConvertType);
 
+        this.semaphore++;
         this.msg(colors.name(streamer.nm) + " converting to " + filename + "." + this.config.autoConvertType);
 
         const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
-        if (this.streamerList.has(streamer.nm)) {
-            const listitem = this.streamerList.get(streamer.nm);
-            listitem.filename = filename + "." + this.config.autoConvertType;
-            this.streamerList.set(streamer.nm, listitem);
-            this.render();
-        }
+        this.storeCapInfo(streamer.uid, filename + "." + this.config.autoConvertType, null);
 
         myCompleteProcess.on("close", () => {
             if (!this.config.keepTsFile) {
-                fs.unlinkSync(this.config.captureDirectory + "/" + filename + ".ts");
+                fs.unlinkSync(this.config.captureDirectory + "/" + fullname);
             }
             this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.config.autoConvertType);
-            if (this.streamerList.has(streamer.nm)) {
-                const li = this.streamerList.get(streamer.nm);
-                li.filename = "";
-                this.streamerList.set(streamer.nm, li);
-                this.render();
-            }
+            this.storeCapInfo(streamer.uid, "", null);
             this.semaphore--; // release semaphore only when ffmpeg process has ended
         });
 
@@ -532,15 +511,25 @@ class Site {
             this.list.deleteLine(0);
         }
 
-        const sortedKeys = Array.from(this.streamerList.keys()).sort();
+        // Map keys are UID, but want to sort list by name.
+        const sortedKeys = Array.from(this.streamerList.keys()).sort((a, b) => {
+            if (this.streamerList.get(a).nm < this.streamerList.get(b).nm) {
+                return -1;
+            }
+            if (this.streamerList.get(a).nm > this.streamerList.get(b).nm) {
+                return 1;
+            }
+            return 0;
+        });
+
         for (let i = 0; i < sortedKeys.length; i++) {
             const value = this.streamerList.get(sortedKeys[i]);
             let line = colors.name(value.nm);
             for (let j = 0; j < 16 - value.nm.length; j++) {
                 line += " ";
             }
-            line += value.streamerState === "Offline" ? colors.offline(value.streamerState) : colors.state(value.streamerState);
-            for (let j = 0; j < 16 - value.streamerState.length; j++) {
+            line += value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
+            for (let j = 0; j < 16 - value.state.length; j++) {
                 line += " ";
             }
             line += colors.file(value.filename);

@@ -12,30 +12,35 @@ class Cb extends site.Site {
         super("CB    ", config, "_cb", screen, logbody, inst, total);
         this.cbData = new Map();
         this.timeOut = 20000;
+
+        for (let i = 0; i < this.listConfig.streamers.length; i++) {
+            const nm = this.listConfig.streamers[i];
+            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
+        }
     }
 
     updateList(nm, add, isTemp) {
-        return Promise.try(() =>  super.updateList({nm: nm, uid: nm}, add, isTemp));
+        return Promise.try(() => super.updateList({nm: nm, uid: nm}, add, isTemp));
     }
 
     checkStreamerState(nm) {
         const url = "https://chaturbate.com/api/chatvideocontext/" + nm;
         let msg = colors.name(nm);
-        let isBroadcasting = 0;
+        let isStreaming = 0;
 
         return Promise.try(() => fetch(url, {timeout: this.timeOut})).then((res) => res.json()).then((json) => {
-            const listitem = this.streamerList.get(nm);
+            const streamer = this.streamerList.get(nm);
+            const prevState = streamer.state;
 
             if (typeof json.status !== "undefined") {
                 if (json.detail === "This room requires a password.") {
-                    listitem.streamerState = "Password Protected";
+                    streamer.state = "Password Protected";
                 } else if (json.detail === "Room is deleted.") {
-                    listitem.streamerState = "Deleted";
+                    streamer.state = "Deleted";
                 } else {
-                    listitem.streamerState = "Access Denied";
+                    streamer.state = "Access Denied";
                 }
-                this.streamerState.set(nm, listitem.streamerState);
-                this.streamerList.set(nm, listitem);
+                this.streamerList.set(nm, streamer);
                 msg += ", " + json.detail;
                 this.dbgMsg(msg);
             } else {
@@ -44,30 +49,29 @@ class Cb extends site.Site {
                 if (currState === "public") {
                     msg += " is in public chat!";
                     this.streamersToCap.push({uid: nm, nm: nm});
-                    isBroadcasting = 1;
-                    listitem.streamerState = "Public Chat";
+                    isStreaming = 1;
+                    streamer.state = "Public Chat";
                 } else if (currState === "private") {
                     msg += " is in a private show.";
-                    listitem.streamerState = "Private";
+                    streamer.state = "Private";
                 } else if (currState === "group") {
                     msg += " is in a group show.";
-                    listitem.streamerState = "Group Show";
+                    streamer.state = "Group Show";
                 } else if (currState === "away") {
                     msg += colors.name("'s") + " stream is off.";
-                    listitem.streamerState = "Away";
+                    streamer.state = "Away";
                 } else if (currState === "hidden") {
                     msg += " is online but hidden.";
-                    listitem.streamerState = "Hidden";
+                    streamer.state = "Hidden";
                 } else if (currState === "offline") {
                     msg += " has gone offline.";
-                    listitem.streamerState = "Offline";
+                    streamer.state = "Offline";
                 } else {
                     msg += " has unknown state: " + currState;
-                    listitem.streamerState = currState;
+                    streamer.state = currState;
                 }
 
-                super.checkStreamerState({nm: nm, uid: nm}, listitem, msg, isBroadcasting, currState === "offline", currState);
-
+                super.checkStreamerState(streamer, msg, isStreaming, prevState);
             }
             this.render();
             return true;
@@ -80,7 +84,6 @@ class Cb extends site.Site {
     }
 
     checkStreamersState(batch) {
-        const me = this;
         const queries = [];
 
         for (let i = 0; i < batch.length; i++) {
@@ -88,28 +91,12 @@ class Cb extends site.Site {
         }
 
         return Promise.all(queries).then(() => true).catch((err) => {
-            me.errMsg(err.toString());
+            this.errMsg(err.toString());
         });
     }
 
     getStreamersToCap() {
         this.streamersToCap = [];
-
-        // TODO: This should be somewhere else
-        for (let i = 0; i < this.listConfig.streamers.length; i++) {
-            const nm = this.listConfig.streamers[i];
-            if (!this.streamerList.has(nm)) {
-                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
-            }
-        }
-        for (let i = 0; i < this.tempList.length; i++) {
-            const nm = this.tempList[i];
-            if (!this.streamerList.has(nm)) {
-                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
-            }
-        }
-
-        this.render();
 
         const nms = [];
         this.streamerList.forEach((value) => {
@@ -141,7 +128,7 @@ class Cb extends site.Site {
 
     setupCapture(streamer) {
 
-        if (!super.setupCapture(streamer)) {
+        if (!super.setupCapture(streamer.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);
         }

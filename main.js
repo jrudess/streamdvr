@@ -34,7 +34,9 @@ console.log = function(msg) {
 const total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch);
 let inst = 1;
 
-const screen = blessed.screen();
+const screen = blessed.screen({smartCSR: true});
+screen.title = "streamdvr";
+
 const logbody = blessed.box({
     top: "66%",
     left: 0,
@@ -151,6 +153,7 @@ inputBar.on("submit", (text) => {
         logbody.setScrollPerc(100);
         break;
     }
+    logbody.focus();
     screen.render();
 });
 
@@ -180,7 +183,7 @@ function mainSiteLoop(site) {
         site.recordStreamers(streamersToCap)
     ).catch((err) => {
         site.errMsg(err);
-        throw err;
+        // throw err;
     }).finally(() => {
         site.dbgMsg("Done, waiting " + config.scanInterval + " seconds.");
         setTimeout(() => { mainSiteLoop(site); }, config.scanInterval * 1000);
@@ -231,6 +234,16 @@ function exit() {
         }
     }
 }
+
+screen.key("pageup", () => {
+    screen.focused.scroll(-screen.focused.height || -1);
+    screen.render();
+});
+
+screen.key("pagedown", () => {
+    screen.focused.scroll(screen.focused.height || 1);
+    screen.render();
+});
 
 screen.key("enter", () => {
     inputBar.focus();
@@ -300,6 +313,13 @@ if (config.enableTwitch) {
     mainSiteLoop(twitch);
 }
 
+const hotkeys = ["1", "2", "3", "4"];
+for (let i = 0; i < hotkeys.length && i < SITES.length; i++) {
+    screen.key(hotkeys[i], () => {
+        SITES[i].list.focus();
+    });
+}
+
 if (!config.listshown) {
     display("hide", "list");
 }
@@ -313,6 +333,7 @@ screen.append(inputBar);
 
 // Have to render screen once before printouts work
 screen.render();
+logbody.focus();
 
 if (config.enableMFC) {
     mfc.msg(mfc.listConfig.streamers.length + " streamer(s) in config");

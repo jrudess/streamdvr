@@ -7,6 +7,11 @@ const site         = require("./site");
 class Twitch extends site.Site {
     constructor(config, screen, logbody, inst, total) {
         super("TWITCH", config, "_twitch", screen, logbody, inst, total);
+
+        for (let i = 0; i < this.listConfig.streamers.length; i++) {
+            const nm = this.listConfig.streamers[i];
+            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
+        }
     }
 
     updateList(nm, add, isTemp) {
@@ -17,22 +22,23 @@ class Twitch extends site.Site {
         const url = "https://api.twitch.tv/kraken/streams/" + nm + "?client_id=rznf9ecq10bbcwe91n6hhnul3dbpg9";
 
         return Promise.try(() => fetch(url)).then((res) => res.json()).then((json) => {
-            const listitem = this.streamerList.get(nm);
-            let isBroadcasting = 0;
+            const streamer = this.streamerList.get(nm);
+            const prevState = streamer.state;
+
+            let isStreaming = 0;
             let msg = colors.name(nm);
 
             if (typeof json.stream === "undefined" || json.stream === null) {
                 msg += " is offline.";
-                listitem.streamerState = "Offline";
+                streamer.state = "Offline";
             } else {
-                msg += " is live streaming";
+                msg += " is streaming.";
                 this.streamersToCap.push({uid: nm, nm: nm});
-                isBroadcasting = 1;
-                listitem.streamerState = "Streaming";
+                isStreaming = 1;
+                streamer.state = "Streaming";
             }
 
-            this.streamerState.set(nm, listitem.streamerState);
-            super.checkStreamerState({nm: nm, uid: nm}, listitem, msg, isBroadcasting, listitem.streamerState === "offline", listitem.streamerState);
+            super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
             this.render();
             return true;
@@ -45,24 +51,8 @@ class Twitch extends site.Site {
     }
 
     getStreamersToCap() {
-        this.streamersToCap = [];
-
-        // TODO: This should be somewhere else
-        for (let i = 0; i < this.listConfig.streamers.length; i++) {
-            const nm = this.listConfig.streamers[i];
-            if (!this.streamerList.has(nm)) {
-                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
-            }
-        }
-        for (let i = 0; i < this.tempList.length; i++) {
-            const nm = this.tempList[i];
-            if (!this.streamerList.has(nm)) {
-                this.streamerList.set(nm, {uid: nm, nm: nm, streamerState: "Offline", filename: ""});
-            }
-        }
-        this.render();
-
         const queries = [];
+        this.streamersToCap = [];
 
         this.streamerList.forEach((value) => {
             queries.push(this.checkStreamerState(value.nm));
@@ -73,7 +63,7 @@ class Twitch extends site.Site {
 
     setupCapture(streamer) {
 
-        if (!super.setupCapture(streamer)) {
+        if (!super.setupCapture(streamer.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);
         }

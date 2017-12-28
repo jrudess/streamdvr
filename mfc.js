@@ -47,50 +47,51 @@ class Mfc extends site.Site {
 
     checkStreamerState(uid) {
 
-        return Promise.try(() => this.mfcGuest.queryUser(uid)).then((streamer) => {
-            if (typeof streamer === "undefined") {
+        return Promise.try(() => this.mfcGuest.queryUser(uid)).then((model) => {
+            if (typeof model === "undefined") {
                 return true;
             }
 
-            let isBroadcasting = 0;
-            let msg = colors.name(streamer.nm);
+            let isStreaming = 0;
+            let msg = colors.name(model.nm);
 
-            if (!this.streamerList.has(streamer.nm)) {
-                this.streamerList.set(streamer.nm, {uid: uid, nm: streamer.nm, streamerState: "Offline", filename: ""});
+            if (!this.streamerList.has(uid)) {
+                this.streamerList.set(uid, {uid: uid, nm: model.nm, state: "Offline", filename: "", captureProcess: null});
             }
 
-            const listitem = this.streamerList.get(streamer.nm);
+            const streamer = this.streamerList.get(uid);
+            const prevState = streamer.state;
 
-            if (streamer.vs === mfc.STATE.FreeChat) {
-                listitem.streamerState = "Public Chat";
+            if (model.vs === mfc.STATE.FreeChat) {
+                streamer.state = "Public Chat";
                 msg += " is in public chat!";
-                this.streamersToCap.push(streamer);
-                isBroadcasting = 1;
-            } else if (streamer.vs === mfc.STATE.GroupShow) {
-                listitem.streamerState = "Group Show";
+                this.streamersToCap.push(model);
+                isStreaming = 1;
+            } else if (model.vs === mfc.STATE.GroupShow) {
+                streamer.state = "Group Show";
                 msg += " is in a group show";
-            } else if (streamer.vs === mfc.STATE.Private) {
-                if (streamer.truepvt === 1) {
-                    listitem.streamerState = "True Private";
+            } else if (model.vs === mfc.STATE.Private) {
+                if (model.truepvt === 1) {
+                    streamer.state = "True Private";
                     msg += " is in a true private show.";
                 } else {
-                    listitem.streamerState = "Private";
+                    streamer.state = "Private";
                     msg += " is in a private show.";
                 }
-            } else if (streamer.vs === mfc.STATE.Away) {
-                listitem.streamerState = "Away";
+            } else if (model.vs === mfc.STATE.Away) {
+                streamer.state = "Away";
                 msg += " is away.";
-            } else if (streamer.vs === mfc.STATE.Online) {
-                listitem.streamerState = "Away";
+            } else if (model.vs === mfc.STATE.Online) {
+                streamer.state = "Away";
                 msg += colors.name("'s") + " stream is off.";
-            } else if (streamer.vs === mfc.STATE.Offline) {
-                listitem.streamerState = "Offline";
+            } else if (model.vs === mfc.STATE.Offline) {
+                streamer.state = "Offline";
                 msg += " has logged off.";
             }
 
-            super.checkStreamerState(streamer, listitem, msg, isBroadcasting, streamer.vs === mfc.STATE.Offline, streamer.vs);
-
+            super.checkStreamerState(streamer, msg, isStreaming, prevState);
             this.render();
+
             return true;
         }).catch((err) => {
             this.errMsg(err.toString());
@@ -118,21 +119,21 @@ class Mfc extends site.Site {
         return Promise.all(queries).then(() => this.streamersToCap);
     }
 
-    setupCapture(streamer) {
+    setupCapture(model) {
 
-        if (!super.setupCapture(streamer)) {
+        if (!super.setupCapture(model.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);
         }
 
         return Promise.try(() => {
-            const filename = this.getFileName(streamer.nm);
-            const url = "http://video" + (streamer.u.camserv - 500) + ".myfreecams.com:1935/NxServer/ngrp:mfc_" + (100000000 + streamer.uid) + ".f4v_mobile/playlist.m3u8";
+            const filename = this.getFileName(model.nm);
+            const url = "http://video" + (model.u.camserv - 500) + ".myfreecams.com:1935/NxServer/ngrp:mfc_" + (100000000 + model.uid) + ".f4v_mobile/playlist.m3u8";
             const spawnArgs = this.getCaptureArguments(url, filename);
 
-            return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
+            return {spawnArgs: spawnArgs, filename: filename, streamer: model};
         }).catch((err) => {
-            this.errMsg(colors.name(streamer.nm) + " " + err.toString());
+            this.errMsg(colors.name(model.nm) + " " + err.toString());
             return err;
         });
     }
