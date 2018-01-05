@@ -5,10 +5,10 @@ const _       = require("underscore");
 const colors  = require("colors/safe");
 
 class Mfc extends site.Site {
-    constructor(config, screen, logbody, inst, total) {
-        super("MFC   ", config, "_mfc", screen, logbody, inst, total);
+    constructor(config, tui) {
+        super("MFC", config, "_mfc", tui);
         mfc.setLogLevel(0);
-        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.listConfig.mfcWebsocket, camYou: false});
+        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebsocket, camYou: false});
     }
 
     connect() {
@@ -99,19 +99,22 @@ class Mfc extends site.Site {
         });
     }
 
-    getStreamersToCap() {
-        const queries = [];
+    getStreamers(bundle) {
+        if (!super.getStreamers(bundle)) {
+            return Promise.try(() => []);
+        }
 
+        const queries = [];
         this.streamersToCap = [];
 
-        for (let i = 0; i < this.listConfig.streamers.length; i++) {
-            queries.push(this.checkStreamerState(this.listConfig.streamers[i]));
+        for (let i = 0; i < this.siteConfig.streamers.length; i++) {
+            queries.push(this.checkStreamerState(this.siteConfig.streamers[i]));
         }
 
         // Only add a streamer from temp list if they are not
         // in the primary list.  Prevents duplicate recording.
         for (let i = 0; i < this.tempList.length; i++) {
-            if (!_.contains(this.listConfig.streamers, this.tempList[i])) {
+            if (!_.contains(this.siteConfig.streamers, this.tempList[i])) {
                 queries.push(this.checkStreamerState(this.tempList[i]));
             }
         }
@@ -120,7 +123,6 @@ class Mfc extends site.Site {
     }
 
     setupCapture(model) {
-
         if (!super.setupCapture(model.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);

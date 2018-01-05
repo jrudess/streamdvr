@@ -8,13 +8,13 @@ function promiseSerial(funcs) {
 }
 
 class Cb extends site.Site {
-    constructor(config, screen, logbody, inst, total) {
-        super("CB    ", config, "_cb", screen, logbody, inst, total);
+    constructor(config, tui) {
+        super("CB", config, "_cb", tui);
         this.cbData = new Map();
         this.timeOut = 20000;
 
-        for (let i = 0; i < this.listConfig.streamers.length; i++) {
-            const nm = this.listConfig.streamers[i];
+        for (let i = 0; i < this.siteConfig.streamers.length; i++) {
+            const nm = this.siteConfig.streamers[i];
             this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
         }
     }
@@ -76,10 +76,8 @@ class Cb extends site.Site {
             this.render();
             return true;
         }).catch((err) => {
-            this.errMsg("Unknown streamer " + colors.name(nm) + ", check the spelling.");
-            this.streamerList.delete(nm);
-            this.render();
-            return err;
+            this.errMsg(colors.name(nm), " lookup problem: " + err.toString());
+            return false;
         });
     }
 
@@ -92,10 +90,15 @@ class Cb extends site.Site {
 
         return Promise.all(queries).then(() => true).catch((err) => {
             this.errMsg(err.toString());
+            return false;
         });
     }
 
-    getStreamersToCap() {
+    getStreamers(bundle) {
+        if (!super.getStreamers(bundle)) {
+            return Promise.try(() => []);
+        }
+
         this.streamersToCap = [];
 
         const nms = [];
@@ -111,7 +114,7 @@ class Cb extends site.Site {
 
         while (count < nms.length) {
             const parBatch = [];
-            const batchSize = this.listConfig.batchSizeCB === 0 ? nms.length : count + this.listConfig.batchSizeCB;
+            const batchSize = this.siteConfig.batchSizeCB === 0 ? nms.length : count + this.siteConfig.batchSizeCB;
 
             for (let i = count; (i < batchSize) && (i < nms.length); i++) {
                 parBatch.push(nms[i]);
@@ -127,7 +130,6 @@ class Cb extends site.Site {
     }
 
     setupCapture(streamer) {
-
         if (!super.setupCapture(streamer.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);

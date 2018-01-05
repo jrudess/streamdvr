@@ -8,32 +8,34 @@ const colors       = require("colors/safe");
 const childProcess = require("child_process");
 const blessed      = require("blessed");
 
+let inst = 1;
+
 class Site {
-    constructor(siteName, config, siteDir, screen, logbody, inst, total) {
+    constructor(siteName, config, siteDir, tui) {
+        // For sizing columns
+        this.logpad  = "         ";
+        this.listpad = "                           ";
+
         // Sitename includes spaces to align log columns easily.
         // Use .trim() as needed.
         this.siteName = siteName;
-        this.listName = siteName.trim().toLowerCase();
+        this.padName  = (siteName + this.logpad).substring(0, this.logpad.length);
+        this.listName = siteName.toLowerCase();
 
         // Handle to the cross-site config.yml
         this.config = config;
 
         // sitename.yml
-        this.listConfig = yaml.safeLoad(fs.readFileSync(this.listName + ".yml", "utf8"));
+        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.listName + ".yml", "utf8"));
 
         // Custom site directory suffix
         this.siteDir = siteDir;
 
         // Blessed UI elements
-        this.screen = screen;
-        this.logbody = logbody;
+        this.tui = tui;
 
-        // Site instance number and site total number
-        this.inst = inst;
-        this.total = total;
-
-        // Counting semaphore to track outstanding post process ffmpeg jobs
-        this.semaphore = 0;
+        // determines position in UI
+        this.inst = inst++;
 
         // Temporary data store used by child classes for outstanding status
         // lookup threads.  Is cleared and repopulated during each loop
@@ -58,22 +60,22 @@ class Site {
         let width;
         let height;
 
-        if (total === 4) {
-            top  = inst === 4 ? 0 : inst === 3 ? "50%" : inst === 2 ? 0 : "50%";
-            left = inst === 4 ? "50%" : inst === 3 ? 0 : inst === 2 ? "50%" : 0;
+        if (tui.total === 4) {
+            top  = this.inst === 4 ? "33%" : this.inst === 3 ? "33%" : this.inst === 2 ? 0 : 0;
+            left = this.inst === 4 ? "50%" : this.inst === 3 ? 0 : this.inst === 2 ? "50%" : 0;
             width = "50%";
             height = "33%-1";
-        } else if (total === 3) {
+        } else if (tui.total === 3) {
             top = 0;
-            left = inst === 3 ? "66%+1" : inst === 2 ? "33%" : 0;
-            width = inst === 1 ? "33%" : "33%+1";
+            left = this.inst === 3 ? "66%+1" : this.inst === 2 ? "33%" : 0;
+            width = this.inst === 1 ? "33%" : "33%+1";
             height = "66%-1";
-        } else if (total === 2) {
+        } else if (tui.total === 2) {
             top = 0;
-            left = inst === 2 ? "50%" : 0;
+            left = this.inst === 2 ? "50%" : 0;
             width = "50%";
             height = "66%-1";
-        } else if (total === 1) {
+        } else if (tui.total === 1) {
             top = 0;
             left = 0;
             width = "100%";
@@ -84,7 +86,7 @@ class Site {
         this.title = blessed.box({
             top: top,
             left: left,
-            height: 1,
+            height: height,
             width: width,
             keys: false,
             mouse: false,
@@ -93,7 +95,7 @@ class Site {
         });
 
         this.list = blessed.box({
-            top: top + 1,
+            top: top === 0 ? 1 : top + "+1",
             left: left,
             height: height,
             width: width,
@@ -105,7 +107,7 @@ class Site {
             shadow: false,
             scrollbar: {
                 ch: " ",
-                bg: "red"
+                bg: "blue"
             },
             border : {
                 type: "line",
@@ -113,8 +115,8 @@ class Site {
             }
         });
 
-        screen.append(this.title);
-        screen.append(this.list);
+        this.tui.screen.append(this.title);
+        this.tui.screen.append(this.list);
 
         this.title.pushLine(colors.site(this.siteName));
     }
@@ -130,7 +132,11 @@ class Site {
     }
 
     full() {
-        if (this.total === 4) {
+        if (this.tui.total === 4) {
+            if (this.inst >= 3) {
+                this.title.top = "50%";
+                this.list.top = "50%+1";
+            }
             this.list.height = "50%-2";
         } else {
             this.list.height = "100%-2";
@@ -138,7 +144,11 @@ class Site {
     }
 
     restore() {
-        if (this.total === 4) {
+        if (this.tui.total === 4) {
+            if (this.inst >= 3) {
+                this.title.top = "33%";
+                this.list.top = "33%+1";
+            }
             this.list.height = "33%-1";
         } else {
             this.list.height = "66%-1";
@@ -181,6 +191,10 @@ class Site {
                 streamers.captureProcess.kill("SIGINT");
             }
         }
+    }
+
+    disconnect() {
+        // pure virtual method
     }
 
     getCaptureArguments(url, filename) {
@@ -241,14 +255,14 @@ class Site {
 
     updateList(streamer, add, isTemp) {
         let dirty = false;
-        let list = isTemp ? this.tempList : this.listConfig.streamers;
+        let list = isTemp ? this.tempList : this.siteConfig.streamers;
         if (add) {
             if (this.addStreamer(streamer, list, isTemp)) {
                 list.push(streamer.uid);
                 dirty = !isTemp;
             }
         } else if (this.removeStreamer(streamer, list)) {
-            if (this.listConfig.streamers.indexOf(streamer.uid) !== -1) {
+            if (this.siteConfig.streamers.indexOf(streamer.uid) !== -1) {
                 list = _.without(list, streamer.uid);
                 dirty = !isTemp;
             }
@@ -256,9 +270,11 @@ class Site {
         if (isTemp) {
             this.tempList = list;
         } else {
-            this.listConfig.streamers = list;
+            this.siteConfig.streamers = list;
         }
-        return dirty;
+        if (dirty) {
+            this.writeConfig();
+        }
     }
 
     updateStreamers(bundle, add) {
@@ -309,6 +325,17 @@ class Site {
         }
     }
 
+    getStreamers(bundle) {
+        if (bundle.dirty) {
+            this.writeConfig();
+        }
+        if (this.tui.tryingToExit) {
+            this.dbgMsg("Skipping lookup while exit in progress...");
+            return false;
+        }
+        return true;
+    }
+
     storeCapInfo(uid, filename, captureProcess) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
@@ -318,16 +345,16 @@ class Site {
         }
     }
 
-    recordStreamers(streamersToCap) {
-        if (streamersToCap === null || streamersToCap.length === 0) {
+    recordStreamers(streamers) {
+        if (streamers === null || streamers.length === 0) {
             return null;
         }
 
         const caps = [];
 
-        this.dbgMsg(streamersToCap.length + " streamer(s) to capture");
-        for (let i = 0; i < streamersToCap.length; i++) {
-            const cap = this.setupCapture(streamersToCap[i]).then((bundle) => {
+        this.dbgMsg(streamers.length + " streamer(s) to capture");
+        for (let i = 0; i < streamers.length; i++) {
+            const cap = this.setupCapture(streamers[i]).then((bundle) => {
                 if (bundle.spawnArgs !== "") {
                     this.startCapture(bundle.streamer, bundle.filename, bundle.spawnArgs);
                 }
@@ -367,7 +394,7 @@ class Site {
     writeConfig() {
         const filename = this.listName + ".yml";
         this.dbgMsg("Rewriting " + filename);
-        fs.writeFileSync(filename, yaml.safeDump(this.listConfig), "utf8");
+        fs.writeFileSync(filename, yaml.safeDump(this.siteConfig), "utf8");
     }
 
     setupCapture(uid) {
@@ -407,8 +434,6 @@ class Site {
 
         captureProcess.on("close", () => {
 
-            this.storeCapInfo(streamer.uid, "", null);
-
             fs.stat(this.config.captureDirectory + "/" + fullname, (err, stats) => {
                 if (err) {
                     if (err.code === "ENOENT") {
@@ -416,9 +441,11 @@ class Site {
                     } else {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }
+                    this.storeCapInfo(streamer.uid, "", null);
                 } else if (stats.size <= this.config.minByteSize) {
                     this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + stats.size + " < minSizeBytes=" + this.config.minByteSize + ")");
                     fs.unlinkSync(this.config.captureDirectory + "/" + fullname);
+                    this.storeCapInfo(streamer.uid, "", null);
                 } else {
                     this.postProcess(streamer, filename);
                 }
@@ -467,19 +494,20 @@ class Site {
         mySpawnArguments.push("-copyts");
         mySpawnArguments.push(completeDir + "/" + filename + "." + this.config.autoConvertType);
 
-        this.semaphore++;
-        this.msg(colors.name(streamer.nm) + " converting to " + filename + "." + this.config.autoConvertType);
-
         const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
-        this.storeCapInfo(streamer.uid, filename + "." + this.config.autoConvertType, null);
+        this.msg(colors.name(streamer.nm) + " converting to " + filename + "." + this.config.autoConvertType);
+        this.storeCapInfo(streamer.uid, filename + "." + this.config.autoConvertType, myCompleteProcess);
 
         myCompleteProcess.on("close", () => {
             if (!this.config.keepTsFile) {
                 fs.unlinkSync(this.config.captureDirectory + "/" + fullname);
             }
-            this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.config.autoConvertType);
+
+            // Note: setting captureProcess to null releases program to exit
             this.storeCapInfo(streamer.uid, "", null);
-            this.semaphore--; // release semaphore only when ffmpeg process has ended
+
+            // Note: msg last since it rerenders screen.
+            this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.config.autoConvertType);
         });
 
         myCompleteProcess.on("error", (err) => {
@@ -488,11 +516,8 @@ class Site {
     }
 
     msg(msg) {
-        const line = colors.time("[" + this.getDateTime() + "]") + " " + colors.site(this.siteName) + " " + msg;
-        this.logbody.pushLine(line);
-        this.logbody.setScrollPerc(100);
-        this.screen.render();
-        console.log(line);
+        const text = colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg;
+        this.tui.log(text);
     }
 
     errMsg(msg) {
@@ -524,18 +549,18 @@ class Site {
 
         for (let i = 0; i < sortedKeys.length; i++) {
             const value = this.streamerList.get(sortedKeys[i]);
-            let line = colors.name(value.nm);
-            for (let j = 0; j < 16 - value.nm.length; j++) {
-                line += " ";
+            const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
+            let state;
+            if (value.filename === "") {
+                state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
+            } else {
+                state = colors.file(value.filename);
             }
-            line += value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
-            for (let j = 0; j < 16 - value.state.length; j++) {
-                line += " ";
-            }
-            line += colors.file(value.filename);
-            this.list.pushLine(line);
+            this.list.pushLine(name + state);
         }
-        this.screen.render();
+        if (typeof this.screen !== "undefined") {
+            this.screen.render();
+        }
     }
 }
 

@@ -5,11 +5,11 @@ const childProcess = require("child_process");
 const site         = require("./site");
 
 class Twitch extends site.Site {
-    constructor(config, screen, logbody, inst, total) {
-        super("TWITCH", config, "_twitch", screen, logbody, inst, total);
+    constructor(config, tui) {
+        super("TWITCH", config, "_twitch", tui);
 
-        for (let i = 0; i < this.listConfig.streamers.length; i++) {
-            const nm = this.listConfig.streamers[i];
+        for (let i = 0; i < this.siteConfig.streamers.length; i++) {
+            const nm = this.siteConfig.streamers[i];
             this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
         }
     }
@@ -43,14 +43,16 @@ class Twitch extends site.Site {
             this.render();
             return true;
         }).catch((err) => {
-            this.errMsg("Unknown streamer " + colors.name(nm) + ", check the spelling.");
-            this.streamerList.delete(nm);
-            this.render();
-            return err;
+            this.errMsg(colors.name(nm), " lookup problem: " + err.toString());
+            return false;
         });
     }
 
-    getStreamersToCap() {
+    getStreamers(bundle) {
+        if (!super.getStreamers(bundle)) {
+            return Promise.try(() => []);
+        }
+
         const queries = [];
         this.streamersToCap = [];
 
@@ -62,7 +64,6 @@ class Twitch extends site.Site {
     }
 
     setupCapture(streamer) {
-
         if (!super.setupCapture(streamer.uid)) {
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return Promise.try(() => empty);
@@ -78,6 +79,17 @@ class Twitch extends site.Site {
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
+        }).catch((err) => {
+            // Twitch API will list a streamer as online, even when they have
+            // ended the stream.  youtbue-dl will return an error in this case.
+            const offline = "is offline";
+            if (err.toString().indexOf(offline) !== -1) {
+                const item = this.streamerList.get(streamer.nm);
+                item.state = "Offline";
+                this.msg(colors(streamer.nm) + " is offline.");
+            } else {
+                this.errMsg(colors(streamer.nm) + ": " + err.toString());
+            }
         });
     }
 }
