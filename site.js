@@ -558,9 +558,7 @@ class Site {
             }
             this.list.pushLine(name + state);
         }
-        if (typeof this.screen !== "undefined") {
-            this.screen.render();
-        }
+        this.tui.screen.render();
     }
 }
 
