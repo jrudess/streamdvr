@@ -71,6 +71,10 @@ class Tui {
             this.exit()
         ));
 
+        this.inputBar.key(["C-c"], () => (
+            this.ext()
+        ));
+
         process.on("SIGINT", () => {
             this.exit();
         });
