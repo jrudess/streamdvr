@@ -288,6 +288,12 @@ class Site {
     }
 
     addStreamer(streamer, list, isTemp) {
+        if (typeof streamer === "undefined") {
+            // For mfc, when a bad username is looked up, an empty
+            // object is returned
+            return false;
+        }
+
         const index = list.indexOf(streamer.uid);
         let rc = false;
         if (index === -1) {

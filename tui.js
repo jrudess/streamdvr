@@ -125,6 +125,7 @@ class Tui {
                 break;
             }
             this.logbody.focus();
+            this.render();
         });
     }
 
