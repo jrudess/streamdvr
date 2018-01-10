@@ -49,7 +49,6 @@ function createSites() {
             mainSiteLoop(mfc);
         }).catch((err) => {
             mfc.errMsg(err);
-            return err;
         });
     }
 
