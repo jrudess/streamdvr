@@ -479,6 +479,8 @@ class Site {
                     this.errMsg(colors.site(filename) + ": " + err.toString());
                 }
             });
+
+            this.storeCapInfo(streamer.uid, "", null);
             return;
         }
 

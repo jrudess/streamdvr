@@ -86,9 +86,9 @@ class Twitch extends site.Site {
             if (err.toString().indexOf(offline) !== -1) {
                 const item = this.streamerList.get(streamer.nm);
                 item.state = "Offline";
-                this.msg(colors(streamer.nm) + " is offline.");
+                this.msg(colors.name(streamer.nm) + " is offline.");
             } else {
-                this.errMsg(colors(streamer.nm) + ": " + err.toString());
+                this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
             }
         });
     }
