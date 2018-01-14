@@ -135,6 +135,11 @@ class Tui {
 
     // Called after SITES is populated
     initSites() {
+
+        // Initial loadConfig is called before sites are created
+        // so correct the shown status for the new lists.
+        this.display(this.config.listshown ? "show" : "hide", "list");
+
         const hotkeys = ["1", "2", "3", "4"];
         for (let i = 0; i < hotkeys.length && i < this.SITES.length; i++) {
             this.screen.key(hotkeys[i], () => {
