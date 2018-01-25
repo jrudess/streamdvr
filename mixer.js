@@ -1,12 +1,11 @@
 const Promise      = require("bluebird");
 const colors       = require("colors/safe");
-const fetch        = require("node-fetch");
 const childProcess = require("child_process");
 const site         = require("./site");
 
-class Twitch extends site.Site {
+class Mixer extends site.Site {
     constructor(config, tui) {
-        super("TWITCH", config, "_twitch", tui);
+        super("MIXER", config, "_mixer", tui);
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
@@ -19,16 +18,16 @@ class Twitch extends site.Site {
     }
 
     checkStreamerState(nm) {
-        const url = "https://api.twitch.tv/kraken/streams/" + nm + "?client_id=rznf9ecq10bbcwe91n6hhnul3dbpg9";
+        return Promise.try(() => {
+            const url = childProcess.execSync("youtube-dl -g https://mixer.com/" + nm, {stdio : ["pipe", "pipe", "ignore"]});
 
-        return Promise.try(() => fetch(url)).then((res) => res.json()).then((json) => {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
 
             let isStreaming = 0;
             let msg = colors.name(nm);
 
-            if (typeof json.stream === "undefined" || json.stream === null) {
+            if (typeof url === "undefined" || url === null) {
                 msg += " is offline.";
                 streamer.state = "Offline";
             } else {
@@ -42,10 +41,7 @@ class Twitch extends site.Site {
 
             this.render();
             return true;
-        }).catch((err) => {
-            this.errMsg(colors.name(nm), " lookup problem: " + err.toString());
-            return false;
-        });
+        }).catch(() => false);
     }
 
     getStreamers(bundle) {
@@ -71,7 +67,7 @@ class Twitch extends site.Site {
 
         return Promise.try(() => {
             const filename = this.getFileName(streamer.nm);
-            let url = childProcess.execSync("youtube-dl -g https://twitch.tv/" + streamer.nm, {stdio : ["pipe", "pipe", "ignore"]});
+            let url = childProcess.execSync("youtube-dl -g https://mixer.com/" + streamer.nm, {stdio : ["pipe", "pipe", "ignore"]});
 
             url = url.toString();
             url = url.replace(/\r?\n|\r/g, "");
@@ -80,7 +76,7 @@ class Twitch extends site.Site {
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
         }).catch((err) => {
-            // Twitch API will list a streamer as online, even when they have
+            // Mixer API will list a streamer as online, even when they have
             // ended the stream.  youtube-dl will return an error in this case.
             const offline = "is offline";
             if (err.toString().indexOf(offline) !== -1) {
@@ -94,5 +90,5 @@ class Twitch extends site.Site {
     }
 }
 
-exports.Twitch = Twitch;
+exports.Mixer = Mixer;
 

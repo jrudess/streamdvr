@@ -14,6 +14,7 @@ const TUI      = require("./tui");
 const MFC      = require("./mfc");
 const CB       = require("./cb");
 const TWITCH   = require("./twitch");
+const MIXER    = require("./mixer");
 
 const logFile  = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: "w"});
 const config   = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
@@ -34,7 +35,7 @@ function mainSiteLoop(site) {
         site.errMsg(err);
         // throw err;
     }).finally(() => {
-        site.dbgMsg("Done, waiting " + site.config.scanInterval + " seconds.");
+        // site.dbgMsg("Done, waiting " + site.config.scanInterval + " seconds.");
         setTimeout(() => { mainSiteLoop(site); }, site.config.scanInterval * 1000);
     });
 }
@@ -62,6 +63,12 @@ function createSites() {
         const twitch = new TWITCH.Twitch(config, tui);
         tui.addSite(twitch);
         mainSiteLoop(twitch);
+    }
+
+    if (config.enableMixer) {
+        const mixer = new MIXER.Mixer(config, tui);
+        tui.addSite(mixer);
+        mainSiteLoop(mixer);
     }
 
     tui.initSites();

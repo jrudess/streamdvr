@@ -14,7 +14,7 @@ class Tui {
         // Handle to the cross-site config.yml
         this.config = config;
 
-        this.total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch);
+        this.total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch) + Number(config.enableMixer);
 
         this.screen = blessed.screen({smartCSR: true});
         this.screen.title = "streamdvr";
@@ -135,7 +135,6 @@ class Tui {
 
     // Called after SITES is populated
     initSites() {
-
         // Initial loadConfig is called before sites are created
         // so correct the shown status for the new lists.
         this.display(this.config.listshown ? "show" : "hide", "list");
@@ -151,7 +150,8 @@ class Tui {
             const siteName = this.SITES[i].listName;
             if ((this.config.enableMFC      && siteName === "mfc") ||
                 (this.config.enableCB       && siteName === "cb") ||
-                (this.config.enableTwitch   && siteName === "twitch")) {
+                (this.config.enableTwitch   && siteName === "twitch") ||
+                (this.config.enableMixer    && siteName === "mixer")) {
 
                 this.SITES[i].msg(this.SITES[i].siteConfig.streamers.length + " streamer(s) in config");
             }
