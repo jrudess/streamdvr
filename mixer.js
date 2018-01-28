@@ -9,7 +9,7 @@ class Mixer extends site.Site {
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
-            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
+            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
         }
     }
 

@@ -43,7 +43,7 @@ function mainSiteLoop(site) {
 function createSites() {
     tui.loadConfig();
 
-    if (config.enableMFC) {
+    if (typeof config.enableMFC !== "undefined" && config.enableMFC) {
         const mfc = new MFC.Mfc(config, tui);
         tui.addSite(mfc);
         Promise.try(() => mfc.connect()).then(() => {
@@ -53,19 +53,19 @@ function createSites() {
         });
     }
 
-    if (config.enableCB) {
+    if (typeof config.enableCB !== "undefined" && config.enableCB) {
         const cb = new CB.Cb(config, tui);
         tui.addSite(cb);
         mainSiteLoop(cb);
     }
 
-    if (config.enableTwitch) {
+    if (typeof config.enableTwitch !== "undefined" && config.enableTwitch) {
         const twitch = new TWITCH.Twitch(config, tui);
         tui.addSite(twitch);
         mainSiteLoop(twitch);
     }
 
-    if (config.enableMixer) {
+    if (typeof config.enableMixer !== "undefined" && config.enableMixer) {
         const mixer = new MIXER.Mixer(config, tui);
         tui.addSite(mixer);
         mainSiteLoop(mixer);

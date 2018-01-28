@@ -46,7 +46,6 @@ class Mfc extends site.Site {
     }
 
     checkStreamerState(uid) {
-
         return Promise.try(() => this.mfcGuest.queryUser(uid)).then((model) => {
             if (typeof model === "undefined") {
                 return true;
@@ -56,7 +55,7 @@ class Mfc extends site.Site {
             let msg = colors.name(model.nm);
 
             if (!this.streamerList.has(uid)) {
-                this.streamerList.set(uid, {uid: uid, nm: model.nm, state: "Offline", filename: "", captureProcess: null});
+                this.streamerList.set(uid, {uid: uid, nm: model.nm, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
             }
 
             const streamer = this.streamerList.get(uid);

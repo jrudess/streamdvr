@@ -10,7 +10,7 @@ class Twitch extends site.Site {
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
-            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null});
+            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
         }
     }
 
@@ -79,17 +79,18 @@ class Twitch extends site.Site {
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
-        }).catch((err) => {
-            // Twitch API will list a streamer as online, even when they have
-            // ended the stream.  youtube-dl will return an error in this case.
-            const offline = "is offline";
-            if (err.toString().indexOf(offline) !== -1) {
-                const item = this.streamerList.get(streamer.nm);
-                item.state = "Offline";
-                this.msg(colors.name(streamer.nm) + " is offline.");
-            } else {
-                this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
-            }
+        }).catch(() => {
+            const msg = colors.name(streamer.nm) + " is offline.";
+            const item = this.streamerList.get(streamer.nm);
+            const prevState = item.state;
+
+            item.state = "Offline";
+
+            super.checkStreamerState(streamer, msg, 0, prevState);
+            this.render();
+
+            const empty = {spawnArgs: "", filename: "", streamer: ""};
+            return empty;
         });
     }
 }

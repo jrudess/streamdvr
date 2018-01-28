@@ -311,11 +311,11 @@ class Site {
 
     removeStreamer(streamer) {
         this.msg(colors.name(streamer.nm) + " removed from capture list.");
+        this.haltCapture(streamer.uid);
         if (this.streamerList.has(streamer.uid)) {
             this.streamerList.delete(streamer.uid);
             this.render();
         }
-        this.haltCapture(streamer.uid);
         return true;
     }
 
@@ -323,7 +323,7 @@ class Site {
         if (streamer.state !== prevState) {
             this.msg(msg);
         }
-        if (streamer.captureProcess !== null && !isStreaming) {
+        if (streamer.postProcessing === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the ffmpeg process doesn't end when a streamer
             // stops broadcasting, so terminate it.
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
@@ -484,6 +484,14 @@ class Site {
             return;
         }
 
+        // Need to remember post-processing is happening, so that
+        // the offline check does not kill postprocess jobs.
+        let item;
+        if (this.streamerList.has(streamer.uid)) {
+            item = this.streamerList.get(streamer.uid);
+            item.postProcess = 1;
+        }
+
         const mySpawnArguments = [
             "-hide_banner",
             "-v",
@@ -516,6 +524,10 @@ class Site {
 
             // Note: msg last since it rerenders screen.
             this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.config.autoConvertType);
+
+            if (item !== null) {
+                item.postProcess = 0;
+            }
         });
 
         myCompleteProcess.on("error", (err) => {
