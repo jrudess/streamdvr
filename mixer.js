@@ -18,6 +18,8 @@ class Mixer extends site.Site {
     }
 
     checkStreamerState(nm) {
+        let msg = colors.name(nm);
+
         return Promise.try(() => {
             const url = childProcess.execSync("youtube-dl -g https://mixer.com/" + nm, {stdio : ["pipe", "pipe", "ignore"]});
 
@@ -25,7 +27,6 @@ class Mixer extends site.Site {
             const prevState = streamer.state;
 
             let isStreaming = 0;
-            let msg = colors.name(nm);
 
             if (typeof url === "undefined" || url === null) {
                 msg += " is offline.";
@@ -41,7 +42,18 @@ class Mixer extends site.Site {
 
             this.render();
             return true;
-        }).catch(() => false);
+        }).catch(() => {
+            const streamer = this.streamerList.get(nm);
+            const prevState = streamer.state;
+            streamer.state = "Offline";
+
+            msg += " is offline.";
+
+            super.checkStreamerState(streamer, msg, 0, prevState);
+
+            this.render();
+            return false;
+        });
     }
 
     getStreamers(bundle) {
@@ -75,17 +87,18 @@ class Mixer extends site.Site {
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
-        }).catch((err) => {
-            // Mixer API will list a streamer as online, even when they have
-            // ended the stream.  youtube-dl will return an error in this case.
-            const offline = "is offline";
-            if (err.toString().indexOf(offline) !== -1) {
-                const item = this.streamerList.get(streamer.nm);
-                item.state = "Offline";
-                this.msg(colors.name(streamer.nm) + " is offline.");
-            } else {
-                this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
-            }
+        }).catch(() => {
+            const msg = colors.name(streamer.nm) + " is offline.";
+            const item = this.streamerList.get(streamer.nm);
+            const prevState = item.state;
+
+            item.state = "Offline";
+
+            super.checkStreamerState(item, msg, 0, prevState);
+            this.render();
+
+            const empty = {spawnArgs: "", filename: "", streamer: ""};
+            return empty;
         });
     }
 }
