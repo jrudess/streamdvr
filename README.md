@@ -11,15 +11,15 @@ StreamDVR allows you to record your favorite live streamers while you are away. 
 
 * Recordings are stored in either a flat or hierarchical structure.
 
-* Supported sites: Twitch, MyFreeCams, Chaturbate
+* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate
 
 Setup
 ==========
 
 * Dependencies: `node.js >= 7.0`, `npm`, `git`, `youtube-dl` and `ffmpeg`
 
-  * `git` is only needed to run 'npm install' and not to run mfc_cb.node
-  * `youtube-dl` is only needed to record twitch
+  * `git` is only needed to run 'npm install' and not to run streamdvr
+  * `youtube-dl` is only needed to record Twitch and Mixer
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
@@ -30,11 +30,7 @@ Setup
 Instructions
 ===========
 
-Refer to `config.yml`.
-
-* Streamers can be added or removed by adding them to the appropriate include section of `updates.yml`.  This file will get processed based on the `scanInterval` setting in `config.yml`.  Any listed streamers will be added or removed from `config.yml`. Because `config.yml` gets rewritten during this process, any manual edits made to this file while StreamDVR is running will get lost.  Streamers should only be added or removed by using `updates.yml`.
-
-* For some sites, streamers are stored in `config.yml` using an ID number supplied by the site.  This allows StreamDVR to track the streamer even if they change their name.
+Refer to `config.yml` for all configuration options.
 
 * To run: `node streamdvr.js`
 * To run without color: `node streamdvr.js --no-color`
