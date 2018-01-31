@@ -486,7 +486,7 @@ class Site {
 
         // Need to remember post-processing is happening, so that
         // the offline check does not kill postprocess jobs.
-        let item;
+        let item = null;
         if (this.streamerList.has(streamer.uid)) {
             item = this.streamerList.get(streamer.uid);
             item.postProcess = 1;
