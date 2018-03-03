@@ -16,7 +16,7 @@ StreamDVR allows you to record your favorite live streamers while you are away. 
 Setup
 ==========
 
-* Dependencies: `node.js >= 7.0`, `npm`, `git`, `youtube-dl` and `ffmpeg`
+* Dependencies: `node.js >= 9.4.0`, `npm`, `git`, `youtube-dl` and `ffmpeg`
 
   * `git` is only needed to run 'npm install' and not to run streamdvr
   * `youtube-dl` is only needed to record Twitch and Mixer

@@ -1,32 +1,35 @@
 {
-	"name": "mfc-node",
-	"version": "0.1.0",
-	"description": "MyFreeCams and Chaturbate Recorder",
-	"main": "main.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/jrudess/mfc_cb.node.git"
-	},
-	"author": "jrudess",
-	"license": "WTFPL",
-	"bugs": {
-		"url": "https://github.com/jrudess/mfc_cb.node/issues"
-	},
-	"homepage": "https://github.com/jrudess/mfc_cb.node",
-	"dependencies": {
-		"blessed": "chjj/blessed",
-		"bluebird": "^3.5.1",
-		"colors": "latest",
-		"js-yaml": "^3.10.0",
-		"mkdirp": "^0.5.1",
-		"moment": "^2.21.0",
-		"mv": "^2.1.1",
-		"MFCAuto": "ZombieAlex/MFCAuto#v4.2.2",
-		"node-fetch": "^2.0.0",
-		"string": "^3.3.3",
-		"underscore": "latest"
-	}
+    "name": "mfc-node",
+    "version": "0.1.0",
+    "description": "MyFreeCams and Chaturbate Recorder",
+    "main": "streamdvr.js",
+    "engines": {
+        "node": ">=9.4.0"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/jrudess/mfc_cb.node.git"
+    },
+    "author": "jrudess",
+    "license": "WTFPL",
+    "bugs": {
+        "url": "https://github.com/jrudess/mfc_cb.node/issues"
+    },
+    "homepage": "https://github.com/jrudess/mfc_cb.node",
+    "dependencies": {
+        "blessed": "chjj/blessed",
+        "bluebird": "^3.5.1",
+        "colors": "latest",
+        "js-yaml": "^3.10.0",
+        "mkdirp": "^0.5.1",
+        "moment": "^2.21.0",
+        "mv": "^2.1.1",
+        "MFCAuto": "ZombieAlex/MFCAuto#v5.1.0",
+        "node-fetch": "^2.0.0",
+        "string": "^3.3.3",
+        "underscore": "latest"
+    }
 }
