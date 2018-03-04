@@ -22,10 +22,6 @@ class Mfc extends site.Site {
         this.mfcGuest.disconnect();
     }
 
-    queryUser(nm) {
-        return this.mfcGuest.queryUser(nm);
-    }
-
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         return this.queryUser(nm).then((streamer) => super.updateList(streamer, add, isTemp));
@@ -47,7 +43,7 @@ class Mfc extends site.Site {
 
     checkStreamerState(uid) {
         return Promise.try(() => this.mfcGuest.queryUser(uid)).then((model) => {
-            if (typeof model === "undefined") {
+            if (typeof model === "undefined" || typeof model.uid === "undefined") {
                 return true;
             }
 
@@ -61,29 +57,31 @@ class Mfc extends site.Site {
             const streamer = this.streamerList.get(uid);
             const prevState = streamer.state;
 
-            if (model.vs === mfc.STATE.FreeChat) {
+            const bestSession = mfc.Model.getModel(model.uid).bestSession;
+
+            if (bestSession.vs === mfc.STATE.FreeChat) {
                 streamer.state = "Public Chat";
                 msg += " is in public chat!";
                 this.streamersToCap.push(model);
                 isStreaming = 1;
-            } else if (model.vs === mfc.STATE.GroupShow) {
+            } else if (bestSession.vs === mfc.STATE.GroupShow) {
                 streamer.state = "Group Show";
                 msg += " is in a group show";
-            } else if (model.vs === mfc.STATE.Private) {
-                if (model.truepvt === 1) {
+            } else if (bestSession.vs === mfc.STATE.Private) {
+                if (bestSession.truepvt === 1) {
                     streamer.state = "True Private";
                     msg += " is in a true private show.";
                 } else {
                     streamer.state = "Private";
                     msg += " is in a private show.";
                 }
-            } else if (model.vs === mfc.STATE.Away) {
+            } else if (bestSession.vs === mfc.STATE.Away) {
                 streamer.state = "Away";
                 msg += " is away.";
-            } else if (model.vs === mfc.STATE.Online) {
+            } else if (bestSession.vs === mfc.STATE.Online) {
                 streamer.state = "Away";
                 msg += colors.name("'s") + " stream is off.";
-            } else if (model.vs === mfc.STATE.Offline) {
+            } else if (bestSession.vs === mfc.STATE.Offline) {
                 streamer.state = "Offline";
                 msg += " has logged off.";
             }
