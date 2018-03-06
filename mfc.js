@@ -24,7 +24,7 @@ class Mfc extends site.Site {
 
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
-        return this.queryUser(nm).then((streamer) => super.updateList(streamer, add, isTemp));
+        return this.mfcGuest.queryUser(nm).then((streamer) => super.updateList(streamer, add, isTemp));
     }
 
     updateStreamers(bundle, add) {
