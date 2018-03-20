@@ -8,7 +8,7 @@ class Mfc extends site.Site {
     constructor(config, tui) {
         super("MFC", config, "_mfc", tui);
         mfc.setLogLevel(0);
-        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebsocket, camYou: false});
+        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, camYou: false});
     }
 
     connect() {
