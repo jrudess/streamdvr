@@ -127,7 +127,8 @@ class Mfc extends site.Site {
 
         return Promise.try(() => {
             const filename = this.getFileName(model.nm);
-            const url = "http://video" + (model.u.camserv - 500) + ".myfreecams.com:1935/NxServer/ngrp:mfc_" + (100000000 + model.uid) + ".f4v_mobile/playlist.m3u8";
+            const mod = mfc.Model.getModel(model.uid);
+            const url = this.mfcGuest.getHlsUrl(mod);
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: model};
