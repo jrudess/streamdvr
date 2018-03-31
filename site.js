@@ -323,7 +323,7 @@ class Site {
         if (streamer.state !== prevState) {
             this.msg(msg);
         }
-        if (streamer.postProcessing === 0 && streamer.captureProcess !== null && !isStreaming) {
+        if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the ffmpeg process doesn't end when a streamer
             // stops broadcasting, so terminate it.
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
