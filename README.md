@@ -5,7 +5,7 @@ StreamDVR
 
 StreamDVR allows you to record your favorite live streamers while you are away.  No need to miss a broadcast!
 
-Time shifting is not a crime! https://copyright.laws.com/time-shifting
+Time shifting is not a crime! https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
 * Records using ffmpeg with ts containers.
 
