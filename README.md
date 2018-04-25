@@ -5,6 +5,8 @@ StreamDVR
 
 StreamDVR allows you to record your favorite live streamers while you are away.  No need to miss a broadcast!
 
+Time shifting is not a crime! https://copyright.laws.com/time-shifting
+
 * Records using ffmpeg with ts containers.
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
