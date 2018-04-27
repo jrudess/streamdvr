@@ -4,6 +4,7 @@ streamerSubdir: true
 scanInterval: 300
 autoConvertType: mp4
 keepTsFile: false
+streamlink: false
 minByteSize: 0
 maxByteSize: 0
 dateFormat: YYYYMMDD_HHmmss
