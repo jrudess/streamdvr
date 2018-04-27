@@ -14,7 +14,6 @@ class Mfc extends site.Site {
     connect() {
         return Promise.try(() => this.mfcGuest.connectAndWaitForModels()).catch((err) => {
             this.errMsg(err.toString());
-            return err;
         });
     }
 
@@ -92,7 +91,7 @@ class Mfc extends site.Site {
             return true;
         }).catch((err) => {
             this.errMsg(err.toString());
-            return err;
+            return false;
         });
     }
 
