@@ -7,7 +7,7 @@ StreamDVR allows you to record your favorite live streamers while you are away. 
 
 Time shifting is not a crime! https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
-* Records using ffmpeg with ts containers.
+* Records using either ffmpeg or streamlink with ts containers.
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
 
@@ -18,9 +18,11 @@ Time shifting is not a crime! https://en.wikipedia.org/wiki/Sony_Corp._of_Americ
 Setup
 ==========
 
-* Dependencies: `node.js >= 9.4.0`, `npm`, `git`, `youtube-dl` and `ffmpeg`
+* Dependencies: `node.js >= 9.4.0`, `npm`, and `ffmpeg`
+* Optional Dependencies: `git`, `streamlink`, `youtube-dl`
 
   * `git` is only needed to run 'npm install' and not to run streamdvr
+  * `streamlink` can be used to capture as an alternative to ffmpeg
   * `youtube-dl` is only needed to record Twitch and Mixer
 
 * Install StreamDVR
