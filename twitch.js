@@ -90,6 +90,8 @@ class Twitch extends site.Site {
             } else {
                 this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
             }
+
+            return {spawnArgs: "", filename: "", streamer: ""};
         });
     }
 }
