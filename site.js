@@ -206,6 +206,7 @@ class Site {
         if (this.config.streamlink) {
             const urlProt = "hlsvariant://" + url;
             params = [
+                "-Q",
                 "-o",
                 this.config.captureDirectory + "/" + filename + ".ts",
                 urlProt,
@@ -342,7 +343,7 @@ class Site {
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the ffmpeg process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending ffmpeg process.");
+            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + (this.config.streamlink ? "streamlink" : "ffmpeg") + " capture process.");
             this.haltCapture(streamer.uid);
         }
     }
@@ -509,40 +510,27 @@ class Site {
             item.postProcess = 1;
         }
 
-        let mySpawnArguments = [];
+        const mySpawnArguments = [
+            "-hide_banner",
+            "-v",
+            "fatal",
+            "-i",
+            this.config.captureDirectory + "/" + fullname,
+            "-c",
+            "copy"
+        ];
 
-        if (this.config.streamlink) {
-            mySpawnArguments = [
-                "-hide_banner",
-                "-v",
-                "fatal",
-                "-i",
-                this.config.captureDirectory + "/" + fullname,
-                "-c",
-                "copy",
-                "-bsf:a",
-                "aac_adtstoasc",
-                "-movflags",
-                "empty_moov+separate_moof+frag_keyframe"
-            ];
-        } else {
-            mySpawnArguments = [
-                "-hide_banner",
-                "-v",
-                "fatal",
-                "-i",
-                this.config.captureDirectory + "/" + fullname,
-                "-c",
-                "copy"
-            ];
-            if (this.config.autoConvertType === "mp4") {
-                mySpawnArguments.push("-bsf:a");
-                mySpawnArguments.push("aac_adtstoasc");
-            }
-
-            mySpawnArguments.push("-copyts");
+        if (this.config.autoConvertType === "mp4") {
+            mySpawnArguments.push("-bsf:a");
+            mySpawnArguments.push("aac_adtstoasc");
         }
 
+        if (this.config.streamlink) {
+            // mySpawnArguments.push("-movflags");
+            // mySpawnArguments.push("empty_moov+separate_moof+frag_keyframe");
+        } else {
+            mySpawnArguments.push("-copyts");
+        }
         mySpawnArguments.push(completeDir + "/" + filename + "." + this.config.autoConvertType);
 
         const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
