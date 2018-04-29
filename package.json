@@ -11,14 +11,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/jrudess/mfc_cb.node.git"
+        "url": "git://github.com/jrudess/streamdvr.node.git"
     },
     "author": "jrudess",
     "license": "WTFPL",
     "bugs": {
-        "url": "https://github.com/jrudess/mfc_cb.node/issues"
+        "url": "https://github.com/jrudess/streamdvr/issues"
     },
-    "homepage": "https://github.com/jrudess/mfc_cb.node",
+    "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
         "blessed": "chjj/blessed",
         "bluebird": "^3.5.1",
