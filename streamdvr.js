@@ -49,7 +49,7 @@ function createSites() {
         Promise.try(() => mfc.connect()).then(() => {
             mainSiteLoop(mfc);
         }).catch((err) => {
-            mfc.errMsg(err);
+            mfc.errMsg(err.toString());
         });
     }
 
