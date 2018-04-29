@@ -509,22 +509,40 @@ class Site {
             item.postProcess = 1;
         }
 
-        const mySpawnArguments = [
-            "-hide_banner",
-            "-v",
-            "fatal",
-            "-i",
-            this.config.captureDirectory + "/" + fullname,
-            "-c",
-            "copy"
-        ];
+        let mySpawnArguments = [];
 
-        if (this.config.autoConvertType === "mp4") {
-            mySpawnArguments.push("-bsf:a");
-            mySpawnArguments.push("aac_adtstoasc");
+        if (this.config.streamlink) {
+            mySpawnArguments = [
+                "-hide_banner",
+                "-v",
+                "fatal",
+                "-i",
+                this.config.captureDirectory + "/" + fullname,
+                "-c",
+                "copy",
+                "-bsf:a",
+                "aac_adtstoasc",
+                "-movflags",
+                "empty_moov+separate_moof+frag_keyframe"
+            ];
+        } else {
+            mySpawnArguments = [
+                "-hide_banner",
+                "-v",
+                "fatal",
+                "-i",
+                this.config.captureDirectory + "/" + fullname,
+                "-c",
+                "copy"
+            ];
+            if (this.config.autoConvertType === "mp4") {
+                mySpawnArguments.push("-bsf:a");
+                mySpawnArguments.push("aac_adtstoasc");
+            }
+
+            mySpawnArguments.push("-copyts");
         }
 
-        mySpawnArguments.push("-copyts");
         mySpawnArguments.push(completeDir + "/" + filename + "." + this.config.autoConvertType);
 
         const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
