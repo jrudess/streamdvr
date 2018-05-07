@@ -18,11 +18,12 @@ Setup
 ==========
 
 * Dependencies: `node.js >= 9.4.0`, `npm`, and `ffmpeg`
-* Optional Dependencies: `git`, `streamlink`, `youtube-dl`
+* Optional Dependencies: `git`, `streamlink`, `youtube-dl`, `MFCAuto`
 
   * `git` is only needed to run 'npm install' and not to run streamdvr
   * `streamlink` can be used to capture as an alternative to ffmpeg
   * `youtube-dl` is only needed to record Twitch and Mixer
+  * `MFCAUto` is only needed to record MyFreeCams
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
@@ -40,7 +41,7 @@ Refer to `config.yml` for all configuration options.
 
 * TUI navigation:
     * 1 to focus the streamer list
-    * Enter to focus the input bar, enter again to focus the log (if enabled)
+    * Press `enter` to focus the input bar.  Press `enter` again to re-focus the log (if enabled)
     * Up/Down/PgUp/PgDn to scroll the active focus
 
 Console Commands
