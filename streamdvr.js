@@ -11,7 +11,6 @@ const path     = require("path");
 
 // local libraries
 const TUI      = require("./core/tui");
-const MFC      = require("./plugins/mfc");
 const CB       = require("./plugins/cb");
 const TWITCH   = require("./plugins/twitch");
 const MIXER    = require("./plugins/mixer");
@@ -48,6 +47,7 @@ function createSites() {
     tui.loadConfig();
 
     if (typeof config.enableMFC !== "undefined" && config.enableMFC) {
+        const MFC = require("./plugins/mfc");
         const mfc = new MFC.Mfc(config, tui);
         tui.addSite(mfc);
         Promise.try(() => mfc.connect()).then(() => {
