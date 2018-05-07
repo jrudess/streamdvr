@@ -51,7 +51,7 @@ class Mixer extends site.Site {
 
             super.checkStreamerState(streamer, msg, 0, prevState);
 
-            this.render();
+            this.tui.render();
             return false;
         });
     }
@@ -95,7 +95,7 @@ class Mixer extends site.Site {
             item.state = "Offline";
 
             super.checkStreamerState(item, msg, 0, prevState);
-            this.render();
+            this.tui.render();
 
             const empty = {spawnArgs: "", filename: "", streamer: ""};
             return empty;
