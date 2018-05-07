@@ -1,6 +1,6 @@
 captureDirectory: capturing
 completeDirectory: captured
-tui: true
+tui: false
 streamerSubdir: true
 scanInterval: 300
 autoConvertType: mp4
