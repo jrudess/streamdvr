@@ -1,7 +1,7 @@
 const Promise = require("bluebird");
 const colors  = require("colors/safe");
 const fetch   = require("node-fetch");
-const site    = require("./site");
+const site    = require("../core/site");
 
 function promiseSerial(funcs) {
     return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
@@ -15,7 +15,7 @@ class Cb extends site.Site {
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
-            this.streamerList.set(nm, {uid: nm, nm: nm, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+            this.streamerList.set(nm, {uid: nm, nm: nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
         }
     }
 
@@ -58,7 +58,12 @@ class Cb extends site.Site {
                     msg += " is in a group show.";
                     streamer.state = "Group Show";
                 } else if (currState === "away") {
-                    msg += colors.name("'s") + " stream is off.";
+                    if (msg.charAt(msg.length - 6) === "s") {
+                        msg += colors.name("'");
+                    } else {
+                        msg += colors.name("'s");
+                    }
+                    msg += " stream is off.";
                     streamer.state = "Away";
                 } else if (currState === "hidden") {
                     msg += " is online but hidden.";
@@ -73,7 +78,7 @@ class Cb extends site.Site {
 
                 super.checkStreamerState(streamer, msg, isStreaming, prevState);
             }
-            this.render();
+            this.tui.render();
             return true;
         }).catch((err) => {
             this.errMsg(colors.name(nm), " lookup problem: " + err.toString());

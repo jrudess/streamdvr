@@ -3,15 +3,14 @@ StreamDVR
 
 ### About ###
 
-StreamDVR allows you to record your favorite live streamers while you are away.  No need to miss a broadcast!
+StreamDVR records your favorite live streamers while you are away.  No need to miss a broadcast!
 
-Time shifting is not a crime! https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
+Time shifting is not a crime!
+https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
-* Records using either ffmpeg or streamlink with ts containers.
+* Captures using either ffmpeg or streamlink to ts constainers
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
-
-* Recordings are stored in either a flat or hierarchical structure.
 
 * Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate
 
@@ -40,8 +39,8 @@ Refer to `config.yml` for all configuration options.
 * To run without color: `node streamdvr.js --no-color`
 
 * TUI navigation:
-    * Numbers 1-4 to focus an active site-list
-    * Enter to focus the input bar, enter again to focus the log if enabled
+    * 1 to focus the streamer list
+    * Enter to focus the input bar, enter again to focus the log (if enabled)
     * Up/Down/PgUp/PgDn to scroll the active focus
 
 Console Commands

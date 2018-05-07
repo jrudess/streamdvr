@@ -1,6 +1,6 @@
 const Promise = require("bluebird");
 const mfc     = require("MFCAuto");
-const site    = require("./site");
+const site    = require("../core/site");
 const _       = require("underscore");
 const colors  = require("colors/safe");
 
@@ -23,7 +23,10 @@ class Mfc extends site.Site {
 
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
-        return this.mfcGuest.queryUser(nm).then((streamer) => super.updateList(streamer, add, isTemp));
+        if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
+            return this.mfcGuest.queryUser(nm).then((streamer) => super.updateList(streamer, add, isTemp));
+        }
+        return false;
     }
 
     updateStreamers(bundle, add) {
@@ -41,16 +44,20 @@ class Mfc extends site.Site {
     }
 
     checkStreamerState(uid) {
+        if (this.mfcGuest.state !== mfc.ClientState.ACTIVE) {
+            return Promise.try(() => false);
+        }
+
         return Promise.try(() => this.mfcGuest.queryUser(uid)).then((model) => {
             if (typeof model === "undefined" || typeof model.uid === "undefined") {
-                return true;
+                return false;
             }
 
             let isStreaming = 0;
             let msg = colors.name(model.nm);
 
             if (!this.streamerList.has(uid)) {
-                this.streamerList.set(uid, {uid: uid, nm: model.nm, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+                this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
             }
 
             const streamer = this.streamerList.get(uid);
@@ -79,14 +86,19 @@ class Mfc extends site.Site {
                 msg += " is away.";
             } else if (bestSession.vs === mfc.STATE.Online) {
                 streamer.state = "Away";
-                msg += colors.name("'s") + " stream is off.";
+                if (msg.charAt(msg.length - 6) === "s") {
+                    msg += colors.name("'");
+                } else {
+                    msg += colors.name("'s");
+                }
+                msg += " stream is off.";
             } else if (bestSession.vs === mfc.STATE.Offline) {
                 streamer.state = "Offline";
                 msg += " has logged off.";
             }
 
             super.checkStreamerState(streamer, msg, isStreaming, prevState);
-            this.render();
+            this.tui.render();
 
             return true;
         }).catch((err) => {
