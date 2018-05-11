@@ -3,25 +3,21 @@
 require("events").EventEmitter.prototype._maxListeners = 100;
 
 // 3rd Party Libraries
-const Promise  = require("bluebird");
-const fs       = require("fs");
-const util     = require("util");
-const yaml     = require("js-yaml");
-const path     = require("path");
+const Promise = require("bluebird");
+const fs      = require("fs");
+const util    = require("util");
+const yaml    = require("js-yaml");
+const path    = require("path");
 
 // local libraries
-const TUI      = require("./core/tui");
-const CB       = require("./plugins/cb");
-const TWITCH   = require("./plugins/twitch");
-const MIXER    = require("./plugins/mixer");
+const TUI     = require("./core/tui");
 
-const config   = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
-const tui      = new TUI.Tui(config);
+const config  = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
+const tui     = new TUI.Tui(config);
 
-let logFile;
 if (config.tui) {
     // When stdout taken over by TUI, redirect log to a file
-    logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: "w"});
+    const logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: "w"});
     console.log = function(msg) {
         logFile.write(util.format(msg) + "\n");
     };
@@ -58,18 +54,21 @@ function createSites() {
     }
 
     if (typeof config.enableCB !== "undefined" && config.enableCB) {
+        const CB = require("./plugins/cb");
         const cb = new CB.Cb(config, tui);
         tui.addSite(cb);
         mainSiteLoop(cb);
     }
 
     if (typeof config.enableTwitch !== "undefined" && config.enableTwitch) {
+        const TWITCH = require("./plugins/twitch");
         const twitch = new TWITCH.Twitch(config, tui);
         tui.addSite(twitch);
         mainSiteLoop(twitch);
     }
 
     if (typeof config.enableMixer !== "undefined" && config.enableMixer) {
+        const MIXER = require("./plugins/mixer");
         const mixer = new MIXER.Mixer(config, tui);
         tui.addSite(mixer);
         mainSiteLoop(mixer);

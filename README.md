@@ -5,7 +5,7 @@ StreamDVR
 
 StreamDVR records your favorite live streamers while you are away.  No need to miss a broadcast!
 
-Time shifting is not a crime!
+Time shifting is not a crime:
 https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
 * Captures using either ffmpeg or streamlink to ts constainers
@@ -17,13 +17,12 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 Setup
 ==========
 
-* Dependencies: `node.js >= 9.4.0`, `npm`, and `ffmpeg`
-* Optional Dependencies: `git`, `streamlink`, `youtube-dl`, `MFCAuto`
+* Dependencies: `node.js >= 9.4.0`, `npm`, `git`, and `ffmpeg`
+* Optional Dependencies: `streamlink`, `youtube-dl`, `mfcauto`
 
-  * `git` is only needed to run 'npm install' and not to run streamdvr
   * `streamlink` can be used to capture as an alternative to ffmpeg
   * `youtube-dl` is only needed to record Twitch and Mixer
-  * `MFCAUto` is only needed to record MyFreeCams
+  * `mfcauto` is only needed to record MyFreeCams
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
@@ -44,12 +43,11 @@ Refer to `config.yml` for all configuration options.
     * Press `enter` to focus the input bar.  Press `enter` again to re-focus the log (if enabled)
     * Up/Down/PgUp/PgDn to scroll the active focus
 
-Console Commands
-===========
-* add     [site] [streamer]
-* addtemp [site] [streamer]
-* remove  [site] [streamer]
-* reload
-* hide [log|list]
-* show [log|list]
-* help
+* TUI Console Commands:
+    * add     [site] [streamer]
+    * addtemp [site] [streamer]
+    * remove  [site] [streamer]
+    * reload
+    * hide [log|list]
+    * show [log|list]
+    * help

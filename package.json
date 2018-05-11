@@ -23,12 +23,14 @@
         "blessed": "chjj/blessed",
         "bluebird": "^3.5.1",
         "colors": "latest",
-        "js-yaml": "^3.10.0",
+        "js-yaml": "^3.11.0",
+        "load": "^1.0.2",
         "mkdirp": "^0.5.1",
-        "moment": "^2.21.0",
+        "moment": "^2.22.1",
         "mv": "^2.1.1",
-        "node-fetch": "^2.0.0",
+        "node-fetch": "^2.1.2",
         "string": "^3.3.3",
-        "underscore": "latest"
+        "underscore": "latest",
+        "ws": "^4.0.0"
     }
 }
