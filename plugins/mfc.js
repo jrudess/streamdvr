@@ -8,7 +8,7 @@ class Mfc extends site.Site {
     constructor(config, tui) {
         super("MFC", config, "_mfc", tui);
         mfc.setLogLevel(0);
-        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, camYou: false});
+        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, modernLogin: this.siteConfig.modernLogin, camYou: false});
     }
 
     connect() {
@@ -86,6 +86,7 @@ class Mfc extends site.Site {
                 msg += " is away.";
             } else if (bestSession.vs === mfc.STATE.Online) {
                 streamer.state = "Away";
+                // Check the last character but avoid color codes
                 if (msg.charAt(msg.length - 6) === "s") {
                     msg += colors.name("'");
                 } else {
@@ -145,7 +146,7 @@ class Mfc extends site.Site {
             return {spawnArgs: spawnArgs, filename: filename, streamer: model};
         }).catch((err) => {
             this.errMsg(colors.name(model.nm) + " " + err.toString());
-            return err;
+            return {spawnArgs: "", filename: "", streamer: ""};
         });
     }
 }
