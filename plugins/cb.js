@@ -131,6 +131,7 @@ class Cb extends site.Site {
         const funcs = serRuns.map((batch) => () => this.checkStreamersState(batch));
         return promiseSerial(funcs).then(() => this.streamersToCap).catch((err) => {
             this.errMsg(err.toString());
+            return [];
         });
     }
 

@@ -97,8 +97,7 @@ class Mixer extends site.Site {
             super.checkStreamerState(item, msg, 0, prevState);
             this.tui.render();
 
-            const empty = {spawnArgs: "", filename: "", streamer: ""};
-            return empty;
+            return {spawnArgs: "", filename: "", streamer: ""};
         });
     }
 }
