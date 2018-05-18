@@ -10,6 +10,8 @@ minByteSize: 0
 maxByteSize: 0
 dateFormat: YYYYMMDD_HHmmss
 debug: false
+logenable: true
+logappend: true
 logshown: true
 listshown: true
 namecolor: magenta
