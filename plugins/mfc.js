@@ -7,7 +7,9 @@ const colors  = require("colors/safe");
 class Mfc extends site.Site {
     constructor(config, tui) {
         super("MFC", config, "_mfc", tui);
-        mfc.setLogLevel(0);
+        if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {
+            mfc.setLogLevel(0);
+        }
         this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, modernLogin: this.siteConfig.modernLogin, camYou: false});
     }
 
