@@ -1,4 +1,5 @@
 mfcWebSocket: true
+modernLogin: false
 streamers:
   - 3623822
   - 12513225
