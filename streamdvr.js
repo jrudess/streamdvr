@@ -5,7 +5,6 @@ require("events").EventEmitter.prototype._maxListeners = 100;
 // 3rd Party Libraries
 const Promise = require("bluebird");
 const fs      = require("fs");
-const util    = require("util");
 const yaml    = require("js-yaml");
 const path    = require("path");
 
@@ -13,15 +12,7 @@ const path    = require("path");
 const TUI     = require("./core/tui");
 
 const config  = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
-const tui     = new TUI.Tui(config);
-
-if (config.tui) {
-    // When stdout taken over by TUI, redirect log to a file
-    const logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: "w"});
-    console.log = function(msg) {
-        logFile.write(util.format(msg) + "\n");
-    };
-}
+let logger    = null;
 
 function mainSiteLoop(site) {
     Promise.try(() => site.checkFileSize(site.config.captureDirectory, site.config.maxByteSize)
@@ -40,6 +31,14 @@ function mainSiteLoop(site) {
 }
 
 function createSites() {
+    if (typeof config.logenable !== "undefined" && config.logenable) {
+        const {Console} = require("console");
+        const attr = (typeof config.logappend !== "undefined" && config.logappend) ? "a" : "w";
+        const logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: attr});
+        logger = new Console({stdout: logFile, stderr: logFile});
+    }
+
+    const tui = new TUI.Tui(config, logger);
     tui.loadConfig();
 
     if (typeof config.enableMFC !== "undefined" && config.enableMFC) {

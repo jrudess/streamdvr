@@ -10,17 +10,20 @@ function sleep(time) {
 }
 
 class Tui {
-    constructor(config) {
+    constructor(config, logger) {
         // For sizing columns
         this.listpad = "                           ";
 
         // Handle to the cross-site config.yml
         this.config = config;
 
+        // Null if no logging to file
+        this.logger = logger;
+
         this.total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch) + Number(config.enableMixer);
 
         this.SITES = [];
-        this.tryingToExit = 0;
+        this.tryingToExit = false;
 
         this.logHidden = false;
         this.listHidden = true;
@@ -204,6 +207,9 @@ class Tui {
             }
         }
         console.log(text);
+        if (this.logger !== null) {
+            this.logger.log(text);
+        }
     }
 
     render() {
@@ -324,12 +330,12 @@ class Tui {
     }
 
     busy() {
-        let capsInProgress = 0;
-
         for (let i = 0; i < this.SITES.length; i++) {
-            capsInProgress += this.SITES[i].getNumCapsInProgress();
+            if (this.SITES[i].getNumCapsInProgress() > 0) {
+                return true;
+            }
         }
-        return capsInProgress > 0;
+        return false;
     }
 
     tryExit() {
@@ -350,7 +356,7 @@ class Tui {
     exit() {
         // Prevent bad things from happening if user holds down ctrl+c
         if (!this.tryingToExit) {
-            this.tryingToExit = 1;
+            this.tryingToExit = true;
             if (this.busy()) {
                 this.log("Waiting for ffmpeg captures to terminate.");
             }
@@ -359,10 +365,8 @@ class Tui {
 
         // Allow this to execute multiple times so that SIGINT
         // can get passed again to ffmpeg in case some get hung.
-        if (this.busy()) {
-            for (let i = 0; i < this.SITES.length; i++) {
-                this.SITES[i].haltAllCaptures();
-            }
+        for (let i = 0; i < this.SITES.length; i++) {
+            this.SITES[i].haltAllCaptures();
         }
     }
 }
