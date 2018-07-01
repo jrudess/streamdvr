@@ -80,6 +80,13 @@ function createSites() {
         mainSiteLoop(bonga);
     }
 
+    if (typeof config.enableCamsoda !== "undefined" && config.enableCamsoda) {
+        const CAMSODA = require("./plugins/camsoda");
+        const camsoda = new CAMSODA.Camsoda(config, tui);
+        tui.addSite(camsoda);
+        mainSiteLoop(camsoda);
+    }
+
     tui.initSites();
 }
 
