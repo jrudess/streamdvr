@@ -18,9 +18,10 @@ Setup
 ==========
 
 * Dependencies: `node.js >= 9.4.0`, `npm`, `git`, and `ffmpeg`
-* Optional Dependencies: `streamlink`, `youtube-dl`, `mfcauto`
+* Optional Dependencies: `streamlink >= 0.14.1`, `youtube-dl`, `mfcauto`
 
   * `streamlink` can be used to capture as an alternative to ffmpeg
+    * Requires the hlssession plugin from https://github.com/back-to/plugins/
   * `youtube-dl` is only needed to record Twitch and Mixer
   * `mfcauto` is only needed to record MyFreeCams
 
