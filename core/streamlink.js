@@ -80,10 +80,7 @@ class Streamlink extends site.Site {
 
         return Promise.try(() => {
             const filename = this.getFileName(streamer.nm);
-            let url = childProcess.execSync("streamlink --stream-url " + this.siteUrl + streamer.nm + " best", {stdio : ["pipe", "pipe", "ignore"]});
-
-            url = url.toString();
-            url = url.replace(/\r?\n|\r/g, "");
+            const url = childProcess.execSync("streamlink --stream-url " + this.siteUrl + streamer.nm + " best", {stdio : ["pipe", "pipe", "ignore"]});
 
             const spawnArgs = this.getCaptureArguments(url, filename);
 
