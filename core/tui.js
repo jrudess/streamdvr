@@ -206,7 +206,9 @@ class Tui {
                 this.render();
             }
         }
-        console.log(text);
+        if (!this.config.tui) {
+            console.log(text);
+        }
         if (this.logger !== null) {
             this.logger.log(text);
         }
