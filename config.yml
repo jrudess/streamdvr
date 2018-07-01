@@ -29,3 +29,4 @@ enableMFC: false
 enableCB: true
 enableTwitch: true
 enableMixer: true
+enableBonga: false

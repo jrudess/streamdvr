@@ -73,6 +73,13 @@ function createSites() {
         mainSiteLoop(mixer);
     }
 
+    if (typeof config.enableBonga !== "undefined" && config.enableBonga) {
+        const BONGA = require("./plugins/bongacams");
+        const bonga = new BONGA.Bonga(config, tui);
+        tui.addSite(bonga);
+        mainSiteLoop(bonga);
+    }
+
     tui.initSites();
 }
 
