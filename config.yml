@@ -10,6 +10,7 @@ minByteSize: 0
 maxByteSize: 0
 dateFormat: YYYYMMDD_HHmmss
 debug: false
+debugrecorder: false
 logenable: true
 logappend: true
 logshown: true
@@ -28,3 +29,6 @@ enableMFC: false
 enableCB: true
 enableTwitch: true
 enableMixer: true
+enableBonga: false
+enableCamsoda: false
+enableFC2: false

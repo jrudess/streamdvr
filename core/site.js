@@ -97,19 +97,26 @@ class Site {
         let params = [];
 
         if (this.config.streamlink) {
-            const urlProt = "hlsvariant://" + url;
             params = [
-                "-Q",
                 "-o",
                 this.config.captureDirectory + "/" + filename + ".ts",
-                urlProt,
+                url,
                 "best"
             ];
+            if (!this.noHLS) {
+                params.push("--hlssession-time");
+                params.push("00:05:00");
+                params.push("--hlssession-segment");
+            }
+            if (this.config.debugrecorder) {
+                params.push("-l");
+                params.push("debug");
+            } else {
+                params.push("-Q");
+            }
         } else {
             params = [
                 "-hide_banner",
-                "-v",
-                "fatal",
                 "-i",
                 url,
                 "-c",
@@ -122,6 +129,11 @@ class Site {
                 "500k",
                 this.config.captureDirectory + "/" + filename + ".ts"
             ];
+            if (!this.config.debugrecorder) {
+                params.push("-v");
+                params.push("fatal");
+            }
+
         }
         return params;
     }
@@ -343,6 +355,12 @@ class Site {
         const fullname = filename + ".ts";
         const capper = this.config.streamlink ? "streamlink" : "ffmpeg";
         const captureProcess = childProcess.spawn(capper, spawnArgs);
+
+        if (this.config.debugrecorder) {
+            const logStream = fs.createWriteStream("./" + filename + ".log", {flags: "w"});
+            captureProcess.stdout.pipe(logStream);
+            captureProcess.stderr.pipe(logStream);
+        }
 
         if (captureProcess.pid) {
             this.msg(colors.name(streamer.nm) + " recording started (" + filename + ".ts)");

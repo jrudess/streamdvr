@@ -191,7 +191,11 @@ class Tui {
             if ((this.config.enableMFC      && siteName === "mfc") ||
                 (this.config.enableCB       && siteName === "cb") ||
                 (this.config.enableTwitch   && siteName === "twitch") ||
-                (this.config.enableMixer    && siteName === "mixer")) {
+                (this.config.enableMixer    && siteName === "mixer") ||
+                (this.config.enableBonga    && siteName === "bonga") ||
+                (this.config.enableCamsoda  && siteName === "camsoda") ||
+                (this.config.enableFC2      && siteName === "fc2")
+                ) {
 
                 this.SITES[i].msg(this.SITES[i].siteConfig.streamers.length + " streamer(s) in config");
             }
@@ -206,7 +210,9 @@ class Tui {
                 this.render();
             }
         }
-        console.log(text);
+        if (!this.config.tui) {
+            console.log(text);
+        }
         if (this.logger !== null) {
             this.logger.log(text);
         }

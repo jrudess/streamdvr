@@ -142,7 +142,10 @@ class Mfc extends site.Site {
         return Promise.try(() => {
             const filename = this.getFileName(model.nm);
             const mod = mfc.Model.getModel(model.uid);
-            const url = this.mfcGuest.getHlsUrl(mod);
+            let url = this.mfcGuest.getHlsUrl(mod);
+            if (this.config.streamlink) {
+                url = "hlssession://" + url;
+            }
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: model};

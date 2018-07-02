@@ -73,6 +73,27 @@ function createSites() {
         mainSiteLoop(mixer);
     }
 
+    if (typeof config.enableBonga !== "undefined" && config.enableBonga) {
+        const BONGA = require("./plugins/bongacams");
+        const bonga = new BONGA.Bonga(config, tui);
+        tui.addSite(bonga);
+        mainSiteLoop(bonga);
+    }
+
+    if (typeof config.enableCamsoda !== "undefined" && config.enableCamsoda) {
+        const CAMSODA = require("./plugins/camsoda");
+        const camsoda = new CAMSODA.Camsoda(config, tui);
+        tui.addSite(camsoda);
+        mainSiteLoop(camsoda);
+    }
+
+    if (typeof config.enableFC2 !== "undefined" && config.enableFC2) {
+        const FC2 = require("./plugins/fc2");
+        const fc2 = new FC2.Fc2(config, tui);
+        tui.addSite(fc2);
+        mainSiteLoop(fc2);
+    }
+
     tui.initSites();
 }
 
