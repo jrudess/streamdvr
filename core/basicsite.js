@@ -25,6 +25,7 @@ class Basicsite extends site.Site {
         let msg = colors.name(nm);
 
         return Promise.try(() => {
+            // Detect of streamer is online or actively streaimng
             const url = childProcess.execSync(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
@@ -81,6 +82,7 @@ class Basicsite extends site.Site {
         }
 
         return Promise.try(() => {
+            // Get the m3u8 URL
             const filename = this.getFileName(streamer.nm);
             const url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
 
