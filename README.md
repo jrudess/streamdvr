@@ -20,10 +20,11 @@ Setup
 * Dependencies: `node.js >= 9.4.0`, `npm`, `git`, and `ffmpeg`
 * Optional Dependencies: `streamlink >= 0.14.1`, `youtube-dl`, `mfcauto`
 
-  * `streamlink` can be used to capture as an alternative to ffmpeg
-    * Requires the hlssession plugin from https://github.com/back-to/plugins/
-  * `youtube-dl` is only needed to record Twitch and Mixer
-  * `mfcauto` is only needed to record MyFreeCams
+  * `streamlink` is used to fetch m3u8 URLs or as an alternative recorder to ffmpeg
+    * Needed for Chaturbate, Camsoda, and Bongacams
+    * To use streamlink as a recorder, the `hlssession` plugin is required: https://github.com/back-to/plugins/
+  * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Mixer
+  * `mfcauto` is used to fetch m3u8 URLs for MyFreeCams
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
