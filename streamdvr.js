@@ -87,6 +87,13 @@ function createSites() {
         mainSiteLoop(camsoda);
     }
 
+    if (typeof config.enableFC2 !== "undefined" && config.enableFC2) {
+        const FC2 = require("./plugins/fc2");
+        const fc2 = new FC2.Fc2(config, tui);
+        tui.addSite(fc2);
+        mainSiteLoop(fc2);
+    }
+
     tui.initSites();
 }
 
