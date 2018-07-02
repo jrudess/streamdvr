@@ -97,16 +97,17 @@ class Site {
         let params = [];
 
         if (this.config.streamlink) {
-            const urlProt = "hlssession://" + url;
             params = [
-                "--hlssession-time",
-                "00:05:00",
-                "--hlssession-segment",
                 "-o",
                 this.config.captureDirectory + "/" + filename + ".ts",
-                urlProt,
+                url,
                 "best"
             ];
+            if (!this.noHLS) {
+                params.push("--hlssession-time");
+                params.push("00:05:00");
+                params.push("--hlssession-segment");
+            }
             if (this.config.debugrecorder) {
                 params.push("-l");
                 params.push("debug");

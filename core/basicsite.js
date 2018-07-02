@@ -4,12 +4,13 @@ const childProcess = require("child_process");
 const site         = require("./site");
 
 class Basicsite extends site.Site {
-    constructor(siteName, config, siteDir, tui, siteUrl, cmdfront, cmdback) {
+    constructor(siteName, config, siteDir, tui, siteUrl, noHLS, cmdfront, cmdback) {
         super(siteName, config, siteDir, tui);
 
         this.siteUrl  = siteUrl;
         this.cmdfront = cmdfront;
         this.cmdback  = cmdback;
+        this.noHLS    = noHLS;
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
@@ -25,14 +26,14 @@ class Basicsite extends site.Site {
         let msg = colors.name(nm);
 
         return Promise.try(() => {
-            // Detect of streamer is online or actively streaimng
+            // Detect if streamer is online or actively streaming
             const url = childProcess.execSync(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
 
             let isStreaming = 0;
 
-            if (typeof url === "undefined" || url === null) {
+            if (typeof url === "undefined" || url === null || url === "error: The broadcaster is currently not available") {
                 msg += " is offline.";
                 streamer.state = "Offline";
             } else {
@@ -84,7 +85,15 @@ class Basicsite extends site.Site {
         return Promise.try(() => {
             // Get the m3u8 URL
             const filename = this.getFileName(streamer.nm);
-            const url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+            let url;
+            if (this.noHLS) {
+                url = this.siteUrl + streamer.nm;
+            } else {
+                url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+                if (this.config.streamlink) {
+                    url = "hlssession://" + url;
+                }
+            }
 
             const spawnArgs = this.getCaptureArguments(url, filename);
 
