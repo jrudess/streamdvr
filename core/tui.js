@@ -194,8 +194,7 @@ class Tui {
                 (this.config.enableMixer    && siteName === "mixer") ||
                 (this.config.enableBonga    && siteName === "bonga") ||
                 (this.config.enableCamsoda  && siteName === "camsoda") ||
-                (this.config.enableFC2      && siteName === "fc2")
-                ) {
+                (this.config.enableFC2      && siteName === "fc2")) {
 
                 this.SITES[i].msg(this.SITES[i].siteConfig.streamers.length + " streamer(s) in config");
             }
@@ -364,7 +363,7 @@ class Tui {
         if (!this.tryingToExit) {
             this.tryingToExit = true;
             if (this.busy()) {
-                this.log("Waiting for ffmpeg captures to terminate.");
+                this.log("Waiting for all captures to terminate...");
             }
             this.tryExit();
         }
