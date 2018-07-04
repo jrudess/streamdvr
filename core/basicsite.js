@@ -3,6 +3,23 @@ const colors       = require("colors/safe");
 const childProcess = require("child_process");
 const site         = require("./site");
 
+function promiseSerial(funcs) {
+    return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
+}
+
+function childToPromise(child) {
+    return new Promise((resolve, reject) => {
+        child.addListener("exit", (code) => {
+            if (code === 0) {
+                resolve(resolve);
+            } else {
+                reject(reject);
+            }
+        });
+        child.addListener("error", reject);
+    });
+}
+
 class Basicsite extends site.Site {
     constructor(siteName, config, siteDir, tui, siteUrl, noHLS, cmdfront, cmdback) {
         super(siteName, config, siteDir, tui);
@@ -25,28 +42,37 @@ class Basicsite extends site.Site {
     checkStreamerState(nm) {
         let msg = colors.name(nm);
 
+        this.dbgMsg(colors.name(nm) + " checking online status");
+
         return Promise.try(() => {
             // Detect if streamer is online or actively streaming
-            const url = childProcess.execSync(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
 
             let isStreaming = 0;
 
-            if (typeof url === "undefined" || url === null || url === "error: The broadcaster is currently not available") {
-                msg += " is offline.";
-                streamer.state = "Offline";
-            } else {
-                msg += " is streaming.";
-                this.streamersToCap.push({uid: nm, nm: nm});
-                isStreaming = 1;
-                streamer.state = "Streaming";
-            }
+            let url = "";
 
-            super.checkStreamerState(streamer, msg, isStreaming, prevState);
+            const child = childProcess.exec(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+            child.stdout.on("data", (data) => {
+                url = data;
+            });
 
-            this.tui.render();
-            return true;
+            return childToPromise(child).then(() => {
+                if (typeof url === "undefined" || url === null) {
+                    msg += " is offline.";
+                    streamer.state = "Offline";
+                } else {
+                    msg += " is streaming.";
+                    this.streamersToCap.push({uid: nm, nm: nm});
+                    isStreaming = 1;
+                    streamer.state = "Streaming";
+                }
+
+                super.checkStreamerState(streamer, msg, isStreaming, prevState);
+
+                return true;
+            });
         }).catch(() => {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
@@ -56,7 +82,19 @@ class Basicsite extends site.Site {
 
             super.checkStreamerState(streamer, msg, 0, prevState);
 
-            this.tui.render();
+            return false;
+        });
+    }
+
+    checkBatch(batch) {
+        const queries = [];
+
+        for (let i = 0; i < batch.length; i++) {
+            queries.push(this.checkStreamerState(batch[i]));
+        }
+
+        return Promise.all(queries).then(() => true).catch((err) => {
+            this.errMsg(err.toString());
             return false;
         });
     }
@@ -66,14 +104,39 @@ class Basicsite extends site.Site {
             return Promise.try(() => []);
         }
 
-        const queries = [];
         this.streamersToCap = [];
 
+        const nms = [];
         this.streamerList.forEach((value) => {
-            queries.push(this.checkStreamerState(value.nm));
+            nms.push(value.nm);
         });
 
-        return Promise.all(queries).then(() => this.streamersToCap);
+        // Break the streamer list up into batches - this throttles the total
+        // number of simultaneous lookups via streamlink/youtubedl by not being
+        // fully parallel, and reduces the lookup latency by not being fully
+        // serial.
+        const serRuns = [];
+        let count = 0;
+        let batchSize = 5;
+        if (typeof this.siteConfig.batchSize !== "undefined") {
+            batchSize = this.siteConfig.batchSize === 0 ? nms.length : this.siteConfig.batchSize;
+        }
+
+        while (count < nms.length) {
+            const parBatch = [];
+
+            for (let i = count; (i < count + batchSize) && (i < nms.length); i++) {
+                parBatch.push(nms[i]);
+                count++;
+            }
+            serRuns.push(parBatch);
+        }
+
+        const funcs = serRuns.map((batch) => () => this.checkBatch(batch));
+        return promiseSerial(funcs).then(() => this.streamersToCap).catch((err) => {
+            this.errMsg(err.toString());
+            return [];
+        });
     }
 
     setupCapture(streamer) {
