@@ -1,4 +1,4 @@
-batchSizeCB: 10
+batchSize: 5
 streamers:
   - aynmarie
   - theemilygrey
