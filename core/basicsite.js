@@ -11,12 +11,12 @@ function childToPromise(child) {
     return new Promise((resolve, reject) => {
         child.addListener("exit", (code) => {
             if (code === 0) {
-                resolve(resolve);
+                resolve();
             } else {
-                reject(reject);
+                reject(new Error("Non-zero exit code " + code));
             }
         });
-        child.addListener("error", reject);
+        child.addListener("error", reject(new Error("child failed")));
     });
 }
 
@@ -50,7 +50,6 @@ class Basicsite extends site.Site {
             const prevState = streamer.state;
 
             let isStreaming = 0;
-
             let url = "";
 
             const child = childProcess.exec(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
@@ -59,7 +58,7 @@ class Basicsite extends site.Site {
             });
 
             return childToPromise(child).then(() => {
-                if (typeof url === "undefined" || url === null) {
+                if (typeof url === "undefined" || url === null || url === "") {
                     msg += " is offline.";
                     streamer.state = "Offline";
                 } else {
@@ -153,13 +152,13 @@ class Basicsite extends site.Site {
                 url = this.siteUrl + streamer.nm;
             } else {
                 url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+                url = url.toString();
+                url = url.replace(/\r?\n|\r/g, "");
+
                 if (this.config.streamlink) {
                     url = "hlssession://" + url;
                 }
             }
-
-            url = url.toString();
-            url = url.replace(/\r?\n|\r/g, "");
 
             const spawnArgs = this.getCaptureArguments(url, filename);
 
