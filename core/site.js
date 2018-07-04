@@ -251,6 +251,7 @@ class Site {
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + (this.config.streamlink ? "streamlink" : "ffmpeg") + " capture process.");
             this.haltCapture(streamer.uid);
         }
+        this.tui.render();
     }
 
     getStreamers(bundle) {
@@ -452,7 +453,7 @@ class Site {
             // Note: setting captureProcess to null releases program to exit
             this.storeCapInfo(streamer.uid, "", null);
 
-            // Note: msg last since it rerenders screen.
+            // Note: print the msg last since it renders the screen
             this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.config.autoConvertType);
 
             if (item !== null) {

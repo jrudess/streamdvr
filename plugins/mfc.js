@@ -101,7 +101,6 @@ class Mfc extends site.Site {
             }
 
             super.checkStreamerState(streamer, msg, isStreaming, prevState);
-            this.tui.render();
 
             return true;
         }).catch((err) => {
