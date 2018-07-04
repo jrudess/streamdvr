@@ -10,17 +10,22 @@ function sleep(time) {
 }
 
 class Tui {
-    constructor(config, logger) {
+    constructor(logger) {
         // For sizing columns
         this.listpad = "                           ";
 
-        // Handle to the cross-site config.yml
-        this.config = config;
+        this.config = null;
+        this.loadConfig();
 
-        // Null if no logging to file
+        this.logger = null;
+        if (typeof this.config.logenable !== "undefined" && this.config.logenable) {
+            const {Console} = require("console");
+            const attr = (typeof this.config.logappend !== "undefined" && this.config.logappend) ? "a" : "w";
+            const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
+            logger = new Console({stdout: logFile, stderr: logFile});
+        }
+        // Null if file logging disabled
         this.logger = logger;
-
-        this.total = Number(config.enableMFC) + Number(config.enableCB) + Number(config.enableTwitch) + Number(config.enableMixer);
 
         this.SITES = [];
         this.tryingToExit = false;
@@ -32,7 +37,7 @@ class Tui {
             this.exit();
         });
 
-        if (config.tui) {
+        if (this.config.tui) {
             this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
             this.screen.title = "streamdvr";
 
@@ -327,7 +332,7 @@ class Tui {
         this.config.captureDirectory  = this.mkdir(this.config.captureDirectory);
         this.config.completeDirectory = this.mkdir(this.config.completeDirectory);
 
-        if (this.config.tui) {
+        if (this.config.tui && typeof this.list !== "undefined") {
             this.display(this.config.listshown ? "show" : "hide", "list");
             this.display(this.config.logshown  ? "show" : "hide", "log");
             this.render();

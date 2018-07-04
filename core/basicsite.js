@@ -21,8 +21,8 @@ function childToPromise(child) {
 }
 
 class Basicsite extends site.Site {
-    constructor(siteName, config, siteDir, tui, siteUrl, noHLS, cmdfront, cmdback) {
-        super(siteName, config, siteDir, tui);
+    constructor(siteName, siteDir, tui, siteUrl, noHLS, cmdfront, cmdback) {
+        super(siteName, siteDir, tui);
 
         this.siteUrl  = siteUrl;
         this.cmdfront = cmdfront;
@@ -155,7 +155,7 @@ class Basicsite extends site.Site {
                 url = url.toString();
                 url = url.replace(/\r?\n|\r/g, "");
 
-                if (this.config.streamlink) {
+                if (this.tui.config.streamlink) {
                     url = "hlssession://" + url;
                 }
             }
@@ -167,11 +167,9 @@ class Basicsite extends site.Site {
             const msg = colors.name(streamer.nm) + " is offline.";
             const item = this.streamerList.get(streamer.nm);
             const prevState = item.state;
-
             item.state = "Offline";
 
             super.checkStreamerState(item, msg, 0, prevState);
-            this.tui.render();
 
             return {spawnArgs: "", filename: "", streamer: ""};
         });

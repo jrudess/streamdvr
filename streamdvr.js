@@ -2,49 +2,30 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
-// 3rd Party Libraries
 const Promise = require("bluebird");
-const fs      = require("fs");
-const yaml    = require("js-yaml");
-const path    = require("path");
-
-// local libraries
 const TUI     = require("./core/tui");
 
-const config  = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
-let logger    = null;
-
 function mainSiteLoop(site) {
-    Promise.try(() => site.checkFileSize(site.config.captureDirectory, site.config.maxByteSize)
+    Promise.try(() => site.checkFileSize()
     ).then(() => site.processUpdates()
     ).then((bundle) => site.updateStreamers(bundle, 1)
     ).then((bundle) => site.updateStreamers(bundle, 0)
     ).then((bundle) => site.getStreamers(bundle)
     ).then((streamers) => site.recordStreamers(streamers)
     ).catch((err) => {
-        site.errMsg(err);
-        // throw err;
+        site.errMsg(err.toString());
     }).finally(() => {
         // site.dbgMsg("Done, waiting " + site.config.scanInterval + " seconds.");
-        setTimeout(() => { mainSiteLoop(site); }, site.config.scanInterval * 1000);
+        setTimeout(() => { mainSiteLoop(site); }, site.tui.config.scanInterval * 1000);
     });
 }
 
 function createSites() {
-    if (typeof config.logenable !== "undefined" && config.logenable) {
-        const {Console} = require("console");
-        const attr = (typeof config.logappend !== "undefined" && config.logappend) ? "a" : "w";
-        const logFile = fs.createWriteStream(path.resolve() + "/streamdvr.log", {flags: attr});
-        logger = new Console({stdout: logFile, stderr: logFile});
-    }
+    const tui = new TUI.Tui();
 
-    const tui = new TUI.Tui(config, logger);
-    tui.loadConfig();
-
-    if (typeof config.enableMFC !== "undefined" && config.enableMFC) {
+    if (typeof tui.config.enableMFC !== "undefined" && tui.config.enableMFC) {
         const MFC = require("./plugins/mfc");
-        const mfc = new MFC.Mfc(config, tui);
-        tui.addSite(mfc);
+        const mfc = new MFC.Mfc(tui);
         Promise.try(() => mfc.connect()).then(() => {
             mainSiteLoop(mfc);
         }).catch((err) => {
@@ -52,46 +33,34 @@ function createSites() {
         });
     }
 
-    if (typeof config.enableCB !== "undefined" && config.enableCB) {
+    if (typeof tui.config.enableCB !== "undefined" && tui.config.enableCB) {
         const CB = require("./plugins/cb");
-        const cb = new CB.Cb(config, tui);
-        tui.addSite(cb);
-        mainSiteLoop(cb);
+        mainSiteLoop(new CB.Cb(tui));
     }
 
-    if (typeof config.enableTwitch !== "undefined" && config.enableTwitch) {
+    if (typeof tui.config.enableTwitch !== "undefined" && tui.config.enableTwitch) {
         const TWITCH = require("./plugins/twitch");
-        const twitch = new TWITCH.Twitch(config, tui);
-        tui.addSite(twitch);
-        mainSiteLoop(twitch);
+        mainSiteLoop(new TWITCH.Twitch(tui));
     }
 
-    if (typeof config.enableMixer !== "undefined" && config.enableMixer) {
+    if (typeof tui.config.enableMixer !== "undefined" && tui.config.enableMixer) {
         const MIXER = require("./plugins/mixer");
-        const mixer = new MIXER.Mixer(config, tui);
-        tui.addSite(mixer);
-        mainSiteLoop(mixer);
+        mainSiteLoop(new MIXER.Mixer(tui));
     }
 
-    if (typeof config.enableBonga !== "undefined" && config.enableBonga) {
+    if (typeof tui.config.enableBonga !== "undefined" && tui.config.enableBonga) {
         const BONGA = require("./plugins/bongacams");
-        const bonga = new BONGA.Bonga(config, tui);
-        tui.addSite(bonga);
-        mainSiteLoop(bonga);
+        mainSiteLoop(new BONGA.Bonga(tui));
     }
 
-    if (typeof config.enableCamsoda !== "undefined" && config.enableCamsoda) {
+    if (typeof tui.config.enableCamsoda !== "undefined" && tui.config.enableCamsoda) {
         const CAMSODA = require("./plugins/camsoda");
-        const camsoda = new CAMSODA.Camsoda(config, tui);
-        tui.addSite(camsoda);
-        mainSiteLoop(camsoda);
+        mainSiteLoop(new CAMSODA.Camsoda(tui));
     }
 
-    if (typeof config.enableFC2 !== "undefined" && config.enableFC2) {
+    if (typeof tui.config.enableFC2 !== "undefined" && tui.config.enableFC2) {
         const FC2 = require("./plugins/fc2");
-        const fc2 = new FC2.Fc2(config, tui);
-        tui.addSite(fc2);
-        mainSiteLoop(fc2);
+        mainSiteLoop(new FC2.Fc2(tui));
     }
 
     tui.initSites();

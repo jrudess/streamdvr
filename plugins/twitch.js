@@ -1,8 +1,8 @@
-const youtubedl    = require("../core/youtubedl");
+const youtubedl = require("../core/youtubedl");
 
 class Twitch extends youtubedl.Youtubedl {
-    constructor(config, tui) {
-        super("TWITCH", config, "_twitch", tui, "https://www.twitch.tv/", false);
+    constructor(tui) {
+        super("TWITCH", "_twitch", tui, "https://www.twitch.tv/", false);
     }
 }
 

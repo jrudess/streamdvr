@@ -5,8 +5,8 @@ const _       = require("underscore");
 const colors  = require("colors/safe");
 
 class Mfc extends site.Site {
-    constructor(config, tui) {
-        super("MFC", config, "_mfc", tui);
+    constructor(tui) {
+        super("MFC", "_mfc", tui);
         if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {
             mfc.setLogLevel(0);
         }
@@ -142,7 +142,7 @@ class Mfc extends site.Site {
             const filename = this.getFileName(model.nm);
             const mod = mfc.Model.getModel(model.uid);
             let url = this.mfcGuest.getHlsUrl(mod);
-            if (this.config.streamlink) {
+            if (this.tui.config.streamlink) {
                 url = "hlssession://" + url;
             }
             const spawnArgs = this.getCaptureArguments(url, filename);
