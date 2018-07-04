@@ -95,6 +95,9 @@ class Basicsite extends site.Site {
                 }
             }
 
+            url = url.toString();
+            url = url.replace(/\r?\n|\r/g, "");
+
             const spawnArgs = this.getCaptureArguments(url, filename);
 
             return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
