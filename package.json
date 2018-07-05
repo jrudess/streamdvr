@@ -24,17 +24,16 @@
         "bluebird": "^3.5.1",
         "cheerio": "^1.0.0-rc.2",
         "colors": "latest",
-        "js-yaml": "^3.11.0",
+        "js-yaml": "^3.12.0",
         "load": "^1.0.2",
         "mkdirp": "^0.5.1",
-        "moment": "^2.22.1",
+        "moment": "^2.22.2",
         "mv": "^2.1.1",
-        "node-fetch": "^2.1.2",
-        "request": "^2.86.0",
+        "request": "^2.87.0",
         "request-promise-native": "^1.0.5",
         "string": "^3.3.3",
         "underscore": "latest",
-        "ws": "^5.1.1",
+        "ws": "^5.2.1",
         "xmlhttprequest": "^1.8.0"
     }
 }
