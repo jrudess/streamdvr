@@ -12,16 +12,16 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
 
-* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Camsoda, Bongacams
+* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Camsoda, Bongacams, Cam4
 
 Setup
 ==========
 
-* Dependencies: `node.js >= 9.4.0`, `npm`, `git`, and `ffmpeg`
+* Dependencies: `node.js >= 10.0.0`, `npm`, `git`, and `ffmpeg`
 * Optional Dependencies: `streamlink >= 0.14.1`, `youtube-dl`, `mfcauto`
 
   * `streamlink` is used to fetch m3u8 URLs or as an alternative recorder to ffmpeg
-    * Needed for Chaturbate, Camsoda, and Bongacams
+    * Needed for Chaturbate, Camsoda, Bongacams, and Cam4
     * To use streamlink as a recorder, the `hlssession` plugin is required: https://github.com/back-to/plugins/
   * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Mixer
   * `mfcauto` is used to fetch m3u8 URLs for MyFreeCams
