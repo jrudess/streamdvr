@@ -16,7 +16,6 @@ function childToPromise(child) {
                 reject(new Error("Non-zero exit code " + code));
             }
         });
-        child.addListener("error", reject(new Error("child failed")));
     });
 }
 
@@ -49,15 +48,18 @@ class Basicsite extends site.Site {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
 
-            let isStreaming = 0;
-            let url = "";
+            let url = null;
 
-            const child = childProcess.exec(this.cmdfront + this.siteUrl + nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+            let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
+            this.msg(colors.name(nm) + " " + mycmd);
+            const child = childProcess.exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
             child.stdout.on("data", (data) => {
                 url = data;
             });
 
             return childToPromise(child).then(() => {
+                let isStreaming = 0;
+
                 if (typeof url === "undefined" || url === null || url === "") {
                     msg += " is offline.";
                     streamer.state = "Offline";
@@ -151,7 +153,7 @@ class Basicsite extends site.Site {
             if (this.noHLS) {
                 url = this.siteUrl + streamer.nm;
             } else {
-                url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
+                url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + " " + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
                 url = url.toString();
                 url = url.replace(/\r?\n|\r/g, "");
 

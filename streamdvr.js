@@ -63,6 +63,11 @@ function createSites() {
         mainSiteLoop(new FC2.Fc2(tui));
     }
 
+    if (typeof tui.config.enableCam4 !== "undefined" && tui.config.enableCam4) {
+        const CAM4 = require("./plugins/cam4");
+        mainSiteLoop(new CAM4.Cam4(tui));
+    }
+
     tui.initSites();
 }
 
