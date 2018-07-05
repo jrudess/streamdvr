@@ -1,6 +1,7 @@
-captured/
-capturing/
+captured
+capturing
+.vscode
 node_modules/
 Session.vim
-streamdvr.log
+*.log
 tags
