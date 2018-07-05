@@ -39,6 +39,8 @@ class Basicsite extends site.Site {
     }
 
     checkStreamerState(nm) {
+        let stdout = null;
+        let stderr = null;
         let msg = colors.name(nm);
 
         this.dbgMsg(colors.name(nm) + " checking online status");
@@ -48,18 +50,28 @@ class Basicsite extends site.Site {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
 
-            let url = null;
+            let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
 
-            const mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
+            if (typeof this.tui.config.proxyenable !== "undefined" && this.tui.config.proxyenable) {
+                if (this.siteType === "streamlink") {
+                    mycmd = mycmd + " --https-proxy " + this.tui.config.proxyserver;
+                } else if (this.siteType === "youtubedl") {
+                    mycmd = mycmd + " --proxy " + this.tui.config.proxyserver;
+                }
+            }
+
             const child = childProcess.exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
             child.stdout.on("data", (data) => {
-                url = data;
+                stdout = data;
+            });
+            child.stderr.on("data", (data) => {
+                stderr = data;
             });
 
             return childToPromise(child).then(() => {
                 let isStreaming = 0;
 
-                if (typeof url === "undefined" || url === null || url === "") {
+                if (typeof stdout === "undefined" || stdout === null || stdout === "") {
                     msg += " is offline.";
                     streamer.state = "Offline";
                 } else {
@@ -79,6 +91,17 @@ class Basicsite extends site.Site {
             streamer.state = "Offline";
 
             msg += " is offline.";
+
+            // Don't print errors for normal offline cases
+            if (typeof stdout !== "undefined" && stdout !== null && stdout !== "") {
+                if (stdout.search("No playable streams found on this URL") === -1) {
+                    this.errMsg(colors.name(nm) + " " + stdout.toString());
+                }
+            } else if (typeof stderr !== "undefined" && stderr !== null && stderr !== "") {
+                if (stderr.search("is offline") === -1) {
+                    this.errMsg(colors.name(nm) + " " + stderr.toString());
+                }
+            }
 
             super.checkStreamerState(streamer, msg, 0, prevState);
 
