@@ -221,7 +221,7 @@ class Site {
             this.msg(colors.name(streamer.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
-            this.msg(colors.name(streamer.nm) + " is already in the capture list");
+            this.errMsg(colors.name(streamer.nm) + " is already in the capture list");
         }
         if (!this.streamerList.has(streamer.uid)) {
             this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null});
@@ -231,11 +231,13 @@ class Site {
     }
 
     removeStreamer(streamer) {
-        this.msg(colors.name(streamer.nm) + " removed from capture list.");
-        this.haltCapture(streamer.uid);
         if (this.streamerList.has(streamer.uid)) {
+            this.msg(colors.name(streamer.nm) + " removed from capture list.");
+            this.haltCapture(streamer.uid);
             this.streamerList.delete(streamer.uid);
             this.tui.render();
+        } else {
+            this.errMsg(colors.name(streamer.nm) + " not in capture list.");
         }
         return true;
     }
