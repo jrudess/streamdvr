@@ -2,7 +2,7 @@ const streamlink = require("../core/streamlink");
 
 class Cam4 extends streamlink.Streamlink {
     constructor(tui) {
-        super("CAM4", "_cam4", tui, "https://www.cam4.com/", true, "best");
+        super("CAM4", tui, "https://www.cam4.com/", false, "480p");
     }
 }
 

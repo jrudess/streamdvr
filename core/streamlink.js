@@ -1,8 +1,8 @@
 const basicsite = require("./basicsite");
 
 class Streamlink extends basicsite.Basicsite {
-    constructor(siteName, siteDir, tui, siteUrl, noHLS, cmdback) {
-        super(siteName, siteDir, tui, siteUrl, noHLS, "streamlink --stream-url ", cmdback);
+    constructor(siteName, tui, siteUrl, noHLS, cmdback) {
+        super(siteName, tui, siteUrl, noHLS, "streamlink --stream-url ", cmdback);
     }
 }
 

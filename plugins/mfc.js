@@ -6,7 +6,7 @@ const colors  = require("colors/safe");
 
 class Mfc extends site.Site {
     constructor(tui) {
-        super("MFC", "_mfc", tui);
+        super("MFC", tui);
         if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {
             mfc.setLogLevel(0);
         }

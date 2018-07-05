@@ -20,8 +20,8 @@ function childToPromise(child) {
 }
 
 class Basicsite extends site.Site {
-    constructor(siteName, siteDir, tui, siteUrl, noHLS, cmdfront, cmdback) {
-        super(siteName, siteDir, tui);
+    constructor(siteName, tui, siteUrl, noHLS, cmdfront, cmdback) {
+        super(siteName, tui);
 
         this.siteUrl  = siteUrl;
         this.cmdfront = cmdfront;

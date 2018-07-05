@@ -8,7 +8,7 @@ const colors       = require("colors/safe");
 const childProcess = require("child_process");
 
 class Site {
-    constructor(siteName, siteDir, tui) {
+    constructor(siteName, tui) {
         // For sizing columns
         this.logpad  = "         ";
 
@@ -22,7 +22,7 @@ class Site {
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.listName + ".yml", "utf8"));
 
         // Custom site directory suffix
-        this.siteDir = siteDir;
+        this.siteDir = "_" + this.listName;
 
         // Blessed UI elements
         this.tui = tui;
