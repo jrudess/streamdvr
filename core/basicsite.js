@@ -50,8 +50,7 @@ class Basicsite extends site.Site {
 
             let url = null;
 
-            let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
-            this.msg(colors.name(nm) + " " + mycmd);
+            const mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
             const child = childProcess.exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
             child.stdout.on("data", (data) => {
                 url = data;
