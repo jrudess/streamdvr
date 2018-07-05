@@ -10,7 +10,7 @@ function sleep(time) {
 }
 
 class Tui {
-    constructor(logger) {
+    constructor() {
         // For sizing columns
         this.listpad = "                           ";
 
@@ -22,10 +22,8 @@ class Tui {
             const {Console} = require("console");
             const attr = (typeof this.config.logappend !== "undefined" && this.config.logappend) ? "a" : "w";
             const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
-            logger = new Console({stdout: logFile, stderr: logFile});
+            this.logger = new Console({stdout: logFile, stderr: logFile});
         }
-        // Null if file logging disabled
-        this.logger = logger;
 
         this.SITES = [];
         this.tryingToExit = false;
