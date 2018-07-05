@@ -8,7 +8,7 @@ StreamDVR records your favorite live streamers while you are away.  No need to m
 Time shifting is not a crime:
 https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
-* Captures using either ffmpeg or streamlink to ts constainers
+* Captures using either ffmpeg or streamlink to ts containers
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
 
