@@ -6,6 +6,8 @@ scanInterval: 300
 autoConvertType: mp4
 keepTsFile: false
 streamlink: false
+proxyenable: false
+proxyserver: socks5://127.0.0.1:1080
 minByteSize: 0
 maxByteSize: 0
 dateFormat: YYYYMMDD_HHmmss
