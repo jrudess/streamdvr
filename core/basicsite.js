@@ -147,8 +147,9 @@ class Basicsite extends site.Site {
 
         while (count < nms.length) {
             const parBatch = [];
+            const limit = count + batchSize;
 
-            for (let i = count; (i < count + batchSize) && (i < nms.length); i++) {
+            for (let i = count; (i < limit) && (i < nms.length); i++) {
                 parBatch.push(nms[i]);
                 count++;
             }
