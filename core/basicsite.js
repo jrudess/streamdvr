@@ -88,19 +88,24 @@ class Basicsite extends site.Site {
         }).catch(() => {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
-            streamer.state = "Offline";
+            let stdoutprint = typeof stdout !== "undefined" && stdout !== null && stdout !== "";
+            let stderrprint = typeof stderr !== "undefined" && stderr !== null && stderr !== "";
 
+            streamer.state = "Offline";
             msg += " is offline.";
 
+            if (stdoutprint) {
+                stdoutprint = (stdout.search("No playable streams found on this URL") === -1) &&
+                              (stdout.search("Forbidden for url") === -1);
+            }
+
+            if (stderrprint) {
+                stderrprint = (stderr.search("is offline") === -1)  && (stderr.search("Unable to open URL") === -1);
+            }
+
             // Don't print errors for normal offline cases
-            if (typeof stdout !== "undefined" && stdout !== null && stdout !== "") {
-                if (stdout.search("No playable streams found on this URL") === -1) {
-                    this.errMsg(colors.name(nm) + " " + stdout.toString());
-                }
-            } else if (typeof stderr !== "undefined" && stderr !== null && stderr !== "") {
-                if (stderr.search("is offline") === -1) {
-                    this.errMsg(colors.name(nm) + " " + stderr.toString());
-                }
+            if (stdoutprint || stderrprint) {
+                this.errMsg(colors.name(nm) + " " + stdout.toString());
             }
 
             super.checkStreamerState(streamer, msg, 0, prevState);
