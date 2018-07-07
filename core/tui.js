@@ -221,8 +221,7 @@ class Tui {
             if (!this.logHidden) {
                 this.render();
             }
-        }
-        if (!this.config.tui) {
+        } else {
             console.log(text);
         }
         if (this.logger !== null) {

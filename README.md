@@ -23,7 +23,7 @@ Setup
   * `streamlink` is used to fetch m3u8 URLs and also to record
     * Required for Chaturbate, Camsoda, Bongacams, and Cam4
     * Optional for MyFreeCams (via `mfcsl` streamdvr plugin)
-    * To use streamlink to record instead of ffmpeg, thestreamlink `hlssession` plugin is required: https://github.com/back-to/plugins/
+    * To use streamlink to record instead of ffmpeg, the streamlink `hlssession` plugin is required: https://github.com/back-to/plugins/
   * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Mixer
   * `mfcauto` is optionally used to fetch m3u8 URLs for MyFreeCams (via `mfc` streamdvr plugin)
 

@@ -41,9 +41,7 @@ class Mfc extends site.Site {
 
         for (let i = 0; i < list.length; i++) {
             this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
-            queries.push(this.updateList(list[i], add, false).then((dirty) => {
-                bundle.dirty |= dirty;
-            }));
+            queries.push(this.updateList(list[i], add, false));
         }
 
         return Promise.all(queries).then(() => bundle);
