@@ -18,7 +18,7 @@ Setup
 ==========
 
 * Dependencies: `node.js >= 10.0.0`, `npm`, `git`, and `ffmpeg`
-* Optional Dependencies: `streamlink >= 0.14.1`, `youtube-dl`, `mfcauto`
+* Optional Dependencies: `streamlink >= 0.14.2+20.gc394b41`, `youtube-dl`, `mfcauto`
 
   * `streamlink` is used to fetch m3u8 URLs or as an alternative recorder to ffmpeg
     * Needed for Chaturbate, Camsoda, Bongacams, and Cam4
