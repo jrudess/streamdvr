@@ -11,25 +11,18 @@ class Site {
     constructor(siteName, tui) {
         // For sizing columns
         this.logpad  = "         ";
-
-        // Sitename includes spaces to align log columns easily.
-        // Use .trim() as needed.
         this.siteName = siteName;
         this.padName  = (siteName + this.logpad).substring(0, this.logpad.length);
         this.listName = siteName.toLowerCase();
 
         // sitename.yml
-        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.listName + ".yml", "utf8"));
+        this.siteConfig = yaml.safeLoad(fs.readFileSync("./config/" + this.listName + ".yml", "utf8"));
 
         // Custom site directory suffix
         this.siteDir = "_" + this.listName;
 
         // Blessed UI elements
         this.tui = tui;
-
-        // Temporary data store used by child classes for outstanding status
-        // lookup threads.  Is cleared and repopulated during each loop
-        this.streamersToCap = [];
 
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
@@ -138,7 +131,7 @@ class Site {
     }
 
     processUpdates() {
-        const filename = this.listName + "_updates.yml";
+        const filename = "./config/" + this.listName + "_updates.yml";
         const stats = fs.statSync(filename);
         if (!stats.isFile()) {
             this.dbgMsg(filename + " does not exist");
@@ -280,25 +273,6 @@ class Site {
         }
     }
 
-    recordStreamers(streamers) {
-        if (streamers === null || streamers.length === 0) {
-            return null;
-        }
-
-        const caps = [];
-
-        this.dbgMsg(streamers.length + " streamer(s) to capture");
-        for (let i = 0; i < streamers.length; i++) {
-            const cap = this.setupCapture(streamers[i]).then((bundle) => {
-                if (bundle && bundle.spawnArgs && bundle.spawnArgs !== "") {
-                    this.startCapture(bundle.streamer, bundle.filename, bundle.spawnArgs);
-                }
-            });
-            caps.push(cap);
-        }
-        return Promise.all(caps);
-    }
-
     getNumCapsInProgress() {
         let count = 0;
 
@@ -327,7 +301,7 @@ class Site {
     }
 
     writeConfig() {
-        const filename = this.listName + ".yml";
+        const filename = "./config/" + this.listName + ".yml";
         this.dbgMsg("Rewriting " + filename);
         fs.writeFileSync(filename, yaml.safeDump(this.siteConfig), "utf8");
     }

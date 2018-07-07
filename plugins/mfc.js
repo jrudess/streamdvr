@@ -70,7 +70,6 @@ class Mfc extends site.Site {
             if (bestSession.vs === mfc.STATE.FreeChat) {
                 streamer.state = "Public Chat";
                 msg += " is in public chat!";
-                this.streamersToCap.push(model);
                 isStreaming = 1;
             } else if (bestSession.vs === mfc.STATE.GroupShow) {
                 streamer.state = "Group Show";
@@ -102,6 +101,13 @@ class Mfc extends site.Site {
 
             super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
+            if (isStreaming) {
+                const capInfo = this.setupCapture(streamer);
+                if (capInfo && capInfo.spawnArgs && capInfo.spawnArgs !== "") {
+                    this.startCapture(capInfo.streamer, capInfo.filename, capInfo.spawnArgs);
+                }
+            }
+
             return true;
         }).catch((err) => {
             this.errMsg(err.toString());
@@ -115,7 +121,6 @@ class Mfc extends site.Site {
         }
 
         const queries = [];
-        this.streamersToCap = [];
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             queries.push(this.checkStreamerState(this.siteConfig.streamers[i]));
@@ -129,29 +134,23 @@ class Mfc extends site.Site {
             }
         }
 
-        return Promise.all(queries).then(() => this.streamersToCap);
+        return Promise.all(queries);
     }
 
     setupCapture(model) {
         if (!super.setupCapture(model.uid)) {
-            const empty = {spawnArgs: "", filename: "", streamer: ""};
-            return Promise.try(() => empty);
+            return {spawnArgs: "", filename: "", streamer: ""};
         }
 
-        return Promise.try(() => {
-            const filename = this.getFileName(model.nm);
-            const mod = mfc.Model.getModel(model.uid);
-            let url = this.mfcGuest.getHlsUrl(mod);
-            if (this.tui.config.streamlink) {
-                url = "hlssession://" + url;
-            }
-            const spawnArgs = this.getCaptureArguments(url, filename);
+        const filename = this.getFileName(model.nm);
+        const mod = mfc.Model.getModel(model.uid);
+        let url = this.mfcGuest.getHlsUrl(mod);
+        if (this.tui.config.streamlink) {
+            url = "hlssession://" + url;
+        }
+        const spawnArgs = this.getCaptureArguments(url, filename);
 
-            return {spawnArgs: spawnArgs, filename: filename, streamer: model};
-        }).catch((err) => {
-            this.errMsg(colors.name(model.nm) + " " + err.toString());
-            return {spawnArgs: "", filename: "", streamer: ""};
-        });
+        return {spawnArgs: spawnArgs, filename: filename, streamer: model};
     }
 }
 

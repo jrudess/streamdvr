@@ -70,18 +70,28 @@ class Basicsite extends site.Site {
 
             return childToPromise(child).then(() => {
                 let isStreaming = 0;
+                let url;
 
                 if (typeof stdout === "undefined" || stdout === null || stdout === "") {
                     msg += " is offline.";
                     streamer.state = "Offline";
                 } else {
                     msg += " is streaming.";
-                    this.streamersToCap.push({uid: nm, nm: nm});
                     isStreaming = 1;
                     streamer.state = "Streaming";
+
+                    url = stdout.toString();
+                    url = url.replace(/\r?\n|\r/g, "");
                 }
 
                 super.checkStreamerState(streamer, msg, isStreaming, prevState);
+
+                if (isStreaming) {
+                    const capInfo = this.setupCapture(streamer, url);
+                    if (capInfo && capInfo.spawnArgs && capInfo.spawnArgs !== "") {
+                        this.startCapture(capInfo.streamer, capInfo.filename, capInfo.spawnArgs);
+                    }
+                }
 
                 return true;
             });
@@ -100,7 +110,8 @@ class Basicsite extends site.Site {
             }
 
             if (stderrprint) {
-                stderrprint = (stderr.search("is offline") === -1)  && (stderr.search("Unable to open URL") === -1);
+                stderrprint = (stderr.search("is offline") === -1) &&
+                              (stderr.search("Unable to open URL") === -1);
             }
 
             // Don't print errors for normal offline cases
@@ -132,8 +143,6 @@ class Basicsite extends site.Site {
             return Promise.try(() => []);
         }
 
-        this.streamersToCap = [];
-
         const nms = [];
         this.streamerList.forEach((value) => {
             nms.push(value.nm);
@@ -162,47 +171,29 @@ class Basicsite extends site.Site {
         }
 
         const funcs = serRuns.map((batch) => () => this.checkBatch(batch));
-        return promiseSerial(funcs).then(() => this.streamersToCap).catch((err) => {
+        return promiseSerial(funcs).catch((err) => {
             this.errMsg(err.toString());
             return [];
         });
     }
 
-    setupCapture(streamer) {
+    setupCapture(streamer, url) {
         if (!super.setupCapture(streamer.uid)) {
-            const empty = {spawnArgs: "", filename: "", streamer: ""};
-            return Promise.try(() => empty);
+            return {spawnArgs: "", filename: "", streamer: ""};
         }
 
-        return Promise.try(() => {
-            // Get the m3u8 URL
-            const filename = this.getFileName(streamer.nm);
-            let url;
-            if (this.noHLS) {
-                url = this.siteUrl + streamer.nm;
-            } else {
-                url = childProcess.execSync(this.cmdfront + this.siteUrl + streamer.nm + " " + this.cmdback, {stdio : ["pipe", "pipe", "ignore"]});
-                url = url.toString();
-                url = url.replace(/\r?\n|\r/g, "");
+        // Get the m3u8 URL
+        const filename = this.getFileName(streamer.nm);
+        let newurl = url;
+        if (this.noHLS) {
+            newurl = this.siteUrl + streamer.nm;
+        } if (this.tui.config.streamlink) {
+            newurl = "hlssession://" + url;
+        }
 
-                if (this.tui.config.streamlink) {
-                    url = "hlssession://" + url;
-                }
-            }
+        const spawnArgs = this.getCaptureArguments(newurl, filename);
 
-            const spawnArgs = this.getCaptureArguments(url, filename);
-
-            return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
-        }).catch(() => {
-            const msg = colors.name(streamer.nm) + " is offline.";
-            const item = this.streamerList.get(streamer.nm);
-            const prevState = item.state;
-            item.state = "Offline";
-
-            super.checkStreamerState(item, msg, 0, prevState);
-
-            return {spawnArgs: "", filename: "", streamer: ""};
-        });
+        return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
 }
 

@@ -314,7 +314,7 @@ class Tui {
     }
 
     loadConfig() {
-        this.config = yaml.safeLoad(fs.readFileSync("config.yml", "utf8"));
+        this.config = yaml.safeLoad(fs.readFileSync("./config/config.yml", "utf8"));
 
         colors.setTheme({
             name:    this.config.namecolor,

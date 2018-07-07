@@ -11,7 +11,6 @@ function mainSiteLoop(site) {
     ).then((bundle) => site.updateStreamers(bundle, 1)
     ).then((bundle) => site.updateStreamers(bundle, 0)
     ).then((bundle) => site.getStreamers(bundle)
-    ).then((streamers) => site.recordStreamers(streamers)
     ).catch((err) => {
         site.errMsg(err.toString());
     }).finally(() => {
