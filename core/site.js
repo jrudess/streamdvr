@@ -372,7 +372,9 @@ class Site {
 
             // Refresh streamer status since streamer has likely changed state
             if (!this.tui.tryingToExit && this.streamerList.has(streamer.uid)) {
-                Promise.try(this.checkStreamerState(streamer.uid)).then(() => {
+                const queries = [];
+                queries.push(this.checkStreamerState(streamer.uid));
+                Promise.all(queries).then(() => {
                     this.tui.render();
                 });
             }
