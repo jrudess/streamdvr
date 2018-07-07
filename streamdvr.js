@@ -67,7 +67,7 @@ function createSites() {
         mainSiteLoop(new CAM4.Cam4(tui));
     }
 
-    tui.initSites();
+    tui.init();
 }
 
 createSites();

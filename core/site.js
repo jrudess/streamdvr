@@ -39,6 +39,8 @@ class Site {
         this.streamerList = new Map();
 
         tui.addSite(this);
+
+        this.msg(this.siteConfig.streamers.length + " streamer(s) in config");
     }
 
     getSiteName() {

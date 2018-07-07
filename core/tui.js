@@ -198,7 +198,7 @@ class Tui {
     }
 
     // Called after SITES is populated
-    initSites() {
+    init() {
         // Initial loadConfig is called before sites are created
         // so correct the shown status for the new lists.
         if (this.config.tui) {
@@ -210,20 +210,6 @@ class Tui {
                 this.screen.key(hotkeys[i], () => {
                     this.list.focus();
                 });
-            }
-        }
-
-        for (let i = 0; i < this.SITES.length; i++) {
-            const siteName = this.SITES[i].listName;
-            if ((this.config.enableMFC      && siteName === "mfc") ||
-                (this.config.enableCB       && siteName === "cb") ||
-                (this.config.enableTwitch   && siteName === "twitch") ||
-                (this.config.enableMixer    && siteName === "mixer") ||
-                (this.config.enableBonga    && siteName === "bonga") ||
-                (this.config.enableCamsoda  && siteName === "camsoda") ||
-                (this.config.enableFC2      && siteName === "fc2")) {
-
-                this.SITES[i].msg(this.SITES[i].siteConfig.streamers.length + " streamer(s) in config");
             }
         }
     }
