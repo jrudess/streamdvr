@@ -9,8 +9,7 @@ const childProcess = require("child_process");
 
 class Site {
     constructor(siteName, tui) {
-        // For sizing columns
-        this.logpad     = "         ";
+        this.logpad     = "         "; // For sizing columns
         this.siteName   = siteName;
         this.padName    = (siteName + this.logpad).substring(0, this.logpad.length);
         this.listName   = siteName.toLowerCase();
@@ -41,10 +40,6 @@ class Site {
         tui.addSite(this);
 
         this.msg(this.siteConfig.streamers.length + " streamer(s) in config");
-    }
-
-    getSiteName() {
-        return this.siteName;
     }
 
     getDateTime() {
@@ -86,7 +81,7 @@ class Site {
     }
 
     disconnect() {
-        // pure virtual method
+        // optional virtual method
     }
 
     getCaptureArguments(url, filename) {
@@ -129,7 +124,6 @@ class Site {
                 params.push("-v");
                 params.push("fatal");
             }
-
         }
         return params;
     }
@@ -162,7 +156,7 @@ class Site {
             updates.exclude = [];
         }
 
-        // if there were some updates, then rewrite updates.yml
+        // save the updates
         if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
             fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
@@ -325,7 +319,7 @@ class Site {
         let completeDir = this.tui.config.completeDirectory;
 
         if (this.tui.config.streamerSubdir) {
-            completeDir = completeDir + "/" + streamer.nm;
+            completeDir += "/" + streamer.nm;
             if (this.tui.config.includeSiteInDir) {
                 completeDir += this.siteDir;
             }
@@ -333,6 +327,16 @@ class Site {
         }
 
         return completeDir;
+    }
+
+    refresh(uid) {
+        if (!this.tui.tryingToExit && this.streamerList.has(uid)) {
+            const queries = [];
+            queries.push(this.checkStreamerState(uid));
+            Promise.all(queries).then(() => {
+                this.tui.render();
+            });
+        }
     }
 
     startCapture(streamer, filename, spawnArgs) {
@@ -370,14 +374,7 @@ class Site {
                 }
             });
 
-            // Refresh streamer status since streamer has likely changed state
-            if (!this.tui.tryingToExit && this.streamerList.has(streamer.uid)) {
-                const queries = [];
-                queries.push(this.checkStreamerState(streamer.uid));
-                Promise.all(queries).then(() => {
-                    this.tui.render();
-                });
-            }
+            this.refresh(streamer.uid);
         });
     }
 
@@ -436,12 +433,13 @@ class Site {
             // Note: setting captureProcess to null releases program to exit
             this.storeCapInfo(streamer.uid, "", null);
 
-            // Note: print the msg last since it renders the screen
             this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.tui.config.autoConvertType);
 
             if (item !== null) {
                 item.postProcess = 0;
             }
+
+            this.refresh(streamer.uid);
         });
 
         myCompleteProcess.on("error", (err) => {
