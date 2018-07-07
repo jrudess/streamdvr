@@ -371,13 +371,11 @@ class Site {
             });
 
             // Refresh streamer status since streamer has likely changed state
-            // if (this.streamerList.has(streamer.uid)) {
-            //     const queries = [];
-            //     queries.push(this.checkStreamerState(streamer.uid));
-            //     Promise.all(queries).then(() => {
-            //         this.tui.render();
-            //     });
-            // }
+            if (!this.tui.tryingToExit && this.streamerList.has(streamer.uid)) {
+                Promise.try(this.checkStreamerState(streamer.uid)).then(() => {
+                    this.tui.render();
+                });
+            }
         });
     }
 
