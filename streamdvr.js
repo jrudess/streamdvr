@@ -32,6 +32,11 @@ function createSites() {
         });
     }
 
+    if (typeof tui.config.enableMFCSL !== "undefined" && tui.config.enableMFCSL) {
+        const MFCSL = require("./plugins/mfcsl");
+        mainSiteLoop(new MFCSL.Mfcsl(tui));
+    }
+
     if (typeof tui.config.enableCB !== "undefined" && tui.config.enableCB) {
         const CB = require("./plugins/cb");
         mainSiteLoop(new CB.Cb(tui));

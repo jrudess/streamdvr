@@ -28,6 +28,7 @@ errorcolor: red
 includeSiteInFile: false
 includeSiteInDir: false
 enableMFC: false
+enableMFCSL: true
 enableCB: true
 enableTwitch: true
 enableMixer: true
