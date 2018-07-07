@@ -173,7 +173,7 @@ class Site {
     updateList(streamer, add, isTemp) {
         if (typeof streamer === "undefined") {
             this.errMsg("Streamer does not exist on this site");
-            return;
+            return false;
         }
 
         let dirty = false;
@@ -181,22 +181,22 @@ class Site {
         if (add) {
             if (this.addStreamer(streamer, list, isTemp)) {
                 list.push(streamer.uid);
-                dirty = !isTemp;
+                dirty = true;
             }
         } else if (this.removeStreamer(streamer, list)) {
             if (this.siteConfig.streamers.indexOf(streamer.uid) !== -1) {
                 list = _.without(list, streamer.uid);
-                dirty = !isTemp;
+                dirty = true;
             }
         }
-        if (isTemp) {
-            this.tempList = list;
-        } else {
-            this.siteConfig.streamers = list;
-        }
         if (dirty) {
-            this.writeConfig();
+            if (isTemp) {
+                this.tempList = list;
+            } else {
+                this.siteConfig.streamers = list;
+            }
         }
+        return dirty && !isTemp;
     }
 
     updateStreamers(bundle, add) {
@@ -217,8 +217,7 @@ class Site {
         }
 
         let added = false;
-        const index = list.indexOf(streamer.uid);
-        if (index === -1) {
+        if (list.indexOf(streamer.uid) === -1) {
             this.msg(colors.name(streamer.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
@@ -232,15 +231,17 @@ class Site {
     }
 
     removeStreamer(streamer) {
+        let dirty = false;
         if (this.streamerList.has(streamer.uid)) {
             this.msg(colors.name(streamer.nm) + " removed from capture list.");
             this.haltCapture(streamer.uid);
             this.streamerList.delete(streamer.uid);
             this.tui.render();
+            dirty = true;
         } else {
             this.errMsg(colors.name(streamer.nm) + " not in capture list.");
         }
-        return true;
+        return dirty;
     }
 
     checkStreamerState(streamer, msg, isStreaming, prevState) {

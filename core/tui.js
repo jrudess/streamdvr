@@ -304,10 +304,12 @@ class Tui {
     // Add and remove streamers
     updateList(cmd, site, nm, isTemp) {
         for (let i = 0; i < this.SITES.length; i++) {
-            const siteName = this.SITES[i].siteName.trim().toLowerCase();
-            if (site === siteName) {
+            if (site === this.SITES[i].listName) {
                 const isAdd = cmd === "add" || cmd === "addtemp";
-                this.SITES[i].updateList(nm, isAdd, isTemp);
+                if (this.SITES[i].updateList(nm, isAdd, isTemp) && !isTemp) {
+                    this.SITES[i].writeConfig();
+                }
+                return;
             }
         }
     }

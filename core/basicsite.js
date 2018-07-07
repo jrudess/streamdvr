@@ -35,7 +35,7 @@ class Basicsite extends site.Site {
     }
 
     updateList(nm, add, isTemp) {
-        return Promise.try(() => super.updateList({nm: nm, uid: nm}, add, isTemp));
+        return super.updateList({nm: nm, uid: nm}, add, isTemp);
     }
 
     checkStreamerState(nm) {
