@@ -43,7 +43,7 @@ class Basicsite extends site.Site {
         let stderr = null;
         let msg = colors.name(nm);
 
-        this.dbgMsg(colors.name(nm) + " checking online status");
+        // this.dbgMsg(colors.name(nm) + " checking online status");
 
         return Promise.try(() => {
             // Detect if streamer is online or actively streaming
@@ -116,7 +116,7 @@ class Basicsite extends site.Site {
             }
 
             // Don't print errors for normal offline cases
-            if (stdoutprint || stderrprint) {
+            if (stdoutprint || (stderrprint && stdout !== null)) {
                 this.errMsg(colors.name(nm) + " " + stdout.toString());
             }
 
@@ -188,7 +188,7 @@ class Basicsite extends site.Site {
         let newurl = url;
         if (this.noHLS) {
             newurl = this.siteUrl + streamer.nm;
-        } if (this.tui.config.streamlink) {
+        } else if (this.tui.config.streamlink) {
             newurl = "hlssession://" + url;
         }
 
