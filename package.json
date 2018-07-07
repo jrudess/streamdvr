@@ -20,7 +20,7 @@
     },
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
-        "blessed": "chjj/blessed",
+        "blessed": "github:chjj/blessed",
         "bluebird": "^3.5.1",
         "cheerio": "^1.0.0-rc.2",
         "colors": "latest",
@@ -32,7 +32,7 @@
         "request": "^2.87.0",
         "request-promise-native": "^1.0.5",
         "string": "^3.3.3",
-        "underscore": "latest",
+        "underscore": "^1.9.1",
         "ws": "^5.2.1",
         "xmlhttprequest": "^1.8.0"
     }
