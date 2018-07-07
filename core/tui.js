@@ -13,6 +13,26 @@ class Tui {
     constructor() {
         // For sizing columns
         this.listpad = "                           ";
+        this.configdir = "";
+
+        let checkHome = 0;
+
+        if (typeof process.env.XDG_CONFIG_HOME !== "undefined") {
+            this.configdir = process.env.XDG_CONFIG_HOME + "/streamdvr/";
+            if (!fs.existsSync(this.configdir + "config.yml")) {
+                checkHome = 1;
+            }
+        }
+
+        if (this.configdir === "" || checkHome) {
+            this.configdir = process.platform === "win32" ? process.env.APPDATA + "/streamdvr/" : process.env.HOME + "/.config/streamdvr/";
+        }
+
+        if (!fs.existsSync(this.configdir + "config.yml")) {
+            this.configdir = "./config/";
+        }
+
+        this.configfile = this.configdir + "config.yml";
 
         this.config = null;
         this.loadConfig();
@@ -314,7 +334,7 @@ class Tui {
     }
 
     loadConfig() {
-        this.config = yaml.safeLoad(fs.readFileSync("./config/config.yml", "utf8"));
+        this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
 
         colors.setTheme({
             name:    this.config.namecolor,

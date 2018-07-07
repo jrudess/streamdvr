@@ -10,13 +10,15 @@ const childProcess = require("child_process");
 class Site {
     constructor(siteName, tui) {
         // For sizing columns
-        this.logpad  = "         ";
-        this.siteName = siteName;
-        this.padName  = (siteName + this.logpad).substring(0, this.logpad.length);
-        this.listName = siteName.toLowerCase();
+        this.logpad     = "         ";
+        this.siteName   = siteName;
+        this.padName    = (siteName + this.logpad).substring(0, this.logpad.length);
+        this.listName   = siteName.toLowerCase();
+        this.cfgname    = tui.configdir + this.listName + ".yml";
+        this.updatename = tui.configdir + this.listName + "_updates.yml";
 
         // sitename.yml
-        this.siteConfig = yaml.safeLoad(fs.readFileSync("./config/" + this.listName + ".yml", "utf8"));
+        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
 
         // Custom site directory suffix
         this.siteDir = "_" + this.listName;
@@ -131,17 +133,16 @@ class Site {
     }
 
     processUpdates() {
-        const filename = "./config/" + this.listName + "_updates.yml";
-        const stats = fs.statSync(filename);
+        const stats = fs.statSync(this.updatename);
         if (!stats.isFile()) {
-            this.dbgMsg(filename + " does not exist");
+            this.dbgMsg(this.updatename + " does not exist");
             return {includeStreamers: [], excludeStreamers: [], dirty: false};
         }
 
         let includeStreamers = [];
         let excludeStreamers = [];
 
-        const updates = yaml.safeLoad(fs.readFileSync(filename, "utf8"));
+        const updates = yaml.safeLoad(fs.readFileSync(this.updatename, "utf8"));
 
         if (!updates.include) {
             updates.include = [];
@@ -161,7 +162,7 @@ class Site {
 
         // if there were some updates, then rewrite updates.yml
         if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
-            fs.writeFileSync(filename, yaml.safeDump(updates), "utf8");
+            fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
 
         return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
@@ -301,9 +302,8 @@ class Site {
     }
 
     writeConfig() {
-        const filename = "./config/" + this.listName + ".yml";
-        this.dbgMsg("Rewriting " + filename);
-        fs.writeFileSync(filename, yaml.safeDump(this.siteConfig), "utf8");
+        this.dbgMsg("Rewriting " + this.cfgname);
+        fs.writeFileSync(this.cfgname, yaml.safeDump(this.siteConfig), "utf8");
     }
 
     setupCapture(uid) {

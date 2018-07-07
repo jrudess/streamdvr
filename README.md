@@ -35,7 +35,13 @@ Setup
 Instructions
 ===========
 
-Refer to `config.yml` for all configuration options.
+Refer to `config/config.yml` for all configuration options.
+
+* config files are loaded from the following paths listed in precedence order
+  * $XDG_CONFIG_HOME/streamdvr/
+  * $HOME/.config/streamdvr/
+    * %LOCALAPPDATA%/streamdvr/ on windows
+  * $cwd/config/
 
 * To run: `node streamdvr.js`
 * To run without color: `node streamdvr.js --no-color`
