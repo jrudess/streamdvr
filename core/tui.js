@@ -13,18 +13,17 @@ class Tui {
     constructor() {
         // For sizing columns
         this.listpad = "                           ";
-        this.configdir = "";
 
-        let checkHome = 0;
+        let checkHome = 1;
 
         if (typeof process.env.XDG_CONFIG_HOME !== "undefined") {
             this.configdir = process.env.XDG_CONFIG_HOME + "/streamdvr/";
-            if (!fs.existsSync(this.configdir + "config.yml")) {
-                checkHome = 1;
+            if (fs.existsSync(this.configdir + "config.yml")) {
+                checkHome = 0;
             }
         }
 
-        if (this.configdir === "" || checkHome) {
+        if (checkHome) {
             this.configdir = process.platform === "win32" ? process.env.APPDATA + "/streamdvr/" : process.env.HOME + "/.config/streamdvr/";
         }
 
@@ -33,6 +32,11 @@ class Tui {
         }
 
         this.configfile = this.configdir + "config.yml";
+
+        if (!fs.existsSync(this.configfile)) {
+            console.log("ERROR: Could not find config.yml");
+            process.exit(1);
+        }
 
         this.config = null;
         this.loadConfig();
