@@ -36,11 +36,11 @@ class Mfc extends site.Site {
                         this.dirty = true;
                     }
 
-                    resolve();
+                    resolve(true);
                 });
             });
         }
-        return Promise.try(() => false);
+        return Promise.resolve(false);
     }
 
     updateStreamers(bundle, add) {
@@ -61,7 +61,7 @@ class Mfc extends site.Site {
 
     checkStreamerState(uid) {
         if (this.mfcGuest.state !== mfc.ClientState.ACTIVE) {
-            return Promise.try(() => false);
+            return Promise.resolve(false);
         }
 
         return Promise.try(() => this.mfcGuest.queryUser(uid)).then((model) => {
@@ -131,7 +131,7 @@ class Mfc extends site.Site {
 
     getStreamers(bundle) {
         if (!super.getStreamers(bundle)) {
-            return Promise.try(() => []);
+            return Promise.resolve([]);
         }
 
         const queries = [];

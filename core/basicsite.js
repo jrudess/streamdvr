@@ -141,7 +141,7 @@ class Basicsite extends site.Site {
 
     getStreamers(bundle) {
         if (!super.getStreamers(bundle)) {
-            return Promise.try(() => []);
+            return Promise.resolve([]);
         }
 
         const nms = [];
