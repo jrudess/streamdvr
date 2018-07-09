@@ -6,8 +6,7 @@ const Promise = require("bluebird");
 const TUI     = require("./core/tui");
 
 function mainSiteLoop(site) {
-    Promise.try(() => site.checkFileSize()
-    ).then(() => site.processUpdates()
+    Promise.try(() => site.processUpdates()
     ).then(() => site.getStreamers()
     ).catch((err) => {
         site.errMsg(err.toString());

@@ -168,7 +168,6 @@ class Site {
                 this.writeConfig();
             }
         });
-        // return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
     updateList(streamer, add, isTemp) {
@@ -196,7 +195,6 @@ class Site {
     }
 
     updateStreamers(list, add) {
-        // const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
         let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
@@ -246,7 +244,7 @@ class Site {
             this.msg(msg);
         }
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
-            // Sometimes the ffmpeg process doesn't end when a streamer
+            // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + (this.tui.config.streamlink ? "streamlink" : "ffmpeg") + " capture process.");
             this.haltCapture(streamer.uid);
@@ -259,6 +257,7 @@ class Site {
             this.dbgMsg("Skipping lookup while exit in progress...");
             return false;
         }
+        this.checkFileSize();
         return true;
     }
 
