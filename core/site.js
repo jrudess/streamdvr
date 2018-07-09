@@ -19,7 +19,7 @@ class Site {
         // sitename.yml
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
 
-        // Custom site directory suffix
+        // Directory suffix
         this.siteDir = "_" + this.listName;
 
         // Blessed UI elements
@@ -28,8 +28,7 @@ class Site {
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
 
-        // Data used to render the displayed lists
-        // JSON data
+        // Contains JSON indexed by UID:
         //     uid
         //     nm
         //     state
@@ -156,7 +155,7 @@ class Site {
             updates.exclude = [];
         }
 
-        // save the updates
+        // reset update.yml
         if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
             fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
@@ -443,8 +442,7 @@ class Site {
     }
 
     msg(msg) {
-        const text = colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg;
-        this.tui.log(text);
+        this.tui.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg);
     }
 
     errMsg(msg) {
