@@ -8,9 +8,7 @@ const TUI     = require("./core/tui");
 function mainSiteLoop(site) {
     Promise.try(() => site.checkFileSize()
     ).then(() => site.processUpdates()
-    ).then((bundle) => site.updateStreamers(bundle, 1)
-    ).then((bundle) => site.updateStreamers(bundle, 0)
-    ).then((bundle) => site.getStreamers(bundle)
+    ).then(() => site.getStreamers()
     ).catch((err) => {
         site.errMsg(err.toString());
     }).finally(() => {

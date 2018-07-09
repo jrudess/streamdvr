@@ -43,20 +43,15 @@ class Mfc extends site.Site {
         return Promise.resolve(false);
     }
 
-    updateStreamers(bundle, add) {
+    updateStreamers(list, add) {
         const queries = [];
-        const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
 
         for (let i = 0; i < list.length; i++) {
             this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
             queries.push(this.updateList(list[i], add, false));
         }
 
-        return Promise.all(queries).then(() => {
-            bundle.dirty = this.dirty;
-            this.dirty = false;
-            return bundle;
-        });
+        return Promise.all(queries).then(() => this.dirty);
     }
 
     checkStreamerState(uid) {
@@ -129,8 +124,8 @@ class Mfc extends site.Site {
         });
     }
 
-    getStreamers(bundle) {
-        if (!super.getStreamers(bundle)) {
+    getStreamers() {
+        if (!super.getStreamers()) {
             return Promise.resolve([]);
         }
 

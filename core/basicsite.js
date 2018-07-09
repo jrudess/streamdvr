@@ -139,8 +139,8 @@ class Basicsite extends site.Site {
         });
     }
 
-    getStreamers(bundle) {
-        if (!super.getStreamers(bundle)) {
+    getStreamers() {
+        if (!super.getStreamers()) {
             return Promise.resolve([]);
         }
 

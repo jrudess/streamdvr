@@ -6,6 +6,7 @@ const mv           = require("mv");
 const moment       = require("moment");
 const colors       = require("colors/safe");
 const childProcess = require("child_process");
+const Promise      = require("bluebird");
 
 class Site {
     constructor(siteName, tui) {
@@ -131,7 +132,7 @@ class Site {
         const stats = fs.statSync(this.updatename);
         if (!stats.isFile()) {
             this.dbgMsg(this.updatename + " does not exist");
-            return {includeStreamers: [], excludeStreamers: [], dirty: false};
+            return Promise.resolve({includeStreamers: [], excludeStreamers: [], dirty: false});
         }
 
         let includeStreamers = [];
@@ -160,7 +161,14 @@ class Site {
             fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
 
-        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
+        return Promise.try(() => this.updateStreamers(includeStreamers, true)
+        ).then((dirty) => this.updateStreamers(excludeStreamers, false) || dirty
+        ).then((dirty) => {
+            if (dirty) {
+                this.writeConfig();
+            }
+        });
+        // return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
     updateList(streamer, add, isTemp) {
@@ -187,14 +195,15 @@ class Site {
         return dirty && !isTemp;
     }
 
-    updateStreamers(bundle, add) {
-        const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
+    updateStreamers(list, add) {
+        // const list = add ? bundle.includeStreamers : bundle.excludeStreamers;
+        let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
-            bundle.dirty |= this.updateList(list[i], add, false);
+            dirty |= this.updateList(list[i], add, false);
         }
 
-        return bundle;
+        return dirty;
     }
 
     addStreamer(streamer, list, isTemp) {
@@ -245,10 +254,7 @@ class Site {
         this.tui.render();
     }
 
-    getStreamers(bundle) {
-        if (bundle.dirty) {
-            this.writeConfig();
-        }
+    getStreamers() {
         if (this.tui.tryingToExit) {
             this.dbgMsg("Skipping lookup while exit in progress...");
             return false;
