@@ -13,7 +13,6 @@ class Mfc extends site.Site {
         this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, modernLogin: this.siteConfig.modernLogin, camYou: false});
 
         this.dirty = false;
-        this.removeList = new Map();
     }
 
     connect() {
@@ -26,11 +25,6 @@ class Mfc extends site.Site {
         this.mfcGuest.disconnect();
     }
 
-    writeConfig() {
-        super.writeConfig();
-        this.removeList.clear();
-    }
-
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
@@ -38,12 +32,6 @@ class Mfc extends site.Site {
                 this.mfcGuest.queryUser(nm).then((streamer) => {
                     if (typeof streamer === "undefined") {
                         reject(new Error("Streamer does not exist on this site"));
-                    }
-
-                    // Solve removing race condition due to extra nm->uid
-                    // lookup threads.
-                    if (!add) {
-                        this.removeList.set(streamer.uid, true);
                     }
 
                     if (super.updateList(streamer, add, isTemp)) {
@@ -85,10 +73,6 @@ class Mfc extends site.Site {
 
             let isStreaming = 0;
             let msg = colors.name(model.nm);
-
-            if (this.removeList.has(uid)) {
-                return false;
-            }
 
             if (!this.streamerList.has(uid)) {
                 this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});

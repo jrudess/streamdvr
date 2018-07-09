@@ -230,46 +230,35 @@ class Tui {
     }
 
     render() {
-        if (typeof this.screen !== "undefined" && this.config.tui) {
-            if (!this.listHidden) {
-                // TODO: Hack
-                for (let i = 0; i < 300; i++) {
-                    this.list.deleteLine(0);
-                }
-
-                let streamerList = [];
-                for (let i = 0; i < this.SITES.length; i++) {
-                    streamerList = streamerList.concat(this.SITES[i].getStreamerList());
-                }
-
-                // Map keys are UID, but want to sort list by name.
-                // const sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
-                //     if (streamerList.get(a).nm < streamerList.get(b).nm) {
-                //         return -1;
-                //     }
-                //     if (streamerList.get(a).nm > streamerList.get(b).nm) {
-                //         return 1;
-                //     }
-                //     return 0;
-                // });
-
-                // for (let i = 0; i < sortedKeys.length; i++) {
-                for (let i = 0; i < streamerList.length; i++) {
-                    // const value = streamerList.get(sortedKeys[i]);
-                    const value = streamerList[i];
-                    const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
-                    const site = value.site;
-                    let state;
-                    if (value.filename === "") {
-                        state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
-                    } else {
-                        state = colors.file(value.filename);
-                    }
-                    this.list.pushLine(name + site + state);
-                }
-            }
-            this.screen.render();
+        if (!this.config.tui || typeof this.screen === "undefined") {
+            return;
         }
+
+        if (!this.listHidden) {
+            // TODO: Hack
+            for (let i = 0; i < 300; i++) {
+                this.list.deleteLine(0);
+            }
+
+            let streamerList = [];
+            for (let i = 0; i < this.SITES.length; i++) {
+                streamerList = streamerList.concat(this.SITES[i].getStreamerList());
+            }
+
+            for (let i = 0; i < streamerList.length; i++) {
+                const value = streamerList[i];
+                const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
+                const site  = value.site;
+                let state;
+                if (value.filename === "") {
+                    state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
+                } else {
+                    state = colors.file(value.filename);
+                }
+                this.list.pushLine(name + site + state);
+            }
+        }
+        this.screen.render();
     }
 
     // Runtime UI adjustments
@@ -383,7 +372,7 @@ class Tui {
         }
 
         // Allow this to execute multiple times so that SIGINT
-        // can get passed again to ffmpeg in case some get hung.
+        // can get passed again to ffmpeg/streamdvr in case some get hung.
         for (let i = 0; i < this.SITES.length; i++) {
             this.SITES[i].haltAllCaptures();
         }
