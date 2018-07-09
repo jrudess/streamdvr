@@ -28,13 +28,11 @@ class Mfc extends site.Site {
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 this.mfcGuest.queryUser(nm).then((streamer) => {
                     if (typeof streamer === "undefined") {
-                        reject(new Error("Streamer does not exist on this site"));
-                    }
-
-                    if (super.updateList(streamer, add, isTemp)) {
+                        this.errMsg(colors.name(nm) + " does not exist on this site");
+                    } else if (super.updateList(streamer, add, isTemp)) {
                         this.dirty = true;
                     }
 
