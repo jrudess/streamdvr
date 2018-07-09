@@ -11,6 +11,9 @@ class Mfc extends site.Site {
             mfc.setLogLevel(0);
         }
         this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, modernLogin: this.siteConfig.modernLogin, camYou: false});
+
+        this.dirty = false;
+        this.removeList = new Map();
     }
 
     connect() {
@@ -23,16 +26,35 @@ class Mfc extends site.Site {
         this.mfcGuest.disconnect();
     }
 
+    writeConfig() {
+        super.writeConfig();
+        this.removeList.clear();
+    }
+
     updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
-            this.mfcGuest.queryUser(nm).then((streamer) => {
-                if (super.updateList(streamer, add, isTemp)) {
-                    super.writeConfig();
-                }
+            return new Promise((resolve, reject) => {
+                this.mfcGuest.queryUser(nm).then((streamer) => {
+                    if (typeof streamer === "undefined") {
+                        reject(new Error("Streamer does not exist on this site"));
+                    }
+
+                    // Solve removing race condition due to extra nm->uid
+                    // lookup threads.
+                    if (!add) {
+                        this.removeList.set(streamer.uid, true);
+                    }
+
+                    if (super.updateList(streamer, add, isTemp)) {
+                        this.dirty = true;
+                    }
+
+                    resolve();
+                });
             });
         }
-        return false;
+        return Promise.try(() => false);
     }
 
     updateStreamers(bundle, add) {
@@ -44,7 +66,11 @@ class Mfc extends site.Site {
             queries.push(this.updateList(list[i], add, false));
         }
 
-        return Promise.all(queries).then(() => bundle);
+        return Promise.all(queries).then(() => {
+            bundle.dirty = this.dirty;
+            this.dirty = false;
+            return bundle;
+        });
     }
 
     checkStreamerState(uid) {
@@ -59,6 +85,10 @@ class Mfc extends site.Site {
 
             let isStreaming = 0;
             let msg = colors.name(model.nm);
+
+            if (this.removeList.has(uid)) {
+                return false;
+            }
 
             if (!this.streamerList.has(uid)) {
                 this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});

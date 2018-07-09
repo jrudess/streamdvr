@@ -165,11 +165,6 @@ class Site {
     }
 
     updateList(streamer, add, isTemp) {
-        if (typeof streamer === "undefined") {
-            this.errMsg("Streamer does not exist on this site");
-            return false;
-        }
-
         let dirty = false;
         let list = isTemp ? this.tempList : this.siteConfig.streamers;
         if (add) {
