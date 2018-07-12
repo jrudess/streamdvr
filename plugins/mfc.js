@@ -97,11 +97,7 @@ class Mfc extends site.Site {
             } else if (bestSession.vs === mfc.STATE.Online) {
                 streamer.state = "Away";
                 // Check the last character but avoid color codes
-                if (msg.charAt(msg.length - 6) === "s") {
-                    msg += colors.name("'");
-                } else {
-                    msg += colors.name("'s");
-                }
+                msg += msg.charAt(msg.length - 6) === "s" ? colors.name("'") : colors.name("'s");
                 msg += " stream is off.";
             } else if (bestSession.vs === mfc.STATE.Offline) {
                 streamer.state = "Offline";
@@ -111,10 +107,7 @@ class Mfc extends site.Site {
             super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
             if (isStreaming) {
-                const capInfo = this.setupCapture(streamer);
-                if (capInfo && capInfo.spawnArgs && capInfo.spawnArgs !== "") {
-                    this.startCapture(capInfo.streamer, capInfo.filename, capInfo.spawnArgs);
-                }
+                this.startCapture(this.setupCapture(streamer));
             }
 
             return true;

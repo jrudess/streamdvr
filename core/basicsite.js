@@ -69,28 +69,24 @@ class Basicsite extends site.Site {
             });
 
             return childToPromise(child).then(() => {
-                let isStreaming = 0;
+                const isStreaming = typeof stdout !== "undefined" && stdout !== null && stdout !== "";
                 let url;
 
-                if (typeof stdout === "undefined" || stdout === null || stdout === "") {
-                    msg += " is offline.";
-                    streamer.state = "Offline";
-                } else {
+                if (isStreaming) {
                     msg += " is streaming.";
-                    isStreaming = 1;
                     streamer.state = "Streaming";
 
                     url = stdout.toString();
                     url = url.replace(/\r?\n|\r/g, "");
+                } else {
+                    msg += " is offline.";
+                    streamer.state = "Offline";
                 }
 
                 super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
                 if (isStreaming) {
-                    const capInfo = this.setupCapture(streamer, url);
-                    if (capInfo && capInfo.spawnArgs && capInfo.spawnArgs !== "") {
-                        this.startCapture(capInfo.streamer, capInfo.filename, capInfo.spawnArgs);
-                    }
+                    this.startCapture(this.setupCapture(streamer, url));
                 }
 
                 return true;
@@ -152,7 +148,7 @@ class Basicsite extends site.Site {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
-        // serial.
+        // serial.  Set batchSize to 0 for full paralell, or 1 for full serial.
         const serRuns = [];
         let count = 0;
         let batchSize = 5;
@@ -183,7 +179,7 @@ class Basicsite extends site.Site {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 
-        // Get the m3u8 URL
+        // Build URL for recorder
         const filename = this.getFileName(streamer.nm);
         let newurl = url;
         if (this.noHLS) {
