@@ -67,7 +67,7 @@ class Tui {
                 top: 0,
                 left: 0,
                 height: "100%-1",
-                width: 70,
+                width: 60,
                 keys: true,
                 mouse: false,
                 alwaysScroll: true,
@@ -86,7 +86,7 @@ class Tui {
 
             this.logbody = blessed.box({
                 top: 0,
-                left: 69,
+                left: 59,
                 height: "100%-1",
                 width: "100%-70",
                 keys: true,
@@ -240,22 +240,28 @@ class Tui {
                 this.list.deleteLine(0);
             }
 
-            let streamerList = [];
+            let first = true;
             for (let i = 0; i < this.SITES.length; i++) {
-                streamerList = streamerList.concat(this.SITES[i].getStreamerList());
-            }
-
-            for (let i = 0; i < streamerList.length; i++) {
-                const value = streamerList[i];
-                const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
-                const site  = value.site;
-                let state;
-                if (value.filename === "") {
-                    state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
-                } else {
-                    state = colors.file(value.filename);
+                const streamerList = this.SITES[i].getStreamerList();
+                if (streamerList.length > 0) {
+                    if (!first) {
+                        this.list.pushLine("");
+                    } else {
+                        first = false;
+                    }
+                    this.list.pushLine(this.SITES[i].siteName);
                 }
-                this.list.pushLine(name + site + state);
+                for (let j = 0; j < streamerList.length; j++) {
+                    const value = streamerList[j];
+                    const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
+                    let state;
+                    if (value.filename === "") {
+                        state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
+                    } else {
+                        state = colors.file(value.filename);
+                    }
+                    this.list.pushLine(name + state);
+                }
             }
         }
         this.screen.render();
@@ -266,13 +272,13 @@ class Tui {
         switch (window) {
         case "list":
             switch (cmd) {
-            case "show": this.list.show(); this.logbody.left = 69; this.logbody.width = "100%-70"; this.listHidden = false; break;
+            case "show": this.list.show(); this.logbody.left = 59; this.logbody.width = "100%-60"; this.listHidden = false; break;
             case "hide": this.list.hide(); this.logbody.left = 0;  this.logbody.width = "100%";    this.listHidden = true;  break;
             }
             break;
         case "log":
             switch (cmd) {
-            case "show": this.logbody.show(); this.list.width = 70;     this.logHidden = false; break;
+            case "show": this.logbody.show(); this.list.width = 60;     this.logHidden = false; break;
             case "hide": this.logbody.hide(); this.list.width = "100%"; this.logHidden = true;  break;
             }
             break;
