@@ -239,20 +239,31 @@ class Tui {
             for (let i = 0; i < 300; i++) {
                 this.list.deleteLine(0);
             }
-
             let first = true;
             for (let i = 0; i < this.SITES.length; i++) {
-                const streamerList = this.SITES[i].getStreamerList();
-                if (streamerList.length > 0) {
+                let sortedKeys = [];
+                const streamerList = this.SITES[i].streamerList;
+                if (streamerList.size > 0) {
                     if (!first) {
                         this.list.pushLine("");
                     } else {
                         first = false;
                     }
                     this.list.pushLine(this.SITES[i].siteName);
+
+                    // Map keys are UID, but want to sort list by name.
+                    sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
+                        if (streamerList.get(a).nm < streamerList.get(b).nm) {
+                            return -1;
+                        }
+                        if (streamerList.get(a).nm > streamerList.get(b).nm) {
+                            return 1;
+                        }
+                        return 0;
+                    });
                 }
-                for (let j = 0; j < streamerList.length; j++) {
-                    const value = streamerList[j];
+                for (let j = 0; j < sortedKeys.length; j++) {
+                    const value = streamerList.get(sortedKeys[j]);
                     const name  = (colors.name(value.nm) + this.listpad).substring(0, this.listpad.length);
                     let state;
                     if (value.filename === "") {
