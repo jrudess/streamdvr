@@ -23,7 +23,7 @@
         "blessed": "github:chjj/blessed",
         "bluebird": "^3.5.1",
         "cheerio": "^1.0.0-rc.2",
-        "colors": "latest",
+        "colors": "^1.3.1",
         "js-yaml": "^3.12.0",
         "load": "^1.0.2",
         "mkdirp": "^0.5.1",
@@ -31,9 +31,8 @@
         "mv": "^2.1.1",
         "request": "^2.87.0",
         "request-promise-native": "^1.0.5",
-        "string": "^3.3.3",
         "underscore": "^1.9.1",
-        "ws": "^5.2.1",
+        "ws": "^5.2.2",
         "xmlhttprequest": "^1.8.0"
     }
 }
