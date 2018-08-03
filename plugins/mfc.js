@@ -46,6 +46,7 @@ class Mfc extends site.Site {
     updateStreamers(list, add) {
         const queries = [];
 
+        this.dirty = false;
         for (let i = 0; i < list.length; i++) {
             this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
             queries.push(this.updateList(list[i], add, false));
