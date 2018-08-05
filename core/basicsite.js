@@ -148,7 +148,7 @@ class Basicsite extends site.Site {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
-        // serial.  Set batchSize to 0 for full paralell, or 1 for full serial.
+        // serial.  Set batchSize to 0 for full parallel, or 1 for full serial.
         const serRuns = [];
         let count = 0;
         let batchSize = 5;

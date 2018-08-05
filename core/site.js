@@ -10,9 +10,8 @@ const Promise      = require("bluebird");
 
 class Site {
     constructor(siteName, tui) {
-        this.logpad     = "         "; // For sizing columns
         this.siteName   = siteName;
-        this.padName    = (siteName + this.logpad).substring(0, this.logpad.length);
+        this.padName    = siteName.padEnd(9, " ");
         this.listName   = siteName.toLowerCase();
         this.cfgname    = tui.configdir + this.listName + ".yml";
         this.updatename = tui.configdir + this.listName + "_updates.yml";
