@@ -34,6 +34,7 @@ class Site {
         //     state
         //     filename
         //     captureProcess
+        //     postProcess
         this.streamerList = new Map();
 
         tui.addSite(this);
@@ -218,7 +219,7 @@ class Site {
             this.errMsg(colors.name(streamer.nm) + " is already in the capture list");
         }
         if (!this.streamerList.has(streamer.uid)) {
-            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null});
+            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
             this.tui.render();
         }
         return added;
@@ -280,9 +281,10 @@ class Site {
     }
 
     haltAllCaptures() {
-        this.streamerList.forEach((value) => {
-            if (value.captureProcess !== null) {
-                value.captureProcess.kill("SIGINT");
+        this.streamerList.forEach((streamer) => {
+            // Don't kill post-process jobs, or recording can get lost.
+            if (streamer.captureProcess !== null && streamer.postProcess === 0) {
+                streamer.captureProcess.kill("SIGINT");
             }
         });
     }
@@ -290,7 +292,7 @@ class Site {
     haltCapture(uid) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
-            if (streamer.captureProcess !== null) {
+            if (streamer.captureProcess !== null && streamer.postProcess === 0) {
                 streamer.captureProcess.kill("SIGINT");
             }
         }

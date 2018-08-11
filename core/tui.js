@@ -387,10 +387,6 @@ class Tui {
 
         // Allow this to execute multiple times so that SIGINT
         // can get passed again to ffmpeg/streamdvr in case some get hung.
-        //
-        // TODO: This can interrupt post-process jobs, and then the ts is
-        // deleted and the video is lost.  Should post-process jobs be
-        // explicitly excluded from processing SIGINT?
         for (let i = 0; i < this.SITES.length; i++) {
             this.SITES[i].haltAllCaptures();
         }
