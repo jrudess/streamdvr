@@ -383,6 +383,18 @@ class Site {
         });
     }
 
+    finalize(streamer, finalName, item) {
+        // Note: setting postProcess to null releases program to exit
+        this.storeCapInfo(streamer.uid, "", null);
+        this.msg(colors.name(streamer.nm) + " done converting " + finalName);
+
+        if (item !== null) {
+            item.postProcess = 0;
+        }
+
+        this.refresh(streamer.uid);
+    }
+
     postProcess(streamer, filename) {
         const fullname = filename + ".ts";
         const completeDir = this.getCompleteDir(streamer);
@@ -407,6 +419,8 @@ class Site {
             item.postProcess = 1;
         }
 
+        const finalName = filename + "." + this.tui.config.autoConvertType;
+
         const mySpawnArguments = [
             "-hide_banner",
             "-v",
@@ -424,26 +438,27 @@ class Site {
 
         mySpawnArguments.push("-copyts");
         mySpawnArguments.push("-start_at_zero");
-        mySpawnArguments.push(completeDir + "/" + filename + "." + this.tui.config.autoConvertType);
+        mySpawnArguments.push(completeDir + "/" + finalName);
 
+        this.msg(colors.name(streamer.nm) + " converting to " + finalName);
         const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
-        this.msg(colors.name(streamer.nm) + " converting to " + filename + "." + this.tui.config.autoConvertType);
-        this.storeCapInfo(streamer.uid, filename + "." + this.tui.config.autoConvertType, myCompleteProcess);
+        this.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
             if (!this.tui.config.keepTsFile) {
                 fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
             }
 
-            // Note: setting captureProcess to null releases program to exit
-            this.storeCapInfo(streamer.uid, "", null);
-            this.msg(colors.name(streamer.nm) + " done converting " + filename + "." + this.tui.config.autoConvertType);
+            if (this.tui.config.postprocess) {
+                const args = [this.tui.config.completeDirectory, finalName];
+                const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
 
-            if (item !== null) {
-                item.postProcess = 0;
+                userPostProcess.on("close", () => {
+                    this.finalize(streamer, finalName, item);
+                });
+            } else {
+                this.finalize(streamer, finalName, item);
             }
-
-            this.refresh(streamer.uid);
         });
 
         myCompleteProcess.on("error", (err) => {
