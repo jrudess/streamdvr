@@ -421,7 +421,7 @@ class Site {
                 }
             });
 
-            this.postScript(streamer, finalName, null);
+            this.postScript(streamer, fullname, null);
             return;
         }
 
