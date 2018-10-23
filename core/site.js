@@ -395,8 +395,22 @@ class Site {
         this.refresh(streamer.uid);
     }
 
+    postScript(streamer, finalName, item) {
+        if (this.tui.config.postprocess) {
+            const args = [this.tui.config.completeDirectory, finalName];
+            const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
+
+            userPostProcess.on("close", () => {
+                this.finalize(streamer, finalName, item);
+            });
+        } else {
+            this.finalize(streamer, finalName, item);
+        }
+    }
+
     postProcess(streamer, filename) {
         const fullname = filename + ".ts";
+        const finalName = filename + "." + this.tui.config.autoConvertType;
         const completeDir = this.getCompleteDir(streamer);
 
         if (this.tui.config.autoConvertType !== "mp4" && this.tui.config.autoConvertType !== "mkv") {
@@ -407,7 +421,7 @@ class Site {
                 }
             });
 
-            this.storeCapInfo(streamer.uid, "", null);
+            this.postScript(streamer, finalName, null);
             return;
         }
 
@@ -418,8 +432,6 @@ class Site {
             item = this.streamerList.get(streamer.uid);
             item.postProcess = 1;
         }
-
-        const finalName = filename + "." + this.tui.config.autoConvertType;
 
         const mySpawnArguments = [
             "-hide_banner",
@@ -449,16 +461,7 @@ class Site {
                 fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
             }
 
-            if (this.tui.config.postprocess) {
-                const args = [this.tui.config.completeDirectory, finalName];
-                const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
-
-                userPostProcess.on("close", () => {
-                    this.finalize(streamer, finalName, item);
-                });
-            } else {
-                this.finalize(streamer, finalName, item);
-            }
+            this.postScript(streamer, finalName, item);
         });
 
         myCompleteProcess.on("error", (err) => {
