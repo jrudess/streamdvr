@@ -386,9 +386,9 @@ class Site {
     finalize(streamer, finalName, item) {
         // Note: setting postProcess to null releases program to exit
         this.storeCapInfo(streamer.uid, "", null);
-        this.msg(colors.name(streamer.nm) + " done converting " + finalName);
 
         if (item !== null) {
+            this.msg(colors.name(streamer.nm) + " done converting " + finalName);
             item.postProcess = 0;
         }
 
