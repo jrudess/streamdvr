@@ -388,7 +388,6 @@ class Site {
         this.storeCapInfo(streamer.uid, "", null);
 
         if (item !== null) {
-            this.msg(colors.name(streamer.nm) + " done converting " + finalName);
             item.postProcess = 0;
         }
 
@@ -401,6 +400,7 @@ class Site {
             const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
 
             userPostProcess.on("close", () => {
+                this.msg(colors.name(streamer.nm) + " done post-processing" + finalName);
                 this.finalize(streamer, finalName, item);
             });
         } else {
@@ -461,6 +461,7 @@ class Site {
                 fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
             }
 
+            this.msg(colors.name(streamer.nm) + " done converting " + finalName);
             this.postScript(streamer, finalName, item);
         });
 
