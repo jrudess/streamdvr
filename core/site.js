@@ -1,11 +1,10 @@
-const yaml         = require("js-yaml");
-const mkdirp       = require("mkdirp");
-const fs           = require("fs");
-const _            = require("underscore");
-const mv           = require("mv");
-const moment       = require("moment");
-const colors       = require("colors/safe");
-const childProcess = require("child_process");
+const yaml    = require("js-yaml");
+const fs      = require("fs");
+const _       = require("underscore");
+const mv      = require("mv");
+const moment  = require("moment");
+const colors  = require("colors/safe");
+const {spawn} = require("child_process");
 
 class Site {
     constructor(siteName, tui) {
@@ -323,7 +322,7 @@ class Site {
         return false;
     }
 
-    getCompleteDir(streamer) {
+    async getCompleteDir(streamer) {
         let completeDir = this.tui.config.completeDirectory;
 
         if (this.tui.config.streamerSubdir) {
@@ -331,7 +330,11 @@ class Site {
             if (this.tui.config.includeSiteInDir) {
                 completeDir += this.siteDir;
             }
-            mkdirp.sync(completeDir);
+            await fs.mkdir(completeDir, {recursive: true}, (err) => {
+                if (err) {
+                    throw err;
+                }
+            });
         }
 
         return completeDir;
@@ -355,7 +358,7 @@ class Site {
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
         const capper = this.tui.config.streamlink ? "streamlink" : "ffmpeg";
-        const captureProcess = childProcess.spawn(capper, capInfo.spawnArgs);
+        const captureProcess = spawn(capper, capInfo.spawnArgs);
 
         if (this.tui.config.debugrecorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
@@ -405,7 +408,7 @@ class Site {
     postScript(streamer, finalName, item) {
         if (this.tui.config.postprocess) {
             const args = [this.tui.config.completeDirectory, finalName];
-            const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
+            const userPostProcess = spawn(this.tui.config.postprocess, args);
 
             userPostProcess.on("close", () => {
                 this.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
@@ -416,10 +419,10 @@ class Site {
         }
     }
 
-    postProcess(streamer, filename) {
+    async postProcess(streamer, filename) {
         const fullname = filename + ".ts";
         const finalName = filename + "." + this.tui.config.autoConvertType;
-        const completeDir = this.getCompleteDir(streamer);
+        const completeDir = await this.getCompleteDir(streamer);
 
         if (this.tui.config.autoConvertType !== "mp4" && this.tui.config.autoConvertType !== "mkv") {
             this.dbgMsg(colors.name(streamer.nm) + " recording moved (" + this.tui.config.captureDirectory + "/" + filename + ".ts to " + completeDir + "/" + filename + ".ts)");
@@ -461,7 +464,7 @@ class Site {
         mySpawnArguments.push(completeDir + "/" + finalName);
 
         this.msg(colors.name(streamer.nm) + " converting to " + finalName);
-        const myCompleteProcess = childProcess.spawn("ffmpeg", mySpawnArguments);
+        const myCompleteProcess = spawn("ffmpeg", mySpawnArguments);
         this.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {

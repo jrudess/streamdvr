@@ -1,6 +1,6 @@
-const colors       = require("colors/safe");
-const childProcess = require("child_process");
-const site         = require("./site");
+const colors  = require("colors/safe");
+const {exec} = require("child_process");
+const site    = require("./site");
 
 function promiseSerial(funcs) {
     return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
@@ -59,7 +59,7 @@ class Basicsite extends site.Site {
                 }
             }
 
-            const child = childProcess.exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
+            const child = exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
             child.stdout.on("data", (data) => {
                 stdout = data;
             });

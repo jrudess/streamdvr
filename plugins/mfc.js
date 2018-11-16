@@ -15,7 +15,9 @@ class Mfc extends site.Site {
     }
 
     connect() {
-        return Promise.resolve().then(() => this.mfcGuest.connectAndWaitForModels()).catch((err) => {
+        return Promise.resolve().then(() =>
+            this.mfcGuest.connectAndWaitForModels()
+        ).catch((err) => {
             this.errMsg(err.toString());
         });
     }
@@ -59,7 +61,9 @@ class Mfc extends site.Site {
             return Promise.resolve(false);
         }
 
-        return Promise.resolve().then(() => this.mfcGuest.queryUser(uid)).then((model) => {
+        return Promise.resolve().then(() =>
+            this.mfcGuest.queryUser(uid)
+        ).then((model) => {
             if (typeof model === "undefined" || typeof model.uid === "undefined") {
                 return false;
             }
