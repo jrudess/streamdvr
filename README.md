@@ -17,7 +17,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 Setup
 ==========
 
-* Dependencies: `node.js >= 10.0.0`, `npm`, `git`, and `ffmpeg`
+* Dependencies: `node.js >= 10.12.0`, `npm`, `git`, and `ffmpeg`
 * Optional Dependencies: `streamlink >= 0.14.2+20.gc394b41`, `youtube-dl`, `mfcauto`
 
   * `streamlink` is used to fetch m3u8 URLs and also to record
