@@ -151,7 +151,18 @@ class Mfc extends site.Site {
         if (this.tui.config.streamlink) {
             url = "hlssession://" + url;
         }
-        const spawnArgs = this.getCaptureArguments(url, filename);
+
+        // Checking if this is 16:9 stream via base64 key characters in url
+        const params = [];
+        if (url.indexOf("==") === -1) {
+            // MFC is mapping
+            params.push("-map");
+            params.push("0:1");
+            params.push("-map");
+            params.push("0:2");
+        }
+
+        const spawnArgs = this.getCaptureArguments(url, filename, {params: params});
 
         return {spawnArgs: spawnArgs, filename: filename, streamer: model};
     }

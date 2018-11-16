@@ -5,7 +5,8 @@
     },
     "extends": "eslint:recommended",
     "parserOptions": {
-        "sourceType": "module"
+        "sourceType": "module",
+        "ecmaVersion": 2017
     },
     "rules": {
         "accessor-pairs": "error",
@@ -136,13 +137,14 @@
         "newline-per-chained-call": "off",
         "no-alert": "error",
         "no-array-constructor": "error",
-        "no-await-in-loop": "error",
+        "no-await-in-loop": "off",
         "no-bitwise": "off",
         "no-buffer-constructor": "error",
         "no-caller": "error",
         "no-catch-shadow": "error",
         "no-confusing-arrow": "error",
         "no-console": "off",
+        "no-constant-condition": "off",
         "no-continue": "off",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",

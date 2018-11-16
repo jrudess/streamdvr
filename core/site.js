@@ -6,7 +6,7 @@ const mv           = require("mv");
 const moment       = require("moment");
 const colors       = require("colors/safe");
 const childProcess = require("child_process");
-const Promise      = require("bluebird");
+// const Promise      = require("bluebird");
 
 class Site {
     constructor(siteName, tui) {
@@ -84,7 +84,7 @@ class Site {
         // optional virtual method
     }
 
-    getCaptureArguments(url, filename) {
+    getCaptureArguments(url, filename, options) {
         let params = [];
 
         if (this.tui.config.streamlink) {
@@ -106,6 +106,8 @@ class Site {
                 params.push("-Q");
             }
         } else {
+            // From camfapper for detecting 16:9 streams
+            // if (url.indexOf('==')==-1) { params for non } else { params for 16x9 }
             params = [
                 "-hide_banner",
                 "-i",
@@ -117,22 +119,29 @@ class Site {
                 "-r",
                 "60",
                 "-b:v",
-                "500k",
-                this.tui.config.captureDirectory + "/" + filename + ".ts"
+                "500k"
             ];
+            if (typeof options !== "undefined") {
+                if (typeof options.params !== "undefined") {
+                    options.params.forEach((item) => {
+                        params.push(item);
+                    });
+                }
+            }
             if (!this.tui.config.debugrecorder) {
                 params.push("-v");
                 params.push("fatal");
             }
+            params.push(this.tui.config.captureDirectory + "/" + filename + ".ts");
         }
         return params;
     }
 
-    processUpdates() {
+    async processUpdates() {
         const stats = fs.statSync(this.updatename);
         if (!stats.isFile()) {
             this.dbgMsg(this.updatename + " does not exist");
-            return Promise.resolve({includeStreamers: [], excludeStreamers: [], dirty: false});
+            return {includeStreamers: [], excludeStreamers: [], dirty: false};
         }
 
         let includeStreamers = [];
@@ -161,13 +170,16 @@ class Site {
             fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
 
-        return Promise.try(() => this.updateStreamers(includeStreamers, true)
-        ).then((dirty) => this.updateStreamers(excludeStreamers, false) || dirty
-        ).then((dirty) => {
+        try {
+            let dirty = await this.updateStreamers(includeStreamers, true);
+            dirty |= await this.updateStreamers(excludeStreamers, false);
             if (dirty) {
                 this.writeConfig();
             }
-        });
+        } catch (err) {
+            this.errMsg(err.toString());
+        }
+        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
     updateList(streamer, add, isTemp) {
@@ -400,7 +412,7 @@ class Site {
             const userPostProcess = childProcess.spawn(this.tui.config.postprocess, args);
 
             userPostProcess.on("close", () => {
-                this.msg(colors.name(streamer.nm) + " done post-processing" + finalName);
+                this.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
                 this.finalize(streamer, finalName, item);
             });
         } else {

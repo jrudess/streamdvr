@@ -360,18 +360,18 @@ class Tui {
         return false;
     }
 
-    tryExit() {
-        // delay exiting until all capture and postprocess
-        // ffmpeg jobs have completed.
-        if (!this.busy()) {
-            for (let i = 0; i < this.SITES.length; i++) {
-                this.SITES[i].disconnect();
+    async tryExit() {
+        while (true) {
+            // delay exiting until all capture and postprocess
+            // ffmpeg jobs have completed.
+            if (!this.busy()) {
+                for (let i = 0; i < this.SITES.length; i++) {
+                    this.SITES[i].disconnect();
+                }
+                process.exit(0);
+            } else {
+                await sleep(1000);
             }
-            process.exit(0);
-        } else {
-            sleep(1000).then(() => {
-                this.tryExit(); // recursion!
-            });
         }
     }
 
