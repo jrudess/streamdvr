@@ -21,7 +21,6 @@
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
         "blessed": "github:chjj/blessed",
-        "bluebird": "^3.5.3",
         "cheerio": "^1.0.0-rc.2",
         "colors": "^1.3.2",
         "js-yaml": "^3.12.0",

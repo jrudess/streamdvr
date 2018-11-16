@@ -6,7 +6,6 @@ const mv           = require("mv");
 const moment       = require("moment");
 const colors       = require("colors/safe");
 const childProcess = require("child_process");
-// const Promise      = require("bluebird");
 
 class Site {
     constructor(siteName, tui) {
@@ -106,8 +105,6 @@ class Site {
                 params.push("-Q");
             }
         } else {
-            // From camfapper for detecting 16:9 streams
-            // if (url.indexOf('==')==-1) { params for non } else { params for 16x9 }
             params = [
                 "-hide_banner",
                 "-i",
@@ -141,7 +138,7 @@ class Site {
         const stats = fs.statSync(this.updatename);
         if (!stats.isFile()) {
             this.dbgMsg(this.updatename + " does not exist");
-            return {includeStreamers: [], excludeStreamers: [], dirty: false};
+            return;
         }
 
         let includeStreamers = [];
@@ -179,7 +176,6 @@ class Site {
         } catch (err) {
             this.errMsg(err.toString());
         }
-        return {includeStreamers: includeStreamers, excludeStreamers: excludeStreamers, dirty: false};
     }
 
     updateList(streamer, add, isTemp) {

@@ -1,4 +1,3 @@
-const Promise      = require("bluebird");
 const colors       = require("colors/safe");
 const childProcess = require("child_process");
 const site         = require("./site");
@@ -45,7 +44,7 @@ class Basicsite extends site.Site {
 
         // this.dbgMsg(colors.name(nm) + " checking online status");
 
-        return Promise.try(() => {
+        return Promise.resolve().then(() => {
             // Detect if streamer is online or actively streaming
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;

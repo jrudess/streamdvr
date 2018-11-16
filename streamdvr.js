@@ -2,8 +2,7 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
-// const Promise = require("bluebird");
-const TUI     = require("./core/tui");
+const TUI = require("./core/tui");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
