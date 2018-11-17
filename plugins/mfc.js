@@ -9,7 +9,11 @@ class Mfc extends site.Site {
         if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {
             mfc.setLogLevel(0);
         }
-        this.mfcGuest = new mfc.Client("guest", "guest", {useWebSockets: this.siteConfig.mfcWebSocket, modernLogin: this.siteConfig.modernLogin, camYou: false});
+        this.mfcGuest = new mfc.Client("guest", "guest", {
+            useWebSockets: this.siteConfig.mfcWebSocket,
+            modernLogin:   this.siteConfig.modernLogin,
+            camYou:        false
+        });
 
         this.dirty = false;
     }
@@ -161,10 +165,11 @@ class Mfc extends site.Site {
             url = "hlssession://" + url;
         }
 
-        // Checking if this is 16:9 stream via base64 key characters in url
+        // Checking if this is 16:9 stream via base64 key-characters in url
         const params = [];
         if (url.indexOf("==") === -1) {
-            // MFC is mapping
+            // MFC is upscaling streams to 1280x960 wasting bandwidth
+            // These mappings work around it to select the true resolution
             params.push("-map");
             params.push("0:1");
             params.push("-map");

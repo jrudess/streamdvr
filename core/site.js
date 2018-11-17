@@ -118,9 +118,7 @@ class Site {
                 "500k"
             ];
             if (options && options.params) {
-                options.params.forEach((item) => {
-                    params.push(item);
-                });
+                params = params.concat(options.params);
             }
             if (!this.tui.config.debugrecorder) {
                 params.push("-v");
