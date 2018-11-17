@@ -37,14 +37,14 @@ class Basicsite extends site.Site {
         return super.updateList({nm: nm, uid: nm}, add, isTemp);
     }
 
-    checkStreamerState(nm) {
+    async checkStreamerState(nm) {
         let stdout = null;
         let stderr = null;
         let msg = colors.name(nm);
 
         // this.dbgMsg(colors.name(nm) + " checking online status");
 
-        return Promise.resolve().then(() => {
+        try {
             // Detect if streamer is online or actively streaming
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
@@ -53,9 +53,9 @@ class Basicsite extends site.Site {
 
             if (this.tui.config.proxyenable) {
                 if (this.siteType === "streamlink") {
-                    mycmd = mycmd + " --https-proxy " + this.tui.config.proxyserver;
+                    mycmd += " --https-proxy " + this.tui.config.proxyserver;
                 } else if (this.siteType === "youtubedl") {
-                    mycmd = mycmd + " --proxy " + this.tui.config.proxyserver;
+                    mycmd += " --proxy " + this.tui.config.proxyserver;
                 }
             }
 
@@ -67,33 +67,33 @@ class Basicsite extends site.Site {
                 stderr = data;
             });
 
-            return childToPromise(child).then(() => {
-                let url;
-                let isStreaming = false;
-                if (stdout) {
-                    isStreaming = true;
-                }
+            await childToPromise(child);
 
-                if (isStreaming) {
-                    msg += " is streaming.";
-                    streamer.state = "Streaming";
+            let url;
+            let isStreaming = false;
+            if (stdout) {
+                isStreaming = true;
+            }
 
-                    url = stdout.toString();
-                    url = url.replace(/\r?\n|\r/g, "");
-                } else {
-                    msg += " is offline.";
-                    streamer.state = "Offline";
-                }
+            if (isStreaming) {
+                msg += " is streaming.";
+                streamer.state = "Streaming";
 
-                super.checkStreamerState(streamer, msg, isStreaming, prevState);
+                url = stdout.toString();
+                url = url.replace(/\r?\n|\r/g, "");
+            } else {
+                msg += " is offline.";
+                streamer.state = "Offline";
+            }
 
-                if (isStreaming) {
-                    this.startCapture(this.setupCapture(streamer, url));
-                }
+            super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
-                return true;
-            });
-        }).catch(() => {
+            if (isStreaming) {
+                this.startCapture(this.setupCapture(streamer, url));
+            }
+
+            return true;
+        } catch (err) {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
             let stdoutprint = false;
@@ -121,25 +121,28 @@ class Basicsite extends site.Site {
             super.checkStreamerState(streamer, msg, 0, prevState);
 
             return false;
-        });
+        }
     }
 
-    checkBatch(batch) {
+    async checkBatch(batch) {
         const queries = [];
 
         for (let i = 0; i < batch.length; i++) {
             queries.push(this.checkStreamerState(batch[i]));
         }
 
-        return Promise.all(queries).then(() => true).catch((err) => {
+        try {
+            await Promise.all(queries);
+            return true;
+        } catch (err) {
             this.errMsg(err.toString());
             return false;
-        });
+        }
     }
 
-    getStreamers() {
+    async getStreamers() {
         if (!super.getStreamers()) {
-            return Promise.resolve([]);
+            return [];
         }
 
         const nms = [];
@@ -170,10 +173,13 @@ class Basicsite extends site.Site {
         }
 
         const funcs = serRuns.map((batch) => () => this.checkBatch(batch));
-        return promiseSerial(funcs).catch((err) => {
+        try {
+            const streamers = await promiseSerial(funcs);
+            return streamers;
+        } catch (err) {
             this.errMsg(err.toString());
             return [];
-        });
+        }
     }
 
     setupCapture(streamer, url) {

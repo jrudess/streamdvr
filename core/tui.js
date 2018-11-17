@@ -210,13 +210,15 @@ class Tui {
         }
     }
 
-    log(text) {
+    log(text, options) {
         if (this.config.tui) {
             this.logbody.pushLine(text);
             this.logbody.setScrollPerc(100);
             if (!this.logHidden) {
                 this.render();
             }
+        } else if (options && options.trace) {
+            console.trace(text);
         } else {
             console.log(text);
         }

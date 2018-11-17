@@ -338,13 +338,10 @@ class Site {
         return completeDir;
     }
 
-    refresh(uid) {
+    async refresh(uid) {
         if (!this.tui.tryingToExit && this.streamerList.has(uid)) {
-            const queries = [];
-            queries.push(this.checkStreamerState(uid));
-            Promise.all(queries).then(() => {
-                this.tui.render();
-            });
+            await this.checkStreamerState(uid);
+            this.tui.render();
         }
     }
 
@@ -479,12 +476,12 @@ class Site {
         });
     }
 
-    msg(msg) {
-        this.tui.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg);
+    msg(msg, options) {
+        this.tui.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg, options);
     }
 
     errMsg(msg) {
-        this.msg(colors.error("[ERROR] ") + msg);
+        this.msg(colors.error("[ERROR] ") + msg, {trace: true});
     }
 
     dbgMsg(msg) {

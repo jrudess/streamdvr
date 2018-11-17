@@ -14,58 +14,50 @@ class Mfc extends site.Site {
         this.dirty = false;
     }
 
-    connect() {
-        return Promise.resolve().then(() =>
-            this.mfcGuest.connectAndWaitForModels()
-        ).catch((err) => {
+    async connect() {
+        try {
+            await this.mfcGuest.connectAndWaitForModels();
+        } catch (err) {
             this.errMsg(err.toString());
-        });
+        }
     }
 
     disconnect() {
         this.mfcGuest.disconnect();
     }
 
-    updateList(nm, add, isTemp) {
+    async updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
-            return new Promise((resolve) => {
-                this.mfcGuest.queryUser(nm).then((streamer) => {
-                    if (streamer) {
-                        if (super.updateList(streamer, add, isTemp)) {
-                            this.dirty = true;
-                        }
-                    } else {
-                        this.errMsg(colors.name(nm) + " does not exist on this site");
+            await this.mfcGuest.queryUser(nm).then((streamer) => {
+                if (streamer) {
+                    if (super.updateList(streamer, add, isTemp)) {
+                        this.dirty = true;
                     }
-
-                    resolve(true);
-                });
+                } else {
+                    this.errMsg(colors.name(nm) + " does not exist on this site");
+                }
+                return true;
             });
         }
-        return Promise.resolve(false);
+        return false;
     }
 
-    updateStreamers(list, add) {
-        const queries = [];
-
+    async updateStreamers(list, add) {
         this.dirty = false;
-        for (let i = 0; i < list.length; i++) {
-            this.dbgMsg("Checking if " + colors.name(list[i]) + " exists.");
-            queries.push(this.updateList(list[i], add, false));
-        }
-
-        return Promise.all(queries).then(() => this.dirty);
+        const queries = list.map((x) => this.updateList(x, add, false));
+        await Promise.all(queries);
+        return this.dirty;
     }
 
-    checkStreamerState(uid) {
+    async checkStreamerState(uid) {
         if (this.mfcGuest.state !== mfc.ClientState.ACTIVE) {
-            return Promise.resolve(false);
+            return false;
         }
 
-        return Promise.resolve().then(() =>
-            this.mfcGuest.queryUser(uid)
-        ).then((model) => {
+        try {
+            const model = await this.mfcGuest.queryUser(uid);
+
             if (typeof model === "undefined" || typeof model.uid === "undefined") {
                 return false;
             }
@@ -117,15 +109,15 @@ class Mfc extends site.Site {
             }
 
             return true;
-        }).catch((err) => {
+        } catch (err) {
             this.errMsg(err.toString());
             return false;
-        });
+        }
     }
 
-    getStreamers() {
+    async getStreamers() {
         if (!super.getStreamers()) {
-            return Promise.resolve([]);
+            return;
         }
 
         const queries = [];
@@ -142,7 +134,7 @@ class Mfc extends site.Site {
             }
         }
 
-        return Promise.all(queries);
+        await Promise.all(queries);
     }
 
     setupCapture(model) {
