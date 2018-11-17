@@ -29,7 +29,8 @@ class Mfc extends site.Site {
     async updateList(nm, add, isTemp) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
-            await this.mfcGuest.queryUser(nm).then((streamer) => {
+            try {
+                const streamer = await this.mfcGuest.queryUser(nm);
                 if (streamer) {
                     if (super.updateList(streamer, add, isTemp)) {
                         this.dirty = true;
@@ -38,7 +39,9 @@ class Mfc extends site.Site {
                     this.errMsg(colors.name(nm) + " does not exist on this site");
                 }
                 return true;
-            });
+            } catch (err) {
+                this.errMsg(err.toString());
+            }
         }
         return false;
     }
@@ -46,7 +49,11 @@ class Mfc extends site.Site {
     async updateStreamers(list, add) {
         this.dirty = false;
         const queries = list.map((x) => this.updateList(x, add, false));
-        await Promise.all(queries);
+        try {
+            await Promise.all(queries);
+        } catch (err) {
+            this.errMsg(err.toString());
+        }
         return this.dirty;
     }
 
@@ -55,64 +62,65 @@ class Mfc extends site.Site {
             return false;
         }
 
+        let model;
         try {
-            const model = await this.mfcGuest.queryUser(uid);
-
-            if (typeof model === "undefined" || typeof model.uid === "undefined") {
-                return false;
-            }
-
-            let isStreaming = 0;
-            let msg = colors.name(model.nm);
-
-            if (!this.streamerList.has(uid)) {
-                this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
-            }
-
-            const streamer = this.streamerList.get(uid);
-            const prevState = streamer.state;
-
-            const bestSession = mfc.Model.getModel(model.uid).bestSession;
-
-            if (bestSession.vs === mfc.STATE.FreeChat) {
-                streamer.state = "Public Chat";
-                msg += " is in public chat!";
-                isStreaming = 1;
-            } else if (bestSession.vs === mfc.STATE.GroupShow) {
-                streamer.state = "Group Show";
-                msg += " is in a group show";
-            } else if (bestSession.vs === mfc.STATE.Private) {
-                if (bestSession.truepvt === 1) {
-                    streamer.state = "True Private";
-                    msg += " is in a true private show.";
-                } else {
-                    streamer.state = "Private";
-                    msg += " is in a private show.";
-                }
-            } else if (bestSession.vs === mfc.STATE.Away) {
-                streamer.state = "Away";
-                msg += " is away.";
-            } else if (bestSession.vs === mfc.STATE.Online) {
-                streamer.state = "Away";
-                // Check the last character but avoid color codes
-                msg += msg.charAt(msg.length - 6) === "s" ? colors.name("'") : colors.name("'s");
-                msg += " stream is off.";
-            } else if (bestSession.vs === mfc.STATE.Offline) {
-                streamer.state = "Offline";
-                msg += " has logged off.";
-            }
-
-            super.checkStreamerState(streamer, msg, isStreaming, prevState);
-
-            if (isStreaming) {
-                this.startCapture(this.setupCapture(streamer));
-            }
-
-            return true;
+            model = await this.mfcGuest.queryUser(uid);
         } catch (err) {
             this.errMsg(err.toString());
             return false;
         }
+
+        if (typeof model === "undefined" || typeof model.uid === "undefined") {
+            return false;
+        }
+
+        let isStreaming = 0;
+        let msg = colors.name(model.nm);
+
+        if (!this.streamerList.has(uid)) {
+            this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+        }
+
+        const streamer = this.streamerList.get(uid);
+        const prevState = streamer.state;
+
+        const bestSession = mfc.Model.getModel(model.uid).bestSession;
+
+        if (bestSession.vs === mfc.STATE.FreeChat) {
+            streamer.state = "Public Chat";
+            msg += " is in public chat!";
+            isStreaming = 1;
+        } else if (bestSession.vs === mfc.STATE.GroupShow) {
+            streamer.state = "Group Show";
+            msg += " is in a group show";
+        } else if (bestSession.vs === mfc.STATE.Private) {
+            if (bestSession.truepvt === 1) {
+                streamer.state = "True Private";
+                msg += " is in a true private show.";
+            } else {
+                streamer.state = "Private";
+                msg += " is in a private show.";
+            }
+        } else if (bestSession.vs === mfc.STATE.Away) {
+            streamer.state = "Away";
+            msg += " is away.";
+        } else if (bestSession.vs === mfc.STATE.Online) {
+            streamer.state = "Away";
+            // Check the last character but avoid color codes
+            msg += msg.charAt(msg.length - 6) === "s" ? colors.name("'") : colors.name("'s");
+            msg += " stream is off.";
+        } else if (bestSession.vs === mfc.STATE.Offline) {
+            streamer.state = "Offline";
+            msg += " has logged off.";
+        }
+
+        super.checkStreamerState(streamer, msg, isStreaming, prevState);
+
+        if (isStreaming) {
+            this.startCapture(this.setupCapture(streamer));
+        }
+
+        return true;
     }
 
     async getStreamers() {
@@ -134,7 +142,11 @@ class Mfc extends site.Site {
             }
         }
 
-        await Promise.all(queries);
+        try {
+            await Promise.all(queries);
+        } catch (err) {
+            this.errMsg(err.toString());
+        }
     }
 
     setupCapture(model) {
