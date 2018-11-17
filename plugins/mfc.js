@@ -31,10 +31,12 @@ class Mfc extends site.Site {
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
             return new Promise((resolve) => {
                 this.mfcGuest.queryUser(nm).then((streamer) => {
-                    if (typeof streamer === "undefined") {
+                    if (streamer) {
+                        if (super.updateList(streamer, add, isTemp)) {
+                            this.dirty = true;
+                        }
+                    } else {
                         this.errMsg(colors.name(nm) + " does not exist on this site");
-                    } else if (super.updateList(streamer, add, isTemp)) {
-                        this.dirty = true;
                     }
 
                     resolve(true);

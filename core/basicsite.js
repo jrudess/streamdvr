@@ -51,7 +51,7 @@ class Basicsite extends site.Site {
 
             let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
 
-            if (typeof this.tui.config.proxyenable !== "undefined" && this.tui.config.proxyenable) {
+            if (this.tui.config.proxyenable) {
                 if (this.siteType === "streamlink") {
                     mycmd = mycmd + " --https-proxy " + this.tui.config.proxyserver;
                 } else if (this.siteType === "youtubedl") {
@@ -68,8 +68,11 @@ class Basicsite extends site.Site {
             });
 
             return childToPromise(child).then(() => {
-                const isStreaming = typeof stdout !== "undefined" && stdout !== null && stdout !== "";
                 let url;
+                let isStreaming = false;
+                if (stdout) {
+                    isStreaming = true;
+                }
 
                 if (isStreaming) {
                     msg += " is streaming.";
@@ -93,18 +96,18 @@ class Basicsite extends site.Site {
         }).catch(() => {
             const streamer = this.streamerList.get(nm);
             const prevState = streamer.state;
-            let stdoutprint = typeof stdout !== "undefined" && stdout !== null && stdout !== "";
-            let stderrprint = typeof stderr !== "undefined" && stderr !== null && stderr !== "";
+            let stdoutprint = false;
+            let stderrprint = false;
 
             streamer.state = "Offline";
             msg += " is offline.";
 
-            if (stdoutprint) {
+            if (stdout) {
                 stdoutprint = (stdout.search("No playable streams found on this URL") === -1) &&
                               (stdout.search("Forbidden for url") === -1);
             }
 
-            if (stderrprint) {
+            if (stderr) {
                 stderrprint = (stderr.search("is offline") === -1) &&
                               (stderr.search("Unable to open URL") === -1) &&
                               (stderr.search("could not be found") === -1);
@@ -151,7 +154,7 @@ class Basicsite extends site.Site {
         const serRuns = [];
         let count = 0;
         let batchSize = 5;
-        if (typeof this.siteConfig.batchSize !== "undefined") {
+        if (this.siteConfig.batchSize) {
             batchSize = this.siteConfig.batchSize === 0 ? nms.length : this.siteConfig.batchSize;
         }
 

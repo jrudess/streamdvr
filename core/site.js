@@ -117,12 +117,10 @@ class Site {
                 "-b:v",
                 "500k"
             ];
-            if (typeof options !== "undefined") {
-                if (typeof options.params !== "undefined") {
-                    options.params.forEach((item) => {
-                        params.push(item);
-                    });
-                }
+            if (options && options.params) {
+                options.params.forEach((item) => {
+                    params.push(item);
+                });
             }
             if (!this.tui.config.debugrecorder) {
                 params.push("-v");

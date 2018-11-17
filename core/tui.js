@@ -13,7 +13,7 @@ class Tui {
     constructor() {
         let checkHome = 1;
 
-        if (typeof process.env.XDG_CONFIG_HOME !== "undefined") {
+        if (process.env.XDG_CONFIG_HOME) {
             this.configdir = process.env.XDG_CONFIG_HOME + "/streamdvr/";
             if (fs.existsSync(this.configdir + "config.yml")) {
                 checkHome = 0;
@@ -39,9 +39,9 @@ class Tui {
         this.loadConfig();
 
         this.logger = null;
-        if (typeof this.config.logenable !== "undefined" && this.config.logenable) {
+        if (this.config.logenable) {
             const {Console} = require("console");
-            const attr = (typeof this.config.logappend !== "undefined" && this.config.logappend) ? "a" : "w";
+            const attr = (this.config.logappend) ? "a" : "w";
             const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
             this.logger = new Console({stdout: logFile, stderr: logFile});
         }
@@ -344,7 +344,7 @@ class Tui {
         this.config.captureDirectory  = this.mkdir(this.config.captureDirectory);
         this.config.completeDirectory = this.mkdir(this.config.completeDirectory);
 
-        if (this.config.tui && typeof this.list !== "undefined") {
+        if (this.config.tui && this.list) {
             this.display(this.config.listshown ? "show" : "hide", "list");
             this.display(this.config.logshown  ? "show" : "hide", "log");
             this.render();

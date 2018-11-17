@@ -23,7 +23,7 @@ async function runSite(site) {
 async function createSites() {
     const tui = new TUI.Tui();
 
-    if (typeof tui.config.enableMFC !== "undefined" && tui.config.enableMFC) {
+    if (tui.config.enableMFC) {
         const MFC = require("./plugins/mfc");
         const mfc = new MFC.Mfc(tui);
         try {
@@ -34,42 +34,42 @@ async function createSites() {
         }
     }
 
-    if (typeof tui.config.enableMFCSL !== "undefined" && tui.config.enableMFCSL) {
+    if (tui.config.enableMFCSL) {
         const MFCSL = require("./plugins/mfcsl");
         runSite(new MFCSL.Mfcsl(tui));
     }
 
-    if (typeof tui.config.enableCB !== "undefined" && tui.config.enableCB) {
+    if (tui.config.enableCB) {
         const CB = require("./plugins/cb");
         runSite(new CB.Cb(tui));
     }
 
-    if (typeof tui.config.enableTwitch !== "undefined" && tui.config.enableTwitch) {
+    if (tui.config.enableTwitch) {
         const TWITCH = require("./plugins/twitch");
         runSite(new TWITCH.Twitch(tui));
     }
 
-    if (typeof tui.config.enableMixer !== "undefined" && tui.config.enableMixer) {
+    if (tui.config.enableMixer) {
         const MIXER = require("./plugins/mixer");
         runSite(new MIXER.Mixer(tui));
     }
 
-    if (typeof tui.config.enableBonga !== "undefined" && tui.config.enableBonga) {
+    if (tui.config.enableBonga) {
         const BONGA = require("./plugins/bongacams");
         runSite(new BONGA.Bonga(tui));
     }
 
-    if (typeof tui.config.enableCamsoda !== "undefined" && tui.config.enableCamsoda) {
+    if (tui.config.enableCamsoda) {
         const CAMSODA = require("./plugins/camsoda");
         runSite(new CAMSODA.Camsoda(tui));
     }
 
-    if (typeof tui.config.enableFC2 !== "undefined" && tui.config.enableFC2) {
+    if (tui.config.enableFC2) {
         const FC2 = require("./plugins/fc2");
         runSite(new FC2.Fc2(tui));
     }
 
-    if (typeof tui.config.enableCam4 !== "undefined" && tui.config.enableCam4) {
+    if (tui.config.enableCam4) {
         const CAM4 = require("./plugins/cam4");
         runSite(new CAM4.Cam4(tui));
     }
