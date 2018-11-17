@@ -1,7 +1,7 @@
 {
-    "name": "mfc-node",
-    "version": "0.1.0",
-    "description": "MyFreeCams and Chaturbate Recorder",
+    "name": "streamdvr",
+    "version": "0.11.0",
+    "description": "DVR for streaming entertainment",
     "main": "streamdvr.js",
     "engines": {
         "node": ">=10.12.0"
@@ -14,7 +14,7 @@
         "url": "git://github.com/jrudess/streamdvr.node.git"
     },
     "author": "jrudess",
-    "license": "WTFPL",
+    "license": "GPL3",
     "bugs": {
         "url": "https://github.com/jrudess/streamdvr/issues"
     },
