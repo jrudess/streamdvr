@@ -78,6 +78,9 @@ class Site {
         }
     }
 
+    connect() {
+    }
+
     disconnect() {
         // optional virtual method
     }
@@ -182,9 +185,9 @@ class Site {
                 dirty = true;
             }
         } else if (this.removeStreamer(streamer, list)) {
-            dirty = true;
             if (this.siteConfig.streamers.indexOf(streamer.uid) !== -1) {
                 list = _.without(list, streamer.uid);
+                dirty = true;
             }
         }
         if (dirty) {

@@ -43,7 +43,7 @@ class Streamdvr {
         }
     }
 
-    async runSite(site) {
+    async run(site) {
         while (true) {
             try {
                 await site.processUpdates();
@@ -56,16 +56,13 @@ class Streamdvr {
     }
 
     async start() {
-
         for (const [site, data] of this.plugins) {
             if (data.enable) {
-                if (site === MFC) {
-                    await this.plugins.get(site).handle.connect();
-                }
-                this.runSite(this.plugins.get(site).handle);
+                const plugin = this.plugins.get(site).handle;
+                await plugin.connect();
+                this.run(plugin);
             }
         }
-
         this.tui.init();
     }
 
