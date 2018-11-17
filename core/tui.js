@@ -1,7 +1,6 @@
 const blessed = require("blessed");
 const colors  = require("colors/safe");
 const fs      = require("fs");
-const mkdirp  = require("mkdirp");
 const path    = require("path");
 const yaml    = require("js-yaml");
 
@@ -221,7 +220,7 @@ class Tui {
         } else {
             console.log(text);
         }
-        if (this.logger !== null) {
+        if (this.logger) {
             this.logger.log(text);
         }
     }
@@ -318,7 +317,7 @@ class Tui {
 
     mkdir(dir) {
         const fulldir = path.resolve(dir);
-        mkdirp(fulldir, (err) => {
+        fs.mkdirSync(fulldir, {recursive: true}, (err) => {
             if (err) {
                 this.log(err.toString());
                 process.exit(1);
