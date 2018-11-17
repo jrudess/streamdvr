@@ -6,5 +6,5 @@ class Twitch extends youtubedl.Youtubedl {
     }
 }
 
-exports.Twitch = Twitch;
+exports.Plugin = Twitch;
 

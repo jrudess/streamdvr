@@ -6,5 +6,5 @@ class Camsoda extends streamlink.Streamlink {
     }
 }
 
-exports.Camsoda = Camsoda;
+exports.Plugin = Camsoda;
 

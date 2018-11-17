@@ -6,5 +6,5 @@ class Bonga extends streamlink.Streamlink {
     }
 }
 
-exports.Bonga = Bonga;
+exports.Plugin = Bonga;
 

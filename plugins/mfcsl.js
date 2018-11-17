@@ -6,5 +6,5 @@ class Mfcsl extends streamlink.Streamlink {
     }
 }
 
-exports.Mfcsl = Mfcsl;
+exports.Plugin = Mfcsl;
 

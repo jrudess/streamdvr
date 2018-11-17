@@ -182,5 +182,5 @@ class Mfc extends site.Site {
     }
 }
 
-exports.Mfc = Mfc;
+exports.Plugin = Mfc;
 

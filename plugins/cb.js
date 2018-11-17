@@ -6,5 +6,5 @@ class Cb extends youtubedl.Youtubedl {
     }
 }
 
-exports.Cb = Cb;
+exports.Plugin = Cb;
 

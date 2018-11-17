@@ -6,5 +6,5 @@ class Cam4 extends streamlink.Streamlink {
     }
 }
 
-exports.Cam4 = Cam4;
+exports.Plugin = Cam4;
 

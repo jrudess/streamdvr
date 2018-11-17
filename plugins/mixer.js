@@ -6,5 +6,5 @@ class Mixer extends youtubedl.Youtubedl {
     }
 }
 
-exports.Mixer = Mixer;
+exports.Plugin = Mixer;
 

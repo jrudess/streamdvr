@@ -6,5 +6,5 @@ class Fc2 extends streamlink.Streamlink {
     }
 }
 
-exports.Fc2 = Fc2;
+exports.Plugin = Fc2;
 
