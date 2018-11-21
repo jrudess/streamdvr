@@ -383,7 +383,7 @@ class Site {
                     this.storeCapInfo(streamer.uid, "", null);
                 } else {
                     const sizeMB = stats.size / 1048576;
-                    if (sizeMB <= this.tui.config.minSize) {
+                    if (sizeMB < this.tui.config.minSize) {
                         this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.tui.config.minSize + ")");
                         fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
                         this.storeCapInfo(streamer.uid, "", null);

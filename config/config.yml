@@ -8,8 +8,8 @@ keepTsFile: false
 streamlink: false
 proxyenable: false
 proxyserver: socks5://127.0.0.1:1080
-minByteSize: 0
-maxByteSize: 0
+minSize: 0
+maxSize: 0
 dateFormat: YYYYMMDD_HHmmss
 debug: false
 debugrecorder: false
