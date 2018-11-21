@@ -428,7 +428,7 @@ class Site {
 
     async postProcess() {
 
-        if (this.postProcessQ.len === 0) {
+        if (this.postProcessQ.length === 0) {
             this.errMsg("post process queue was empty while post processing -- this should not happen");
             return;
         }
