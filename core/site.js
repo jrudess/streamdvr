@@ -61,8 +61,8 @@ class Site {
     }
 
     checkFileSize() {
-        const maxByteSize = this.tui.config.maxByteSize;
-        if (maxByteSize === 0) {
+        const maxSize = this.tui.config.maxSize;
+        if (maxSize === 0) {
             return;
         }
 
@@ -72,9 +72,10 @@ class Site {
             }
 
             const stat = fs.statSync(this.tui.config.captureDirectory + "/" + streamers.filename);
-            this.dbgMsg(colors.name(streamers.nm) + " file size (" + streamers.filename + "), size=" + stat.size + ", maxByteSize=" + maxByteSize);
-            if (stat.size >= maxByteSize) {
-                this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + stat.size + " > maxByteSize=" + maxByteSize + ")");
+            const sizeMB = stat.size / 1048576;
+            this.dbgMsg(colors.name(streamers.nm) + " file size (" + streamers.filename + "), size=" + sizeMB + ", maxSize=" + maxSize);
+            if (sizeMB >= maxSize) {
+                this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 streamers.captureProcess.kill("SIGINT");
             }
         }
@@ -380,14 +381,17 @@ class Site {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }
                     this.storeCapInfo(streamer.uid, "", null);
-                } else if (stats.size <= this.tui.config.minByteSize) {
-                    this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + stats.size + " < minByteSize=" + this.tui.config.minByteSize + ")");
-                    fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
-                    this.storeCapInfo(streamer.uid, "", null);
                 } else {
-                    this.postProcessQ.push({streamer: streamer, filename: capInfo.filename});
-                    if (this.postProcessQ.length === 1) {
-                        this.postProcess();
+                    const sizeMB = stats.size / 1048576;
+                    if (sizeMB <= this.tui.config.minSize) {
+                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.tui.config.minSize + ")");
+                        fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
+                        this.storeCapInfo(streamer.uid, "", null);
+                    } else {
+                        this.postProcessQ.push({streamer: streamer, filename: capInfo.filename});
+                        if (this.postProcessQ.length === 1) {
+                            this.postProcess();
+                        }
                     }
                 }
             });
