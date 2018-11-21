@@ -26,6 +26,8 @@ class Site {
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
 
+        this.postProcessQ = [];
+
         // Contains JSON indexed by UID:
         //     uid
         //     nm
@@ -79,6 +81,7 @@ class Site {
     }
 
     connect() {
+        // optional virtual method
     }
 
     disconnect() {
@@ -382,7 +385,10 @@ class Site {
                     fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
                     this.storeCapInfo(streamer.uid, "", null);
                 } else {
-                    this.postProcess(streamer, capInfo.filename);
+                    this.postProcessQ.push({streamer: streamer, filename: capInfo.filename});
+                    if (this.postProcessQ.length === 1) {
+                        this.postProcess();
+                    }
                 }
             });
 
@@ -399,6 +405,11 @@ class Site {
         }
 
         this.refresh(streamer.uid);
+
+        this.postProcessQ.shift();
+        if (this.postProcessQ.length > 0) {
+            this.postProcess();
+        }
     }
 
     postScript(streamer, finalName, item) {
@@ -415,28 +426,35 @@ class Site {
         }
     }
 
-    async postProcess(streamer, filename) {
-        const fullname = filename + ".ts";
-        const finalName = filename + "." + this.tui.config.autoConvertType;
-        const completeDir = await this.getCompleteDir(streamer);
+    async postProcess() {
+
+        if (this.postProcessQ.len === 0) {
+            this.errMsg("post process queue was empty while post processing -- this should not happen");
+            return;
+        }
+
+        const capInfo = this.postProcessQ[0];
+        const fullname = capInfo.filename + ".ts";
+        const finalName = capInfo.filename + "." + this.tui.config.autoConvertType;
+        const completeDir = await this.getCompleteDir(capInfo.streamer);
 
         if (this.tui.config.autoConvertType !== "mp4" && this.tui.config.autoConvertType !== "mkv") {
-            this.dbgMsg(colors.name(streamer.nm) + " recording moved (" + this.tui.config.captureDirectory + "/" + filename + ".ts to " + completeDir + "/" + filename + ".ts)");
+            this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
             mv(this.tui.config.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
-                    this.errMsg(colors.site(filename) + ": " + err.toString());
+                    this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
                 }
             });
 
-            this.postScript(streamer, fullname, null);
+            this.postScript(capInfo.streamer, fullname, null);
             return;
         }
 
         // Need to remember post-processing is happening, so that
         // the offline check does not kill postprocess jobs.
         let item = null;
-        if (this.streamerList.has(streamer.uid)) {
-            item = this.streamerList.get(streamer.uid);
+        if (this.streamerList.has(capInfo.streamer.uid)) {
+            item = this.streamerList.get(capInfo.streamer.uid);
             item.postProcess = 1;
         }
 
@@ -459,17 +477,17 @@ class Site {
         mySpawnArguments.push("-start_at_zero");
         mySpawnArguments.push(completeDir + "/" + finalName);
 
-        this.msg(colors.name(streamer.nm) + " converting to " + finalName);
+        this.msg(colors.name(capInfo.streamer.nm) + " converting to " + finalName);
         const myCompleteProcess = spawn("ffmpeg", mySpawnArguments);
-        this.storeCapInfo(streamer.uid, finalName);
+        this.storeCapInfo(capInfo.streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
             if (!this.tui.config.keepTsFile) {
                 fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
             }
 
-            this.msg(colors.name(streamer.nm) + " done converting " + finalName);
-            this.postScript(streamer, finalName, item);
+            this.msg(colors.name(capInfo.streamer.nm) + " done converting " + finalName);
+            this.postScript(capInfo.streamer, finalName, item);
         });
 
         myCompleteProcess.on("error", (err) => {
