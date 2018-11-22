@@ -4,8 +4,8 @@ const _       = require("underscore");
 const colors  = require("colors/safe");
 
 class Mfc extends Site {
-    constructor(tui) {
-        super("MFC", tui);
+    constructor(name, tui) {
+        super(name, tui);
         if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {
             mfc.setLogLevel(0);
         }
