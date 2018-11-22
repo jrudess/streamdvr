@@ -1,5 +1,4 @@
 siteUrl: "https://www.twitch.tv/"
-hls: true
 batchSize: 5
 streamers:
   - peyzki

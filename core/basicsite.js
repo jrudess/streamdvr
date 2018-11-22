@@ -31,7 +31,7 @@ class Basicsite extends Site {
         const prevState = streamer.state;
 
         let mycmd = this.cmdfront + this.siteConfig.siteUrl + nm + " " + this.cmdback;
-        this.dbgMsg("Checking if " + colors.name(nm) + " is online with: " + colors.site(mycmd));
+        this.dbgMsg(colors.name(nm) + " running: " + colors.site(mycmd));
 
         if (this.tui.config.proxyenable) {
             if (this.siteType === "streamlink") {
@@ -64,7 +64,7 @@ class Basicsite extends Site {
             }
         }
 
-        let url;
+        // let url;
         let isStreaming = false;
         if (stdio && stdio.stdout) {
             isStreaming = true;
@@ -74,8 +74,8 @@ class Basicsite extends Site {
             msg += " is streaming.";
             streamer.state = "Streaming";
 
-            url = stdio.stdout.toString();
-            url = url.replace(/\r?\n|\r/g, "");
+            // url = stdio.stdout.toString();
+            // url = url.replace(/\r?\n|\r/g, "");
         } else {
             msg += " is offline.";
             streamer.state = "Offline";
@@ -84,7 +84,7 @@ class Basicsite extends Site {
         super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
         if (isStreaming) {
-            this.startCapture(this.setupCapture(streamer, url));
+            this.startCapture(this.setupCapture(streamer));
         }
 
         return true;
@@ -156,22 +156,14 @@ class Basicsite extends Site {
         }
     }
 
-    setupCapture(streamer, url) {
+    setupCapture(streamer) {
         if (!super.setupCapture(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 
-        // Build URL for recorder
-        const filename = this.getFileName(streamer.nm);
-        let newurl = url;
-        if (!this.siteConfig.hls) {
-            newurl = this.siteConfig.siteUrl + streamer.nm;
-        } else if (this.tui.config.streamlink) {
-            newurl = "hlssession://" + url;
-        }
-
-        const spawnArgs = this.getCaptureArguments(newurl, filename);
-
+        const filename  = this.getFileName(streamer.nm);
+        const url       = this.siteConfig.siteUrl + streamer.nm;
+        const spawnArgs = this.getCaptureArguments(url, filename);
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
 }

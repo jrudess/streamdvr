@@ -1,5 +1,4 @@
 siteUrl: "https://mixer.com/"
-hls: true
 batchSize: 5
 streamers:
   - britni

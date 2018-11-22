@@ -46,9 +46,6 @@ class Site {
         if (typeof this.siteConfig.siteUrl === "undefined") {
             this.errMsg(this.cfgname + " is missing siteUrl");
         }
-        if (typeof this.siteConfig.hls === "undefined") {
-            this.errMsg(this.cfgname + " is missing hls");
-        }
     }
 
     getDateTime() {
@@ -114,11 +111,6 @@ class Site {
                 "best"
                 // "--stream-sorting-excludes=live"
             ];
-            if (this.siteConfig.hls) {
-                params.push("--hlssession-time");
-                params.push("00:05:00");
-                params.push("--hlssession-segment");
-            }
             if (this.tui.config.debugrecorder) {
                 params.push("-l");
                 params.push("debug");
