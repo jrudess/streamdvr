@@ -4,12 +4,11 @@ const exec        = promisify(require("child_process").exec);
 const {Site}      = require("./site");
 
 class Basicsite extends Site {
-    constructor(siteName, tui, noHLS, cmdfront, cmdback) {
+    constructor(siteName, tui, cmdfront, cmdback) {
         super(siteName, tui);
 
         this.cmdfront = cmdfront;
         this.cmdback  = cmdback;
-        this.noHLS    = noHLS;
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
@@ -32,6 +31,7 @@ class Basicsite extends Site {
         const prevState = streamer.state;
 
         let mycmd = this.cmdfront + this.siteConfig.siteUrl + nm + " " + this.cmdback;
+        this.dbgMsg("Checking if " + colors.name(nm) + " is online with: " + colors.site(mycmd));
 
         if (this.tui.config.proxyenable) {
             if (this.siteType === "streamlink") {
@@ -164,7 +164,7 @@ class Basicsite extends Site {
         // Build URL for recorder
         const filename = this.getFileName(streamer.nm);
         let newurl = url;
-        if (this.noHLS) {
+        if (!this.siteConfig.hls) {
             newurl = this.siteConfig.siteUrl + streamer.nm;
         } else if (this.tui.config.streamlink) {
             newurl = "hlssession://" + url;
