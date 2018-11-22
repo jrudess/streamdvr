@@ -57,7 +57,6 @@ class Streamdvr {
             } else {
                 site.errMsg("Missing scanInterval option in " + site.cfgname + ". Using 300s instead");
                 await sleep(300 * 1000);
-                process.exit(1);
             }
         }
     }
