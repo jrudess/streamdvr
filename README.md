@@ -8,9 +8,14 @@ StreamDVR records your favorite live streamers while you are away.  No need to m
 Time shifting is not a crime:
 https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_Inc.
 
-* Captures using either ffmpeg or streamlink to ts containers
+* Use either ffmpeg or streamlink to record to ts-containers
 
-* Automatic post-processing converts recordings to mp4 or mkv containers.
+* Automatically convert recordings to mp4 or mkv
+
+* Run custom post-process scripts after conversion to...
+    * upload to cloud storage
+    * generate thumbnail previews
+    * do anything you want
 
 * Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Bongacams
 
@@ -18,14 +23,13 @@ Setup
 ==========
 
 * Dependencies: `node.js >= 10.12.0`, `npm`, `git`, and `ffmpeg`
-* Optional Dependencies: `streamlink >= 0.14.2+20.gc394b41`, `youtube-dl`, `mfcauto`
+* Optional Dependencies: `streamlink, `youtube-dl`, `mfcauto`
 
-  * `streamlink` is used to fetch m3u8 URLs and also to record
-    * Required for Chaturbate, Camsoda, Bongacams, and Cam4
-    * Optional for MyFreeCams (via `mfcsl` streamdvr plugin)
-    * To use streamlink to record instead of ffmpeg, the streamlink `hlssession` plugin is required: https://github.com/back-to/plugins/
+  * `streamlink` is used to fetch m3u8 URLs but can also be used to record
+    * Required for Chaturbate, Bongacams
+    * To use streamlink to record instead of ffmpeg, the streamlink `generic` plugin is required: https://github.com/back-to/generic
   * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Mixer
-  * `mfcauto` is optionally used to fetch m3u8 URLs for MyFreeCams (via `mfc` streamdvr plugin)
+  * `mfcauto` is optionally used to fetch m3u8 URLs for MyFreeCams
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
@@ -38,14 +42,15 @@ Instructions
 
 Refer to `config/config.yml` for all configuration options.
 
-* config files are loaded from the following paths listed in precedence order
+* config files are loaded from the following paths (listed in precedence order):
   * $XDG_CONFIG_HOME/streamdvr/
   * $HOME/.config/streamdvr/
     * %LOCALAPPDATA%/streamdvr/ on windows
   * $cwd/config/
 
 * To run: `node streamdvr.js`
-* To run without color: `node streamdvr.js --no-color`
+* To run without color: `node --no-color streamdvr.js`
+* To suppress node warnings: `node --no-warnings streamdvr.js`
 
 * TUI navigation:
     * `1` to focus the streamer list
