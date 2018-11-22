@@ -1,6 +1,6 @@
-const streamlink = require("../core/streamlink");
+const {Streamlink} = require("../core/streamlink");
 
-class Camsoda extends streamlink.Streamlink {
+class Camsoda extends Streamlink {
     constructor(tui) {
         super("CAMSODA", tui, "https://www.camsoda.com/", false, "best");
     }

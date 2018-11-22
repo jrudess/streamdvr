@@ -1,9 +1,9 @@
 const mfc     = require("MFCAuto");
-const site    = require("../core/site");
+const {Site}  = require("../core/site");
 const _       = require("underscore");
 const colors  = require("colors/safe");
 
-class Mfc extends site.Site {
+class Mfc extends Site {
     constructor(tui) {
         super("MFC", tui);
         if (typeof this.siteConfig.mfcautolog !== "undefined" && this.siteConfig.mfcautolog === false) {

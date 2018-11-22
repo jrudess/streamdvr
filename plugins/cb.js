@@ -1,6 +1,6 @@
-const youtubedl = require("../core/youtubedl");
+const {Youtubedl} = require("../core/youtubedl");
 
-class Cb extends youtubedl.Youtubedl {
+class Cb extends Youtubedl {
     constructor(tui) {
         super("CB", tui, "https://chaturbate.com/", false);
     }
