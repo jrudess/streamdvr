@@ -13,6 +13,7 @@ maxSize: 0
 dateFormat: YYYYMMDD_HHmmss
 debug: false
 debugrecorder: false
+errortrace: false
 logenable: true
 logappend: true
 logshown: true
