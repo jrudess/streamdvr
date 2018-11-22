@@ -97,8 +97,8 @@ class Site {
                 "-o",
                 this.tui.config.captureDirectory + "/" + filename + ".ts",
                 url,
-                "best",
-                "--stream-sorting-excludes=live"
+                "best"
+                // "--stream-sorting-excludes=live"
             ];
             if (!this.noHLS) {
                 params.push("--hlssession-time");
