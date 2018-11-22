@@ -81,8 +81,7 @@ class Site {
                 this.msg(colors.name(streamers.nm) + " terminating stuck recording with SIGINT");
                 streamers.captureProcess.kill("SIGINT");
                 streamers.stuckcounter = 0;
-            }
-            if (maxSize !== 0 && sizeMB >= maxSize) {
+            } else if (maxSize !== 0 && sizeMB >= maxSize) {
                 this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 streamers.captureProcess.kill("SIGINT");
             }
