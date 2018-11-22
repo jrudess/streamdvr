@@ -1,8 +1,8 @@
 const {Streamlink} = require("../core/streamlink");
 
 class Bonga extends Streamlink {
-    constructor(tui) {
-        super("BONGA", tui, "best");
+    constructor(name, tui) {
+        super(name, tui, "best");
     }
 }
 
