@@ -14,7 +14,7 @@ const CB      = Symbol("Chaturbate");
 const TWITCH  = Symbol("Twitch");
 const MIXER   = Symbol("Mixer");
 const BONGA   = Symbol("BongaCams");
-const CAMSODA = Symbol("Camsoda");
+// const CAMSODA = Symbol("Camsoda");
 const FC2     = Symbol("FC2");
 const CAM4    = Symbol("CAM4");
 
@@ -31,7 +31,7 @@ class Streamdvr {
         this.plugins.set(TWITCH,  {file: "./plugins/twitch",    enable: this.tui.config.enableTwitch,  handle: null});
         this.plugins.set(MIXER,   {file: "./plugins/mixer",     enable: this.tui.config.enableMixer,   handle: null});
         this.plugins.set(BONGA,   {file: "./plugins/bongacams", enable: this.tui.config.enableBonga,   handle: null});
-        this.plugins.set(CAMSODA, {file: "./plugins/camsoda",   enable: this.tui.config.enableCamsoda, handle: null});
+        // this.plugins.set(CAMSODA, {file: "./plugins/camsoda",   enable: this.tui.config.enableCamsoda, handle: null});
         this.plugins.set(FC2,     {file: "./plugins/fc2",       enable: this.tui.config.enableFC2,     handle: null});
         this.plugins.set(CAM4,    {file: "./plugins/cam4",      enable: this.tui.config.enableCam4,    handle: null});
 
