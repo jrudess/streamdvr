@@ -33,6 +33,4 @@ enableCB: true
 enableTwitch: true
 enableMixer: true
 enableBonga: false
-enableCamsoda: false
 enableFC2: false
-enableCam4: true

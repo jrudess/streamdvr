@@ -165,7 +165,7 @@ class Mfc extends site.Site {
         const filename = this.getFileName(model.nm);
         const mod = mfc.Model.getModel(model.uid);
         if (mod.camserv < 840) {
-            this.msg(colors.name(model.nm) + "does not have a mobile feed and can not be captured");
+            this.msg(colors.name(model.nm) + " does not have a mobile feed and can not be captured");
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 

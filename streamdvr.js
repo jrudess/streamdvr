@@ -16,7 +16,7 @@ const MIXER   = Symbol("Mixer");
 const BONGA   = Symbol("BongaCams");
 // const CAMSODA = Symbol("Camsoda");
 const FC2     = Symbol("FC2");
-const CAM4    = Symbol("CAM4");
+// const CAM4    = Symbol("CAM4");
 
 class Streamdvr {
 
@@ -33,7 +33,7 @@ class Streamdvr {
         this.plugins.set(BONGA,   {file: "./plugins/bongacams", enable: this.tui.config.enableBonga,   handle: null});
         // this.plugins.set(CAMSODA, {file: "./plugins/camsoda",   enable: this.tui.config.enableCamsoda, handle: null});
         this.plugins.set(FC2,     {file: "./plugins/fc2",       enable: this.tui.config.enableFC2,     handle: null});
-        this.plugins.set(CAM4,    {file: "./plugins/cam4",      enable: this.tui.config.enableCam4,    handle: null});
+        // this.plugins.set(CAM4,    {file: "./plugins/cam4",      enable: this.tui.config.enableCam4,    handle: null});
 
         for (const [site, data] of this.plugins) {
             if (data.enable) {

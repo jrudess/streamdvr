@@ -12,7 +12,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Automatic post-processing converts recordings to mp4 or mkv containers.
 
-* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Bongacams, Cam4
+* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Bongacams
 
 Setup
 ==========
