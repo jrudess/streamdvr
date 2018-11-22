@@ -368,7 +368,7 @@ class Tui {
             // ffmpeg jobs have completed.
             if (!this.busy()) {
                 for (let i = 0; i < this.SITES.length; i++) {
-                    this.SITES[i].disconnect();
+                    await this.SITES[i].disconnect();
                 }
                 process.exit(0);
             } else {

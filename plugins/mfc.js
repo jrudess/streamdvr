@@ -26,8 +26,12 @@ class Mfc extends site.Site {
         }
     }
 
-    disconnect() {
-        this.mfcGuest.disconnect();
+    async disconnect() {
+        try {
+            await this.mfcGuest.disconnect();
+        } catch (err) {
+            this.errMsg(err.toString());
+        }
     }
 
     async updateList(nm, add, isTemp) {
