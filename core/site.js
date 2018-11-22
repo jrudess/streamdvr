@@ -174,7 +174,7 @@ class Site {
             let dirty = await this.updateStreamers(includeStreamers, true);
             dirty |= await this.updateStreamers(excludeStreamers, false);
             if (dirty) {
-                this.writeConfig();
+                await this.writeConfig();
             }
         } catch (err) {
             this.errMsg(err.toString());
@@ -309,9 +309,19 @@ class Site {
         }
     }
 
-    writeConfig() {
-        this.dbgMsg("Rewriting " + this.cfgname);
-        fs.writeFileSync(this.cfgname, yaml.safeDump(this.siteConfig), "utf8");
+    async writeConfig() {
+        let filehandle;
+        try {
+            filehandle = await fs.promises.open(this.cfgname, "w");
+            await filehandle.writeFile(yaml.safeDump(this.siteConfig));
+        } finally {
+            if (filehandle) {
+                this.dbgMsg("Rewriting " + this.cfgname);
+                await filehandle.close();
+            } else {
+                this.errMsg("Could not write " + this.cfgname);
+            }
+        }
     }
 
     setupCapture(uid) {
@@ -334,11 +344,11 @@ class Site {
             if (this.tui.config.includeSiteInDir) {
                 completeDir += this.siteDir;
             }
-            await fs.mkdir(completeDir, {recursive: true}, (err) => {
-                if (err) {
-                    throw err;
-                }
-            });
+            try {
+                await fs.promises.mkdir(completeDir, {recursive: true});
+            } catch (err) {
+                this.errMsg(err.toString());
+            }
         }
 
         return completeDir;
@@ -496,7 +506,7 @@ class Site {
         });
 
         myCompleteProcess.on("error", (err) => {
-            this.errMsg(err);
+            this.errMsg(err.toString());
         });
     }
 

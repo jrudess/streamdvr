@@ -305,12 +305,13 @@ class Tui {
     }
 
     // Add and remove streamers
-    updateList(cmd, site, nm, isTemp) {
+    async updateList(cmd, site, nm, isTemp) {
         for (let i = 0; i < this.SITES.length; i++) {
             if (site === this.SITES[i].listName) {
                 const isAdd = cmd === "add" || cmd === "addtemp";
-                if (this.SITES[i].updateList(nm, isAdd, isTemp) && !isTemp) {
-                    this.SITES[i].writeConfig();
+                const dirty = await this.SITES[i].updateList(nm, isAdd, isTemp) && !isTemp;
+                if (dirty) {
+                    await this.SITES[i].writeConfig();
                 }
                 return;
             }
