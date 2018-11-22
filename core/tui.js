@@ -217,7 +217,7 @@ class Tui {
             if (!this.logHidden) {
                 this.render();
             }
-        } else if (options && options.trace) {
+        } else if (options && options.trace && this.config.errortrace) {
             console.trace(text);
         } else {
             console.log(text);
