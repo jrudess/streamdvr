@@ -1,6 +1,6 @@
 const colors = require("colors/safe");
 const {exec} = require("child_process");
-const {Site} = require("./site");
+const site   = require("./site");
 
 function promiseSerial(funcs) {
     return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
@@ -18,7 +18,7 @@ function childToPromise(child) {
     });
 }
 
-class Basicsite extends Site {
+class Basicsite extends site.Site {
     constructor(siteName, tui, siteUrl, noHLS, cmdfront, cmdback) {
         super(siteName, tui);
 
@@ -193,11 +193,10 @@ class Basicsite extends Site {
         if (this.noHLS) {
             newurl = this.siteUrl + streamer.nm;
         } else if (this.tui.config.streamlink) {
-            newurl = "generic://" + url;
+            newurl = "hlssession://" + url;
         }
 
         const spawnArgs = this.getCaptureArguments(newurl, filename);
-        this.msg(spawnArgs);
 
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
