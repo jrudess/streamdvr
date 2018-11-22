@@ -1,8 +1,8 @@
 const basicsite = require("./basicsite");
 
 class Youtubedl extends basicsite.Basicsite {
-    constructor(siteName, tui, siteUrl, noHLS) {
-        super(siteName, tui, siteUrl, noHLS, "youtube-dl -g ", "");
+    constructor(siteName, tui, noHLS) {
+        super(siteName, tui, noHLS, "youtube-dl -g ", "");
         this.siteType = "youtubedl";
     }
 }
