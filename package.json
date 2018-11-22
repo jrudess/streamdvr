@@ -14,12 +14,13 @@
         "url": "git://github.com/jrudess/streamdvr.node.git"
     },
     "author": "jrudess",
-    "license": "GPL3",
+    "license": "GPL-3.0",
     "bugs": {
         "url": "https://github.com/jrudess/streamdvr/issues"
     },
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
+        "MFCAuto": "github:Damianonymous/MFCAuto",
         "blessed": "github:chjj/blessed",
         "cheerio": "^1.0.0-rc.2",
         "colors": "^1.3.2",

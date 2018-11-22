@@ -9,7 +9,7 @@ function sleep(time) {
 }
 
 const MFC     = Symbol("Myfreecams");
-const MFCSL   = Symbol("Myfreecams with streamlink");
+// const MFCSL   = Symbol("Myfreecams with streamlink");
 const CB      = Symbol("Chaturbate");
 const TWITCH  = Symbol("Twitch");
 const MIXER   = Symbol("Mixer");
@@ -26,7 +26,7 @@ class Streamdvr {
         this.plugins = new Map();
 
         this.plugins.set(MFC,     {file: "./plugins/mfc",       enable: this.tui.config.enableMFC,     handle: null});
-        this.plugins.set(MFCSL,   {file: "./plugins/mfcsl",     enable: this.tui.config.enableMFCSL,   handle: null});
+        // this.plugins.set(MFCSL,   {file: "./plugins/mfcsl",     enable: this.tui.config.enableMFCSL,   handle: null});
         this.plugins.set(CB,      {file: "./plugins/cb",        enable: this.tui.config.enableCB,      handle: null});
         this.plugins.set(TWITCH,  {file: "./plugins/twitch",    enable: this.tui.config.enableTwitch,  handle: null});
         this.plugins.set(MIXER,   {file: "./plugins/mixer",     enable: this.tui.config.enableMixer,   handle: null});
