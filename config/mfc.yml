@@ -1,4 +1,5 @@
 siteUrl: "https://www.myfreecams.com/"
+scanInterval: 300
 mfcWebSocket: true
 modernLogin: false
 mfcautolog: false

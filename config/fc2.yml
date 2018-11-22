@@ -1,3 +1,4 @@
 siteUrl: "https://live.fc2.com/"
+scanInterval: 300
 batchSize: 5
 streamers: []

@@ -52,7 +52,13 @@ class Streamdvr {
             } catch (err) {
                 site.errMsg(err.toString());
             }
-            await sleep(site.tui.config.scanInterval * 1000);
+            if (site.siteConfig.scanInterval) {
+                await sleep(site.siteConfig.scanInterval * 1000);
+            } else {
+                site.errMsg("Missing scanInterval option in " + site.cfgname + ". Using 300s instead");
+                await sleep(300 * 1000);
+                process.exit(1);
+            }
         }
     }
 

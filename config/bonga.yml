@@ -1,4 +1,5 @@
 siteUrl: "https://bongacams.com/"
+scanInterval: 300
 batchSize: 5
 streamers:
   - sweetkira25

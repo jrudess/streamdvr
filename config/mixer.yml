@@ -1,4 +1,5 @@
 siteUrl: "https://mixer.com/"
+scanInterval: 300
 batchSize: 5
 streamers:
   - britni
