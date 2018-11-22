@@ -1,21 +1,10 @@
-const colors = require("colors/safe");
-const {exec} = require("child_process");
-const {Site} = require("./site");
+const colors      = require("colors/safe");
+const {promisify} = require("util");
+const exec        = promisify(require("child_process").exec);
+const {Site}      = require("./site");
 
 function promiseSerial(funcs) {
     return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
-}
-
-function childToPromise(child) {
-    return new Promise((resolve, reject) => {
-        child.addListener("exit", (code) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                reject(new Error("Non-zero exit code " + code));
-            }
-        });
-    });
 }
 
 class Basicsite extends Site {
@@ -38,90 +27,72 @@ class Basicsite extends Site {
     }
 
     async checkStreamerState(nm) {
-        let stdout = null;
-        let stderr = null;
+        let stdio = null;
         let msg = colors.name(nm);
 
         // this.dbgMsg(colors.name(nm) + " checking online status");
 
+        // Detect if streamer is online or actively streaming
+        const streamer = this.streamerList.get(nm);
+        const prevState = streamer.state;
+
+        let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
+
+        if (this.tui.config.proxyenable) {
+            if (this.siteType === "streamlink") {
+                mycmd += " --https-proxy " + this.tui.config.proxyserver;
+            } else if (this.siteType === "youtubedl") {
+                mycmd += " --proxy " + this.tui.config.proxyserver;
+            }
+        }
+
         try {
-            // Detect if streamer is online or actively streaming
-            const streamer = this.streamerList.get(nm);
-            const prevState = streamer.state;
-
-            let mycmd = this.cmdfront + this.siteUrl + nm + " " + this.cmdback;
-
-            if (this.tui.config.proxyenable) {
-                if (this.siteType === "streamlink") {
-                    mycmd += " --https-proxy " + this.tui.config.proxyserver;
-                } else if (this.siteType === "youtubedl") {
-                    mycmd += " --proxy " + this.tui.config.proxyserver;
-                }
-            }
-
-            const child = exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
-            child.stdout.on("data", (data) => {
-                stdout = data;
-            });
-            child.stderr.on("data", (data) => {
-                stderr = data;
-            });
-
-            await childToPromise(child);
-
-            let url;
-            let isStreaming = false;
-            if (stdout) {
-                isStreaming = true;
-            }
-
-            if (isStreaming) {
-                msg += " is streaming.";
-                streamer.state = "Streaming";
-
-                url = stdout.toString();
-                url = url.replace(/\r?\n|\r/g, "");
-            } else {
-                msg += " is offline.";
-                streamer.state = "Offline";
-            }
-
-            super.checkStreamerState(streamer, msg, isStreaming, prevState);
-
-            if (isStreaming) {
-                this.startCapture(this.setupCapture(streamer, url));
-            }
-
-            return true;
+            stdio = await exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
         } catch (err) {
-            const streamer = this.streamerList.get(nm);
-            const prevState = streamer.state;
             let stdoutprint = false;
             let stderrprint = false;
 
-            streamer.state = "Offline";
-            msg += " is offline.";
-
-            if (stdout) {
-                stdoutprint = (stdout.search("No playable streams found on this URL") === -1) &&
-                              (stdout.search("Forbidden for url") === -1);
+            if (err && err.stdout) {
+                stdoutprint = (err.stdout.toString().search("No playable streams found on this URL") === -1) &&
+                              (err.stdout.search("Forbidden for url") === -1);
             }
 
-            if (stderr) {
-                stderrprint = (stderr.search("is offline") === -1) &&
-                              (stderr.search("Unable to open URL") === -1) &&
-                              (stderr.search("could not be found") === -1);
+            if (err && err.stderr) {
+                stderrprint = (err.stderr.search("is offline") === -1) &&
+                    (err.stderr.search("Unable to open URL") === -1) &&
+                    (err.stderr.search("could not be found") === -1);
             }
 
             // Don't print errors for normal offline cases
-            if (stdoutprint || (stderrprint && stdout !== null)) {
-                this.errMsg(colors.name(nm) + " " + stdout.toString());
+            if (stdoutprint || (stderrprint && err.stdout)) {
+                this.errMsg(colors.name(nm) + " " + err.stdout.toString());
             }
-
-            super.checkStreamerState(streamer, msg, 0, prevState);
-
-            return false;
         }
+
+        let url;
+        let isStreaming = false;
+        if (stdio && stdio.stdout) {
+            isStreaming = true;
+        }
+
+        if (isStreaming) {
+            msg += " is streaming.";
+            streamer.state = "Streaming";
+
+            url = stdio.stdout.toString();
+            url = url.replace(/\r?\n|\r/g, "");
+        } else {
+            msg += " is offline.";
+            streamer.state = "Offline";
+        }
+
+        super.checkStreamerState(streamer, msg, isStreaming, prevState);
+
+        if (isStreaming) {
+            this.startCapture(this.setupCapture(streamer, url));
+        }
+
+        return true;
     }
 
     async checkBatch(batch) {
