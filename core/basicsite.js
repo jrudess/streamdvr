@@ -55,8 +55,8 @@ class Basicsite extends Site {
 
             if (err && err.stderr) {
                 stderrprint = (err.stderr.search("is offline") === -1) &&
-                    (err.stderr.search("Unable to open URL") === -1) &&
-                    (err.stderr.search("could not be found") === -1);
+                              (err.stderr.search("Unable to open URL") === -1) &&
+                              (err.stderr.search("could not be found") === -1);
             }
 
             // Don't print errors for normal offline cases

@@ -35,6 +35,8 @@ class Site {
         //     filename
         //     captureProcess
         //     postProcess
+        //     filesize
+        //     stuckcounter
         this.streamerList = new Map();
 
         tui.addSite(this);
@@ -62,10 +64,6 @@ class Site {
 
     checkFileSize() {
         const maxSize = this.tui.config.maxSize;
-        if (maxSize === 0) {
-            return;
-        }
-
         for (const streamers of this.streamerList.values()) {
             if (streamers.captureProcess === null) {
                 continue;
@@ -73,8 +71,18 @@ class Site {
 
             const stat = fs.statSync(this.tui.config.captureDirectory + "/" + streamers.filename);
             const sizeMB = stat.size / 1048576;
-            this.dbgMsg(colors.name(streamers.nm) + " file size (" + streamers.filename + "), size=" + sizeMB + ", maxSize=" + maxSize);
-            if (sizeMB >= maxSize) {
+            this.dbgMsg(colors.name(streamers.nm) + ": " + streamers.filename + ", size=" + sizeMB + ", maxSize=" + maxSize);
+            if (sizeMB === streamers.filesize) {
+                this.msg(colors.name(streamers.nm) + " recording appears to be stuck, file size is not increasing: " + sizeMB);
+                streamers.stuckcounter++;
+            }
+            streamers.filesize = sizeMB;
+            if (streamers.stuckcounter >= 2) {
+                this.msg(colors.name(streamers.nm) + " terminating stuck recording with SIGINT");
+                streamers.captureProcess.kill("SIGINT");
+                streamers.stuckcounter = 0;
+            }
+            if (maxSize !== 0 && sizeMB >= maxSize) {
                 this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 streamers.captureProcess.kill("SIGINT");
             }
@@ -230,7 +238,7 @@ class Site {
             this.errMsg(colors.name(streamer.nm) + " is already in the capture list");
         }
         if (!this.streamerList.has(streamer.uid)) {
-            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0, filesize: 0, stuckcounter: 0});
             this.tui.render();
         }
         return added;
