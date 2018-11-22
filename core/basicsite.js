@@ -1,6 +1,6 @@
 const colors = require("colors/safe");
 const {exec} = require("child_process");
-const site   = require("./site");
+const {Site} = require("./site");
 
 function promiseSerial(funcs) {
     return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
@@ -18,7 +18,7 @@ function childToPromise(child) {
     });
 }
 
-class Basicsite extends site.Site {
+class Basicsite extends Site {
     constructor(siteName, tui, siteUrl, noHLS, cmdfront, cmdback) {
         super(siteName, tui);
 

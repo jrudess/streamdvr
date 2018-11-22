@@ -37,8 +37,9 @@ class Streamdvr {
 
         for (const [site, data] of this.plugins) {
             if (data.enable) {
-                this[site] = require(this.plugins.get(site).file);
-                this.plugins.get(site).handle = new this[site].Plugin(this.tui);
+                const plugin = this.plugins.get(site);
+                this[site] = require(plugin.file);
+                plugin.handle = new this[site].Plugin(this.tui);
             }
         }
     }
