@@ -3,10 +3,6 @@ const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("./site");
 
-function promiseSerial(funcs) {
-    return funcs.reduce((promise, func) => promise.then((result) => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]));
-}
-
 class Basicsite extends Site {
     constructor(siteName, tui, siteUrl, noHLS, cmdfront, cmdback) {
         super(siteName, tui);
@@ -53,7 +49,7 @@ class Basicsite extends Site {
             let stderrprint = false;
 
             if (err && err.stdout) {
-                stdoutprint = (err.stdout.toString().search("No playable streams found on this URL") === -1) &&
+                stdoutprint = (err.stdout.search("No playable streams found on this URL") === -1) &&
                               (err.stdout.search("Forbidden for url") === -1);
             }
 
@@ -111,16 +107,7 @@ class Basicsite extends Site {
         }
     }
 
-    async getStreamers() {
-        if (!super.getStreamers()) {
-            return [];
-        }
-
-        const nms = [];
-        this.streamerList.forEach((value) => {
-            nms.push(value.nm);
-        });
-
+    serialize(nms) {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
@@ -142,10 +129,27 @@ class Basicsite extends Site {
             }
             serRuns.push(parBatch);
         }
+        return serRuns;
+    }
 
-        const funcs = serRuns.map((batch) => () => this.checkBatch(batch));
+    async getStreamers() {
+        if (!super.getStreamers()) {
+            return [];
+        }
+
+        const nms = [];
+        this.streamerList.forEach((value) => {
+            nms.push(value.nm);
+        });
+
+        const serRuns = this.serialize(nms);
+
         try {
-            const streamers = await promiseSerial(funcs);
+            let streamers = [];
+            for (let i = 0; i < serRuns.length; i++) {
+                const batch = await this.checkBatch(serRuns[i]);
+                streamers = streamers.concat(batch);
+            }
             return streamers;
         } catch (err) {
             this.errMsg(err.toString());
