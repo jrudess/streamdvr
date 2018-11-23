@@ -67,8 +67,9 @@ Refer to `config/config.yml` for all configuration options.
     * help
 
 * Custom Post Processing is enabled in `config.yml` with `postprocess: /path/to/script`
-
+```bash
     #!/usr/bin/bash
-    # arg0 is path, arg1 is filename
+    #arg0 is path, arg1 is filename
     args=("$@")
     notify-send "streamdvr" "Done recording ${args[1]}"
+```
