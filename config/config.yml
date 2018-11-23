@@ -3,8 +3,6 @@ enable:
   CB: true
   Twitch: true
   Mixer: true
-  Bonga: false
-  FC2: false
 recording:
   autoConvertType: mp4
   captureDirectory: capturing
