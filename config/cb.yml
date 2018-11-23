@@ -1,4 +1,5 @@
 siteUrl: "https://www.chaturbate.com/"
+m3u8fetch: youtubedl.sh
 scanInterval: 300
 batchSize: 5
 streamers:

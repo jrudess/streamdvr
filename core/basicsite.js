@@ -3,6 +3,11 @@ const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("./site");
 
+// A basic-site is one in which external scripts are used to check if a
+// streamer is online and also record the streams.  These scripts currentlychecking if a streamer is online and recording
+// streams are both handled by external scripts which implment youtube-dl,
+// streamlink, and ffmpeg functionality.  This allows for the easy expansion
+// of new programs for handling these features or implementing new sites.
 class Basicsite extends Site {
     constructor(siteName, tui, cmdfront, cmdback) {
         super(siteName, tui);
@@ -20,71 +25,46 @@ class Basicsite extends Site {
         return super.updateList({nm: nm, uid: nm}, add, isTemp);
     }
 
-    async checkStreamerState(nm) {
-        let stdio = null;
-        let msg = colors.name(nm);
-
-        // this.dbgMsg(colors.name(nm) + " checking online status");
-
-        // Detect if streamer is online or actively streaming
-        const streamer = this.streamerList.get(nm);
-        const prevState = streamer.state;
-
-        let mycmd = this.cmdfront + this.siteConfig.siteUrl + nm + " " + this.cmdback;
+    async m3u8Script(nm) {
+        // arg0 = url
+        // arg1 = proxy enable
+        // arg2 = proxy server
+        const mycmd = this.siteConfig.m3u8fetch + " " + this.siteConfig.siteUrl + nm + (this.tui.config.proxy.enable ? " 1 " : " 0 ") + this.tui.config.proxy.server;
         this.dbgMsg(colors.name(nm) + " running: " + colors.site(mycmd));
-
-        if (this.tui.config.proxy.enable) {
-            if (this.siteType === "streamlink") {
-                mycmd += " --https-proxy " + this.tui.config.proxy.server;
-            } else if (this.siteType === "youtubedl") {
-                mycmd += " --proxy " + this.tui.config.proxy.server;
-            }
-        }
-
         try {
-            stdio = await exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
-        } catch (err) {
-            let stdoutprint = false;
-            let stderrprint = false;
+            const stdio = await exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
+            let url = stdio.stdout.toString();
+            url = url.replace(/\r?\n|\r/g, "");
 
-            if (err && err.stdout) {
-                stdoutprint = (err.stdout.search("No playable streams found on this URL") === -1) &&
-                              (err.stdout.search("Forbidden for url") === -1);
+            return {status: true, m3u8: url};
+        } catch (stdio) {
+            if (stdio.stdout || stdio.stderr) {
+                this.errMsg(stdio.stdout);
+                this.errMsg(stdio.stderr);
             }
-
-            if (err && err.stderr) {
-                stderrprint = (err.stderr.search("is offline") === -1) &&
-                              (err.stderr.search("Unable to open URL") === -1) &&
-                              (err.stderr.search("could not be found") === -1);
-            }
-
-            // Don't print errors for normal offline cases
-            if (stdoutprint || (stderrprint && err.stdout)) {
-                this.errMsg(colors.name(nm) + " " + err.stdout.toString());
-            }
+            return {status: false, m3u8: ""};
         }
+    }
 
-        // let url;
-        let isStreaming = false;
-        if (stdio && stdio.stdout) {
-            isStreaming = true;
-        }
+    async checkStreamerState(nm) {
+        // Detect if streamer is online or actively streaming
+        const streamer  = this.streamerList.get(nm);
+        const prevState = streamer.state;
+        const stream    = await this.m3u8Script(nm);
 
-        if (isStreaming) {
+        let msg = colors.name(nm);
+        if (stream.status) {
             msg += " is streaming.";
             streamer.state = "Streaming";
-
-            // url = stdio.stdout.toString();
-            // url = url.replace(/\r?\n|\r/g, "");
         } else {
             msg += " is offline.";
             streamer.state = "Offline";
         }
 
-        super.checkStreamerState(streamer, msg, isStreaming, prevState);
+        super.checkStreamerState(streamer, msg, stream.status, prevState);
 
-        if (isStreaming) {
-            this.startCapture(this.setupCapture(streamer));
+        if (stream.status) {
+            this.startCapture(this.setupCapture(streamer, stream.m3u8));
         }
 
         return true;
@@ -156,14 +136,14 @@ class Basicsite extends Site {
         }
     }
 
-    setupCapture(streamer) {
+    setupCapture(streamer, url) {
         if (!super.setupCapture(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 
         const filename  = this.getFileName(streamer.nm);
-        const url       = this.siteConfig.siteUrl + streamer.nm;
-        const spawnArgs = this.getCaptureArguments(url, filename);
+        const newurl    = this.tui.config.recording.streamlink ? this.siteConfig.siteUrl + streamer.nm : url;
+        const spawnArgs = this.getCaptureArguments(newurl, filename);
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
 }
