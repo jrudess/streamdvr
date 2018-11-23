@@ -170,7 +170,7 @@ class Mfc extends Site {
         }
 
         let url = this.mfcGuest.getHlsUrl(mod);
-        if (this.tui.config.streamlink) {
+        if (this.tui.config.recording.streamlink) {
             url = "hlssession://" + url;
         }
 

@@ -38,9 +38,9 @@ class Tui {
         this.loadConfig();
 
         this.logger = null;
-        if (this.config.logenable) {
+        if (this.config.log.enable) {
             const {Console} = require("console");
-            const attr = (this.config.logappend) ? "a" : "w";
+            const attr = (this.config.log.append) ? "a" : "w";
             const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
             this.logger = new Console({stdout: logFile, stderr: logFile});
         }
@@ -198,7 +198,7 @@ class Tui {
         // Initial loadConfig is called before sites are created
         // so correct the shown status for the new lists.
         if (this.config.tui) {
-            this.display(this.config.listshown ? "show" : "hide", "list");
+            this.display(this.config.list.shown ? "show" : "hide", "list");
 
 
             const hotkeys = ["1"];
@@ -217,7 +217,7 @@ class Tui {
             if (!this.logHidden) {
                 this.render();
             }
-        } else if (options && options.trace && this.config.errortrace) {
+        } else if (options && options.trace && this.config.debug.errortrace) {
             console.trace(text);
         } else {
             console.log(text);
@@ -330,25 +330,29 @@ class Tui {
     }
 
     loadConfig() {
-        this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
+        try {
+            this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
+        } catch (err) {
+            this.errMsg("Failed to load config.yml:" + err.toString());
+        }
 
         colors.setTheme({
-            name:    this.config.namecolor,
-            state:   this.config.statecolor,
-            offline: this.config.offlinecolor,
-            file:    this.config.filecolor,
-            time:    this.config.timecolor,
-            site:    this.config.sitecolor,
-            debug:   this.config.debugcolor,
-            error:   this.config.errorcolor
+            name:    this.config.colors.name,
+            state:   this.config.colors.state,
+            offline: this.config.colors.offline,
+            file:    this.config.colors.file,
+            time:    this.config.colors.time,
+            site:    this.config.colors.site,
+            debug:   this.config.colors.debug,
+            error:   this.config.colors.error
         });
 
-        this.config.captureDirectory  = this.mkdir(this.config.captureDirectory);
-        this.config.completeDirectory = this.mkdir(this.config.completeDirectory);
+        this.config.recording.captureDirectory  = this.mkdir(this.config.recording.captureDirectory);
+        this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
 
         if (this.config.tui && this.list) {
-            this.display(this.config.listshown ? "show" : "hide", "list");
-            this.display(this.config.logshown  ? "show" : "hide", "log");
+            this.display(this.config.list.shown ? "show" : "hide", "list");
+            this.display(this.config.log.shown  ? "show" : "hide", "log");
             this.render();
         }
     }

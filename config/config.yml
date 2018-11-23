@@ -1,35 +1,42 @@
-captureDirectory: capturing
-completeDirectory: captured
 tui: false
-streamerSubdir: true
-autoConvertType: mp4
-keepTsFile: false
-streamlink: false
-proxyenable: false
-proxyserver: socks5://127.0.0.1:1080
-minSize: 0
-maxSize: 0
-dateFormat: YYYYMMDD_HHmmss
-debug: false
-debugrecorder: false
-errortrace: false
-logenable: true
-logappend: true
-logshown: true
-listshown: true
-namecolor: magenta
-statecolor: yellow
-offlinecolor: blue
-filecolor: green
-timecolor: grey
-sitecolor: green
-debugcolor: yellow
-errorcolor: red
-includeSiteInFile: false
-includeSiteInDir: false
-enableMFC: true
-enableCB: true
-enableTwitch: true
-enableMixer: true
-enableBonga: false
-enableFC2: false
+enable:
+  MFC: true
+  CB: true
+  Twitch: true
+  Mixer: true
+  Bonga: false
+  FC2: false
+recording:
+  autoConvertType: mp4
+  captureDirectory: capturing
+  completeDirectory: captured
+  dateFormat: YYYYMMDD_HHmmss
+  includeSiteInFile: false
+  includeSiteInDir: false
+  streamerSubdir: true
+  streamlink: false
+  keepTsFile: false
+  minSize: 0
+  maxSize: 0
+log:
+  enable: true
+  append: true
+  shown: true
+list:
+  shown: true
+colors:
+  name: magenta
+  state: yellow
+  offline: blue
+  file: green
+  time: grey
+  site: green
+  debug: yellow
+  error: red
+proxy:
+  enable: false
+  server: socks5://127.0.0.1:1080
+debug:
+  log: false
+  recorder: false
+  errortrace: false

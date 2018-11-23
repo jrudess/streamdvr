@@ -49,7 +49,7 @@ class Site {
     }
 
     getDateTime() {
-        return moment().format(this.tui.config.dateFormat);
+        return moment().format(this.tui.config.recording.dateFormat);
     }
 
     getStreamerList() {
@@ -59,7 +59,7 @@ class Site {
     getFileName(nm) {
         let filename = nm + "_";
 
-        if (this.tui.config.includeSiteInFile) {
+        if (this.tui.config.recording.includeSiteInFile) {
             filename += this.listName + "_";
         }
         filename += this.getDateTime();
@@ -67,13 +67,13 @@ class Site {
     }
 
     checkFileSize() {
-        const maxSize = this.tui.config.maxSize;
+        const maxSize = this.tui.config.recording.maxSize;
         for (const streamers of this.streamerList.values()) {
             if (streamers.captureProcess === null) {
                 continue;
             }
 
-            const stat = fs.statSync(this.tui.config.captureDirectory + "/" + streamers.filename);
+            const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamers.filename);
             const sizeMB = stat.size / 1048576;
             this.dbgMsg(colors.name(streamers.nm) + ": " + streamers.filename + ", size=" + sizeMB + ", maxSize=" + maxSize);
             if (sizeMB === streamers.filesize) {
@@ -103,15 +103,15 @@ class Site {
     getCaptureArguments(url, filename, options) {
         let params = [];
 
-        if (this.tui.config.streamlink) {
+        if (this.tui.config.recording.streamlink) {
             params = [
                 "-o",
-                this.tui.config.captureDirectory + "/" + filename + ".ts",
+                this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
                 url,
                 "best"
                 // "--stream-sorting-excludes=live"
             ];
-            if (this.tui.config.debugrecorder) {
+            if (this.tui.config.debug.recorder) {
                 params.push("-l");
                 params.push("debug");
             } else {
@@ -134,11 +134,11 @@ class Site {
             if (options && options.params) {
                 params = params.concat(options.params);
             }
-            if (!this.tui.config.debugrecorder) {
+            if (!this.tui.config.debug.recorder) {
                 params.push("-v");
                 params.push("fatal");
             }
-            params.push(this.tui.config.captureDirectory + "/" + filename + ".ts");
+            params.push(this.tui.config.recording.captureDirectory + "/" + filename + ".ts");
         }
         return params;
     }
@@ -343,11 +343,11 @@ class Site {
     }
 
     async getCompleteDir(streamer) {
-        let completeDir = this.tui.config.completeDirectory;
+        let completeDir = this.tui.config.recording.completeDirectory;
 
-        if (this.tui.config.streamerSubdir) {
+        if (this.tui.config.recording.streamerSubdir) {
             completeDir += "/" + streamer.nm;
-            if (this.tui.config.includeSiteInDir) {
+            if (this.tui.config.recording.includeSiteInDir) {
                 completeDir += this.siteDir;
             }
             try {
@@ -374,10 +374,10 @@ class Site {
 
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
-        const capper = this.tui.config.streamlink ? "streamlink" : "ffmpeg";
+        const capper = this.tui.config.recording.streamlink ? "streamlink" : "ffmpeg";
         const captureProcess = spawn(capper, capInfo.spawnArgs);
 
-        if (this.tui.config.debugrecorder) {
+        if (this.tui.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
             captureProcess.stdout.pipe(logStream);
             captureProcess.stderr.pipe(logStream);
@@ -390,19 +390,19 @@ class Site {
 
         captureProcess.on("close", () => {
 
-            fs.stat(this.tui.config.captureDirectory + "/" + fullname, (err, stats) => {
+            fs.stat(this.tui.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
                 if (err) {
                     if (err.code === "ENOENT") {
-                        this.errMsg(colors.name(streamer.nm) + ", " + capInfo.filename + ".ts not found in capturing directory, cannot convert to " + this.tui.config.autoConvertType);
+                        this.errMsg(colors.name(streamer.nm) + ", " + capInfo.filename + ".ts not found in capturing directory, cannot convert to " + this.tui.config.recording.autoConvertType);
                     } else {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }
                     this.storeCapInfo(streamer.uid, "", null);
                 } else {
                     const sizeMB = stats.size / 1048576;
-                    if (sizeMB < this.tui.config.minSize) {
-                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.tui.config.minSize + ")");
-                        fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
+                    if (sizeMB < this.tui.config.recording.minSize) {
+                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.tui.config.recording.minSize + ")");
+                        fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
                         this.storeCapInfo(streamer.uid, "", null);
                     } else {
                         this.postProcessQ.push({streamer: streamer, filename: capInfo.filename});
@@ -435,7 +435,7 @@ class Site {
 
     postScript(streamer, finalName, item) {
         if (this.tui.config.postprocess) {
-            const args = [this.tui.config.completeDirectory, finalName];
+            const args = [this.tui.config.recording.completeDirectory, finalName];
             const userPostProcess = spawn(this.tui.config.postprocess, args);
 
             userPostProcess.on("close", () => {
@@ -456,10 +456,10 @@ class Site {
 
         const capInfo = this.postProcessQ[0];
         const fullname = capInfo.filename + ".ts";
-        const finalName = capInfo.filename + "." + this.tui.config.autoConvertType;
+        const finalName = capInfo.filename + "." + this.tui.config.recording.autoConvertType;
         const completeDir = await this.getCompleteDir(capInfo.streamer);
 
-        if (this.tui.config.autoConvertType !== "mp4" && this.tui.config.autoConvertType !== "mkv") {
+        if (this.tui.config.recording.autoConvertType !== "mp4" && this.tui.config.recording.autoConvertType !== "mkv") {
             this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
             mv(this.tui.config.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
@@ -484,12 +484,12 @@ class Site {
             "-v",
             "fatal",
             "-i",
-            this.tui.config.captureDirectory + "/" + fullname,
+            this.tui.config.recording.captureDirectory + "/" + fullname,
             "-c",
             "copy"
         ];
 
-        if (this.tui.config.autoConvertType === "mp4") {
+        if (this.tui.config.recording.autoConvertType === "mp4") {
             mySpawnArguments.push("-bsf:a");
             mySpawnArguments.push("aac_adtstoasc");
         }
@@ -503,8 +503,8 @@ class Site {
         this.storeCapInfo(capInfo.streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
-            if (!this.tui.config.keepTsFile) {
-                fs.unlinkSync(this.tui.config.captureDirectory + "/" + fullname);
+            if (!this.tui.config.recording.keepTsFile) {
+                fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
             }
 
             this.msg(colors.name(capInfo.streamer.nm) + " done converting " + finalName);
@@ -525,7 +525,7 @@ class Site {
     }
 
     dbgMsg(msg) {
-        if (this.tui.config.debug) {
+        if (this.tui.config.debuglog) {
             this.msg(colors.debug("[DEBUG] ") + msg);
         }
     }

@@ -33,11 +33,11 @@ class Basicsite extends Site {
         let mycmd = this.cmdfront + this.siteConfig.siteUrl + nm + " " + this.cmdback;
         this.dbgMsg(colors.name(nm) + " running: " + colors.site(mycmd));
 
-        if (this.tui.config.proxyenable) {
+        if (this.tui.config.proxy.enable) {
             if (this.siteType === "streamlink") {
-                mycmd += " --https-proxy " + this.tui.config.proxyserver;
+                mycmd += " --https-proxy " + this.tui.config.proxy.server;
             } else if (this.siteType === "youtubedl") {
-                mycmd += " --proxy " + this.tui.config.proxyserver;
+                mycmd += " --proxy " + this.tui.config.proxy.server;
             }
         }
 
