@@ -1,4 +1,3 @@
-tui: false
 enable:
   MFC: true
   CB: true
@@ -21,9 +20,10 @@ recording:
 log:
   enable: true
   append: true
-  shown: true
-list:
-  shown: true
+tui:
+  enable: false
+  logshown: true
+  listshown: true
 colors:
   name: magenta
   state: yellow

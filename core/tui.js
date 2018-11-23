@@ -55,7 +55,7 @@ class Tui {
             this.exit();
         });
 
-        if (this.config.tui) {
+        if (this.config.tui.enable) {
             this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
             this.screen.title = "streamdvr";
 
@@ -197,8 +197,8 @@ class Tui {
     init() {
         // Initial loadConfig is called before sites are created
         // so correct the shown status for the new lists.
-        if (this.config.tui) {
-            this.display(this.config.list.shown ? "show" : "hide", "list");
+        if (this.config.tui.enable) {
+            this.display(this.config.tui.listshown ? "show" : "hide", "list");
 
 
             const hotkeys = ["1"];
@@ -211,7 +211,7 @@ class Tui {
     }
 
     log(text, options) {
-        if (this.config.tui) {
+        if (this.config.tui.enable) {
             this.logbody.pushLine(text);
             this.logbody.setScrollPerc(100);
             if (!this.logHidden) {
@@ -228,7 +228,7 @@ class Tui {
     }
 
     render() {
-        if (!this.config.tui || typeof this.screen === "undefined") {
+        if (!this.config.tui.enable || typeof this.screen === "undefined") {
             return;
         }
 
@@ -350,9 +350,9 @@ class Tui {
         this.config.recording.captureDirectory  = this.mkdir(this.config.recording.captureDirectory);
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
 
-        if (this.config.tui && this.list) {
-            this.display(this.config.list.shown ? "show" : "hide", "list");
-            this.display(this.config.log.shown  ? "show" : "hide", "log");
+        if (this.config.tui.enable && this.list) {
+            this.display(this.config.tui.listshown ? "show" : "hide", "list");
+            this.display(this.config.tui.logshown  ? "show" : "hide", "log");
             this.render();
         }
     }
