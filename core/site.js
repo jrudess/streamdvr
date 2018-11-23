@@ -460,7 +460,7 @@ class Site {
         const completeDir = await this.getCompleteDir(capInfo.streamer);
 
         if (this.tui.config.recording.autoConvertType !== "mp4" && this.tui.config.recording.autoConvertType !== "mkv") {
-            this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
+            this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
             mv(this.tui.config.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
                     this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
