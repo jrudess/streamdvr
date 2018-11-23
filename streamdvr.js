@@ -13,9 +13,9 @@ const MFC     = Symbol("Myfreecams");
 const CB      = Symbol("Chaturbate");
 const TWITCH  = Symbol("Twitch");
 const MIXER   = Symbol("Mixer");
-const BONGA   = Symbol("BongaCams");
+// const BONGA   = Symbol("BongaCams");
 // const CAMSODA = Symbol("Camsoda");
-const FC2     = Symbol("FC2");
+// const FC2     = Symbol("FC2");
 // const CAM4    = Symbol("CAM4");
 
 class Streamdvr {
@@ -30,9 +30,9 @@ class Streamdvr {
         this.plugins.set(CB,      {name: "CB",      file: "./plugins/cb",        enable: this.tui.config.enable.CB,      handle: null});
         this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/twitch",    enable: this.tui.config.enable.Twitch,  handle: null});
         this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/mixer",     enable: this.tui.config.enable.Mixer,   handle: null});
-        this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", enable: this.tui.config.enable.Bonga,   handle: null});
+        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", enable: this.tui.config.enable.Bonga,   handle: null});
         // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/camsoda",   enable: this.tui.config.enable.Camsoda, handle: null});
-        this.plugins.set(FC2,     {name: "FC2",    file: "./plugins/fc2",       enable: this.tui.config.enable.FC2,     handle: null});
+        // this.plugins.set(FC2,     {name: "FC2",    file: "./plugins/fc2",       enable: this.tui.config.enable.FC2,     handle: null});
         // this.plugins.set(CAM4,    {name: "CAM4",   file: "./plugins/cam4",      enable: this.tui.config.enable.Cam4,    handle: null});
 
         for (const [site, data] of this.plugins) {

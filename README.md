@@ -17,7 +17,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
     * generate thumbnail previews
     * do anything you want
 
-* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate, Bongacams
+* Supported sites: Twitch, Mixer, MyFreeCams, Chaturbate
 
 Setup
 ==========
@@ -26,7 +26,6 @@ Setup
 * Optional Dependencies: `streamlink, `youtube-dl`, `mfcauto`
 
   * `streamlink` can be used to record instead of ffmpeg with a streamlink plugin at https://github.com/back-to/generic
-  * `streamlink` is used to fetch m3u8 URLs for Bongacam
   * `youtube-dl` is used to fetch m3u8 URLs for CB, Twitch and Mixer
   * `mfcauto` is used to fetch m3u8 URLs for MyFreeCams
 
