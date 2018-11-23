@@ -1,5 +1,5 @@
 siteUrl: "https://mixer.com/"
-m3u8fetch: youtubedl.sh
+m3u8fetch: scripts/m3u8_youtubedl.sh
 scanInterval: 300
 batchSize: 5
 streamers:
