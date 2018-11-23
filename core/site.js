@@ -461,7 +461,7 @@ class Site {
 
         if (this.tui.config.recording.autoConvertType !== "mp4" && this.tui.config.recording.autoConvertType !== "mkv") {
             this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
-            mv(this.tui.config.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
+            mv(this.tui.config.recording.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
                     this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
                 }
