@@ -10,7 +10,7 @@ url=${args[0]}
 proxyen=${args[1]}
 proxyserver=""
 if [ "$proxyen" -eq 1 ]; then
-    $proxyserver="--proxyserver ${args[2]}"
+    $proxyserver="--proxy ${args[2]}"
 fi
 
 youtube-dl -g $url $proxyserver > $tmp/stdout 2> $tmp/stderr

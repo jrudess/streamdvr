@@ -4,10 +4,9 @@ const exec        = promisify(require("child_process").exec);
 const {Site}      = require("./site");
 
 // A basic-site is one in which external scripts are used to check if a
-// streamer is online and also record the streams.  These scripts currentlychecking if a streamer is online and recording
-// streams are both handled by external scripts which implment youtube-dl,
-// streamlink, and ffmpeg functionality.  This allows for the easy expansion
-// of new programs for handling these features or implementing new sites.
+// streamer is online and also record the streams.  These scripts currently
+// wrap youtube-dl, streamlink, and ffmpeg functionality.  This allows for
+// easier support of new programs by adding new shell script wrappers.
 class Basicsite extends Site {
     constructor(siteName, tui, cmdfront, cmdback) {
         super(siteName, tui);
@@ -17,7 +16,15 @@ class Basicsite extends Site {
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
-            this.streamerList.set(nm, {uid: nm, nm: nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+            this.streamerList.set(nm, {
+                uid:            nm,
+                nm:             nm,
+                site:           this.padName,
+                state:          "Offline",
+                filename:       "",
+                captureProcess: null,
+                postProcess:    0
+            });
         }
     }
 
@@ -29,7 +36,8 @@ class Basicsite extends Site {
         // arg0 = url
         // arg1 = proxy enable
         // arg2 = proxy server
-        const mycmd = this.siteConfig.m3u8fetch + " " + this.siteConfig.siteUrl + nm + (this.tui.config.proxy.enable ? " 1 " : " 0 ") + this.tui.config.proxy.server;
+        const mycmd = this.siteConfig.m3u8fetch + " " + this.siteConfig.siteUrl + nm +
+                     (this.tui.config.proxy.enable ? " 1 " : " 0 ") + this.tui.config.proxy.server;
         this.dbgMsg(colors.name(nm) + " running: " + colors.site(mycmd));
         try {
             const stdio = await exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
