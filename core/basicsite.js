@@ -102,7 +102,7 @@ class Basicsite extends Site {
         const serRuns = [];
         let count = 0;
         let batchSize = 5;
-        if (this.siteConfig.batchSize) {
+        if (typeof this.siteConfig.batchSize !== "undefined") {
             batchSize = this.siteConfig.batchSize === 0 ? nms.length : this.siteConfig.batchSize;
         }
 
