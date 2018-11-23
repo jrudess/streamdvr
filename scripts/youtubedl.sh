@@ -20,8 +20,8 @@ if [ "$?" -eq 0 ]; then
     cat $tmp/stdout
     exit 0
 else
-    grep -i "offline" $tmp/stout > /dev/null 2> /dev/null
-    if [ "$?" -ne 0 ]; then
+    grep -i "offline" $tmp/stdout > /dev/null 2> /dev/null
+    if [ "$?" -eq 0 ]; then
         # Print nothing for offline cases, these are expected errors
         exit 1
     fi
