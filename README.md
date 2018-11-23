@@ -23,7 +23,7 @@ Setup
 ==========
 
 * Dependencies: `node.js >= 10.12.0`, `npm`, `git`, and `ffmpeg`
-* Optional Dependencies: `streamlink, `youtube-dl`, `mfcauto`
+* Optional Dependencies: `streamlink`, `youtube-dl`, `mfcauto`
 
   * `streamlink` can be used to record instead of ffmpeg with a streamlink plugin at https://github.com/back-to/generic
   * `youtube-dl` is used to fetch m3u8 URLs for CB, Twitch and Mixer
