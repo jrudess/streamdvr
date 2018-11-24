@@ -4,6 +4,7 @@ enable:
   Pixiv: true
   Twitch: true
   Mixer: true
+  FC2: true
 recording:
   autoConvertType: mp4
   captureDirectory: capturing
