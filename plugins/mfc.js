@@ -170,10 +170,7 @@ class Mfc extends Site {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 
-        let url = this.mfcGuest.getHlsUrl(mod);
-        if (this.tui.config.recording.streamlink) {
-            url = "hlssession://" + url;
-        }
+        const url = this.mfcGuest.getHlsUrl(mod);
 
         // Checking if this is 16:9 stream via base64 key-characters in url
         const params = [];
