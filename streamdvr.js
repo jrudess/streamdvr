@@ -81,27 +81,14 @@ class Streamdvr {
 
         site.setProcessing(streamer);
 
-        const mySpawnArguments = [
-            "-hide_banner",
-            "-v",
-            "fatal",
-            "-i",
+        const args = [
             this.tui.config.recording.captureDirectory + "/" + fullname,
-            "-c",
-            "copy"
+            completeDir + "/" + finalName,
+            this.tui.config.recording.autoConvertType
         ];
 
-        if (this.tui.config.recording.autoConvertType === "mp4") {
-            mySpawnArguments.push("-bsf:a");
-            mySpawnArguments.push("aac_adtstoasc");
-        }
-
-        mySpawnArguments.push("-copyts");
-        mySpawnArguments.push("-start_at_zero");
-        mySpawnArguments.push(completeDir + "/" + finalName);
-
         site.msg(colors.name(streamer.nm) + " converting to " + finalName);
-        const myCompleteProcess = spawn("ffmpeg", mySpawnArguments);
+        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
         site.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {

@@ -430,7 +430,7 @@ class Site {
         }
     }
 
-    clearProcessing(streamer, finalName) {
+    clearProcessing(streamer) {
         if (this.streamerList.has(streamer.uid)) {
             const item = this.streamerList.get(streamer.uid);
 
