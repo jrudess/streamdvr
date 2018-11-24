@@ -75,17 +75,11 @@ class Streamdvr {
                 }
             });
 
-            this.postScript(site, streamer, fullname, null);
+            this.postScript(site, streamer, fullname);
             return;
         }
 
-        // Need to remember post-processing is happening, so that
-        // the offline check does not kill postprocess jobs.
-        let item = null;
-        if (site.streamerList.has(streamer.uid)) {
-            item = site.streamerList.get(streamer.uid);
-            item.postProcess = 1;
-        }
+        site.setProcessing(streamer);
 
         const mySpawnArguments = [
             "-hide_banner",
@@ -116,7 +110,7 @@ class Streamdvr {
             }
 
             site.msg(colors.name(streamer.nm) + " done converting " + finalName);
-            this.postScript(site, streamer, finalName, item);
+            this.postScript(site, streamer, finalName);
         });
 
         myCompleteProcess.on("error", (err) => {
@@ -124,23 +118,23 @@ class Streamdvr {
         });
     }
 
-    postScript(site, streamer, finalName, item) {
+    postScript(site, streamer, finalName) {
         if (this.tui.config.postprocess) {
             const args = [this.tui.config.recording.completeDirectory, finalName];
             const userPostProcess = spawn(this.tui.config.postprocess, args);
 
             userPostProcess.on("close", () => {
                 site.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
-                this.finalize(site, streamer, finalName, item);
+                this.next(site, streamer);
             });
         } else {
-            this.finalize(site, streamer, finalName, item);
+            this.next(site, streamer);
         }
     }
 
-    finalize(site, streamer, finalName, item) {
+    next(site, streamer) {
 
-        site.finalize(streamer, finalName, item);
+        site.clearProcessing(streamer);
 
         // Pop current job, and start next post-process job (if any)
         this.postProcessQ.shift();

@@ -421,15 +421,28 @@ class Site {
         });
     }
 
-    finalize(streamer, finalName, item) {
-        // Note: setting postProcess to null releases program to exit
-        this.storeCapInfo(streamer.uid, "", null);
-
-        if (item !== null) {
-            item.postProcess = 0;
+    setProcessing(streamer) {
+        // Need to remember post-processing is happening, so that
+        // the offline check does not kill postprocess jobs.
+        if (this.streamerList.has(streamer.uid)) {
+            const item = this.streamerList.get(streamer.uid);
+            item.postProcess = 1;
         }
+    }
 
-        this.refresh(streamer.uid);
+    clearProcessing(streamer, finalName) {
+        if (this.streamerList.has(streamer.uid)) {
+            const item = this.streamerList.get(streamer.uid);
+
+            // Note: setting postProcess to null releases program to exit
+            this.storeCapInfo(streamer.uid, "", null);
+
+            if (item !== null) {
+                item.postProcess = 0;
+            }
+
+            this.refresh(streamer.uid);
+        }
     }
 
     msg(msg, options) {
