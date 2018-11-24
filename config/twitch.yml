@@ -1,5 +1,6 @@
 siteUrl: "https://www.twitch.tv/"
 m3u8fetch: scripts/m3u8_youtubedl.sh
+recorder: ffmpeg
 scanInterval: 300
 batchSize: 5
 streamers:

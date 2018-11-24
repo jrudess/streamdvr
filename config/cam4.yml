@@ -1,4 +1,6 @@
 siteUrl: "https://www.cam4.com/"
+m3u8fetch: scripts/m3u8_streamlink.sh
+recorder: streamlink
 scanInterval: 300
 batchSize: 5
 streamers: []

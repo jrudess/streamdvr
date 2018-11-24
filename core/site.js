@@ -103,7 +103,7 @@ class Site {
     getCaptureArguments(url, filename, options) {
         let params = [];
 
-        if (this.tui.config.recording.streamlink) {
+        if (this.siteConfig.recorder === "streamlink") {
             params = [
                 "-o",
                 this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
@@ -265,7 +265,7 @@ class Site {
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + (this.tui.config.streamlink ? "streamlink" : "ffmpeg") + " capture process.");
+            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + this.siteConfig.recorder + " capture process.");
             this.haltCapture(streamer.uid);
         }
         this.tui.render();
@@ -379,8 +379,7 @@ class Site {
 
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
-        const capper = this.tui.config.recording.streamlink ? "streamlink" : "ffmpeg";
-        const captureProcess = spawn(capper, capInfo.spawnArgs);
+        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs);
 
         if (this.tui.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
