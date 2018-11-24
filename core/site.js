@@ -458,6 +458,7 @@ class Site {
             return;
         }
 
+        // peek into queue, and pop in finalize()
         const capInfo = this.postProcessQ[0];
         const fullname = capInfo.filename + ".ts";
         const finalName = capInfo.filename + "." + this.tui.config.recording.autoConvertType;
