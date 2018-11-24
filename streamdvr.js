@@ -2,7 +2,7 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
-const {Tui}       = require("./core/tui");
+const {Tui} = require("./core/tui");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
