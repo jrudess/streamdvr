@@ -1,6 +1,7 @@
 enable:
   MFC: true
   CB: true
+  Pixiv: true
   Twitch: true
   Mixer: true
 recording:
