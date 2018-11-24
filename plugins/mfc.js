@@ -175,7 +175,7 @@ class Mfc extends Site {
         // MFC is upscaling streams to 1280x960 wasting bandwidth
         // These mappings work around it to select the true resolution
         const params = [];
-        if (this.siteConfig.recorder === "streamlink") {
+        if (this.siteConfig.recorder === "scripts/record_streamlink.sh") {
             params.push("--stream-sorting-excludes=960p");
         } else if (url.indexOf("==") === -1) {
             // Checking if this is 16:9 stream via base64 key-characters in url

@@ -1,6 +1,6 @@
 siteUrl: "https://mixer.com/"
 m3u8fetch: scripts/m3u8_youtubedl.sh
-recorder: ffmpeg
+recorder: scripts/record_ffmpeg.sh
 scanInterval: 300
 batchSize: 5
 streamers:

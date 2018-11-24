@@ -1,6 +1,6 @@
 siteUrl: "https://www.youtube.com/channel/"
-m3u8fetch: scripts/m3u8_streamlink.sh
-recorder: ffmpeg
+m3u8fetch: scripts/m3u8_youtubedl.sh
+recorder: scripts/record_ffmpeg.sh
 scanInterval: 300
 batchSize: 5
 streamers: []

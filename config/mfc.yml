@@ -1,5 +1,5 @@
 siteUrl: "https://www.myfreecams.com/"
-recorder: ffmpeg
+recorder: scripts/record_ffmpeg.sh
 scanInterval: 300
 mfcWebSocket: true
 modernLogin: false

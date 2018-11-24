@@ -101,48 +101,19 @@ class Site {
     }
 
     getCaptureArguments(url, filename, options) {
-        let params = [];
+        let args = [
+            this.tui.config.recording.captureDirectory + "/" + filename + ".ts ",
+            url,
+            this.tui.config.proxy.enable ? "1" : "0",
+            this.tui.config.proxy.server,
+            this.tui.config.debug.recorder ? "1" : "0"
+        ];
 
-        if (this.siteConfig.recorder === "streamlink") {
-            params = [
-                "-o",
-                this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
-                url,
-                "best"
-            ];
-            if (options && options.params) {
-                params = params.concat(options.params);
-            }
-            if (this.tui.config.debug.recorder) {
-                params.push("-l");
-                params.push("debug");
-            } else {
-                params.push("-Q");
-            }
-        } else {
-            params = [
-                "-hide_banner",
-                "-i",
-                url,
-                "-c",
-                "copy",
-                "-vsync",
-                "2",
-                "-r",
-                "60",
-                "-b:v",
-                "500k"
-            ];
-            if (options && options.params) {
-                params = params.concat(options.params);
-            }
-            if (!this.tui.config.debug.recorder) {
-                params.push("-v");
-                params.push("fatal");
-            }
-            params.push(this.tui.config.recording.captureDirectory + "/" + filename + ".ts");
+        if (options && options.params) {
+            args = args.concat(options.params);
         }
-        return params;
+
+        return args;
     }
 
     async processUpdates() {
