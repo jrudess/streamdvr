@@ -1,7 +1,7 @@
 const colors      = require("colors/safe");
 const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
-const {Site}      = require("./site");
+const {Site}      = require("../core/site");
 
 // A basic-site is one in which external scripts are used to check if a
 // streamer is online and also record the streams.  These scripts currently
