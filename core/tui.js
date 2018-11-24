@@ -63,7 +63,7 @@ class Tui {
                 top: 0,
                 left: 0,
                 height: "100%-1",
-                width: 62,
+                width: 72,
                 keys: true,
                 mouse: false,
                 alwaysScroll: true,
@@ -82,9 +82,9 @@ class Tui {
 
             this.logbody = blessed.box({
                 top: 0,
-                left: 61,
+                left: 71,
                 height: "100%-1",
-                width: "100%-70",
+                width: "100%-71",
                 keys: true,
                 mouse: false,
                 alwaysScroll: true,
@@ -262,7 +262,7 @@ class Tui {
                 }
                 for (let j = 0; j < sortedKeys.length; j++) {
                     const value = streamerList.get(sortedKeys[j]);
-                    const name  = colors.name(value.nm.padEnd(22, " "));
+                    const name  = colors.name(value.nm.padEnd(26, " "));
                     let state;
                     if (value.filename === "") {
                         state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
@@ -281,13 +281,13 @@ class Tui {
         switch (window) {
         case "list":
             switch (cmd) {
-            case "show": this.list.show(); this.logbody.left = 61; this.logbody.width = "100%-62"; this.listHidden = false; break;
+            case "show": this.list.show(); this.logbody.left = 71; this.logbody.width = "100%-72"; this.listHidden = false; break;
             case "hide": this.list.hide(); this.logbody.left = 0;  this.logbody.width = "100%";    this.listHidden = true;  break;
             }
             break;
         case "log":
             switch (cmd) {
-            case "show": this.logbody.show(); this.list.width = 62;     this.logHidden = false; break;
+            case "show": this.logbody.show(); this.list.width = 72;     this.logHidden = false; break;
             case "hide": this.logbody.hide(); this.list.width = "100%"; this.logHidden = true;  break;
             }
             break;

@@ -1,0 +1,5 @@
+siteUrl: "https://www.youtube.com/channel/"
+m3u8fetch: scripts/m3u8_streamlink.sh
+scanInterval: 300
+batchSize: 5
+streamers: []
