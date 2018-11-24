@@ -12,6 +12,7 @@ recording:
   includeSiteInFile: false
   includeSiteInDir: false
   streamerSubdir: true
+  siteSubdir: true
   streamlink: false
   keepTsFile: false
   minSize: 0

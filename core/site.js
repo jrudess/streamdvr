@@ -345,6 +345,9 @@ class Site {
     async getCompleteDir(streamer) {
         let completeDir = this.tui.config.recording.completeDirectory;
 
+        if (this.tui.config.recording.siteSubdir) {
+            completeDir += "/" + this.siteName;
+        }
         if (this.tui.config.recording.streamerSubdir) {
             completeDir += "/" + streamer.nm;
             if (this.tui.config.recording.includeSiteInDir) {
