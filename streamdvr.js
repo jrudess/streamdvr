@@ -2,7 +2,7 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
-const TUI = require("./core/tui");
+const {Tui}       = require("./core/tui");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -22,15 +22,15 @@ const MIXER   = Symbol("Mixer");
 class Streamdvr {
 
     constructor() {
-        this.tui = new TUI.Tui();
+        this.tui = new Tui();
 
         this.plugins = new Map();
 
         this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",       urlback: "",       enable: this.tui.config.enable.MFC,     handle: null});
-        this.plugins.set(CB,      {name: "CB",      file: "./plugins/cb",        urlback: "",       enable: this.tui.config.enable.CB,      handle: null});
-        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./plugins/pixiv",     urlback: "/lives", enable: this.tui.config.enable.Pixiv,   handle: null});
-        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/twitch",    urlback: "",       enable: this.tui.config.enable.Twitch,  handle: null});
-        this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/mixer",     urlback: "",       enable: this.tui.config.enable.Mixer,   handle: null});
+        this.plugins.set(CB,      {name: "CB",      file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.CB,      handle: null});
+        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./core/basicsite",    urlback: "/lives", enable: this.tui.config.enable.Pixiv,   handle: null});
+        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.Twitch,  handle: null});
+        this.plugins.set(MIXER,   {name: "MIXER",   file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.Mixer,   handle: null});
         // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/mfcsl",     urlback: "",       enable: this.tui.config.enable.MFCSL,   handle: null});
         // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", urlback: "",       enable: this.tui.config.enable.Bonga,   handle: null});
         // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/camsoda",   urlback: "",       enable: this.tui.config.enable.Camsoda, handle: null});

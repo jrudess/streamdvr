@@ -158,5 +158,5 @@ class Basicsite extends Site {
     }
 }
 
-exports.Basicsite = Basicsite;
+exports.Plugin = Basicsite;
 
