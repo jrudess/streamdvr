@@ -26,16 +26,16 @@ class Streamdvr {
 
         this.plugins = new Map();
 
-        this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",       urlback: "",       enable: this.tui.config.enable.MFC,     handle: null});
-        this.plugins.set(CB,      {name: "CB",      file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.CB,      handle: null});
-        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./core/basicsite",    urlback: "/lives", enable: this.tui.config.enable.Pixiv,   handle: null});
-        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.Twitch,  handle: null});
-        this.plugins.set(MIXER,   {name: "MIXER",   file: "./core/basicsite",    urlback: "",       enable: this.tui.config.enable.Mixer,   handle: null});
-        // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/mfcsl",     urlback: "",       enable: this.tui.config.enable.MFCSL,   handle: null});
-        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", urlback: "",       enable: this.tui.config.enable.Bonga,   handle: null});
-        // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/camsoda",   urlback: "",       enable: this.tui.config.enable.Camsoda, handle: null});
-        // this.plugins.set(FC2,     {name: "FC2",     file: "./plugins/fc2",       urlback: "",       enable: this.tui.config.enable.FC2,     handle: null});
-        // this.plugins.set(CAM4,    {name: "CAM4",    file: "./plugins/cam4",      urlback: "",       enable: this.tui.config.enable.Cam4,    handle: null});
+        this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",      urlback: "",       enable: this.tui.config.enable.MFC,     handle: null});
+        this.plugins.set(CB,      {name: "CB",      file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.CB,      handle: null});
+        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./plugins/basic",    urlback: "/lives", enable: this.tui.config.enable.Pixiv,   handle: null});
+        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.Twitch,  handle: null});
+        this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.Mixer,   handle: null});
+        // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.MFCSL,   handle: null});
+        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.Bonga,   handle: null});
+        // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.Camsoda, handle: null});
+        // this.plugins.set(FC2,     {name: "FC2",     file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.FC2,     handle: null});
+        // this.plugins.set(CAM4,    {name: "CAM4",    file: "./plugins/basic",    urlback: "",       enable: this.tui.config.enable.Cam4,    handle: null});
 
         for (const [site, data] of this.plugins) {
             if (data.enable) {

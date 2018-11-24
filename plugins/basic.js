@@ -7,7 +7,7 @@ const {Site}      = require("./site");
 // streamer is online and also record the streams.  These scripts currently
 // wrap youtube-dl, streamlink, and ffmpeg functionality.  This allows for
 // easier support of new programs by adding new shell script wrappers.
-class Basicsite extends Site {
+class Basic extends Site {
     constructor(siteName, tui, urlback) {
         super(siteName, tui);
 
@@ -158,5 +158,5 @@ class Basicsite extends Site {
     }
 }
 
-exports.Plugin = Basicsite;
+exports.Plugin = Basic;
 
