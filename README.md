@@ -21,8 +21,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Docker available at https://hub.docker.com/r/purrsevere/streamdvr/
 
-Setup
-==========
+### Setup ###
 
 * Dependencies: `node.js >= 10.12.0`, `npm`, `git`, and `ffmpeg`
 * Optional Dependencies: `streamlink`, `youtube-dl`, `mfcauto`
@@ -38,8 +37,7 @@ Setup
 
 * Run `npm install` to fetch all of the package dependences listed in package.json.
 
-Instructions
-===========
+### Instructions ###
 
 Refer to `config/config.yml` for all configuration options.
 
