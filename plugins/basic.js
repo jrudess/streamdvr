@@ -8,8 +8,8 @@ const {Site}      = require("../core/site");
 // wrap youtube-dl, streamlink, and ffmpeg functionality.  This allows for
 // easier support of new programs by adding new shell script wrappers.
 class Basic extends Site {
-    constructor(siteName, tui, urlback) {
-        super(siteName, tui);
+    constructor(siteName, dvr, tui, urlback) {
+        super(siteName, dvr, tui);
 
         this.urlback = urlback;
 

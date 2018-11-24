@@ -1,13 +1,12 @@
 const yaml    = require("js-yaml");
 const fs      = require("fs");
 const _       = require("underscore");
-const mv      = require("mv");
 const moment  = require("moment");
 const colors  = require("colors/safe");
 const {spawn} = require("child_process");
 
 class Site {
-    constructor(siteName, tui) {
+    constructor(siteName, dvr, tui) {
         this.siteName   = siteName;
         this.padName    = siteName.padEnd(9, " ");
         this.listName   = siteName.toLowerCase();
@@ -20,13 +19,14 @@ class Site {
         // Directory suffix
         this.siteDir = "_" + this.listName;
 
+        // Handle to parent dvr for post-process queue
+        this.dvr = dvr;
+
         // Blessed UI elements
         this.tui = tui;
 
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
-
-        this.postProcessQ = [];
 
         // Contains JSON indexed by UID:
         //     uid
@@ -409,9 +409,9 @@ class Site {
                         fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
                         this.storeCapInfo(streamer.uid, "", null);
                     } else {
-                        this.postProcessQ.push({streamer: streamer, filename: capInfo.filename});
-                        if (this.postProcessQ.length === 1) {
-                            this.postProcess();
+                        this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
+                        if (this.dvr.postProcessQ.length === 1) {
+                            this.dvr.postProcess();
                         }
                     }
                 }
@@ -430,95 +430,6 @@ class Site {
         }
 
         this.refresh(streamer.uid);
-
-        this.postProcessQ.shift();
-        if (this.postProcessQ.length > 0) {
-            this.postProcess();
-        }
-    }
-
-    postScript(streamer, finalName, item) {
-        if (this.tui.config.postprocess) {
-            const args = [this.tui.config.recording.completeDirectory, finalName];
-            const userPostProcess = spawn(this.tui.config.postprocess, args);
-
-            userPostProcess.on("close", () => {
-                this.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
-                this.finalize(streamer, finalName, item);
-            });
-        } else {
-            this.finalize(streamer, finalName, item);
-        }
-    }
-
-    async postProcess() {
-
-        if (this.postProcessQ.length === 0) {
-            this.errMsg("post process queue was empty while post processing -- this should not happen");
-            return;
-        }
-
-        // peek into queue, and pop in finalize()
-        const capInfo = this.postProcessQ[0];
-        const fullname = capInfo.filename + ".ts";
-        const finalName = capInfo.filename + "." + this.tui.config.recording.autoConvertType;
-        const completeDir = await this.getCompleteDir(capInfo.streamer);
-
-        if (this.tui.config.recording.autoConvertType !== "mp4" && this.tui.config.recording.autoConvertType !== "mkv") {
-            this.dbgMsg(colors.name(capInfo.streamer.nm) + " recording moved (" + this.tui.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
-            mv(this.tui.config.recording.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
-                if (err) {
-                    this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
-                }
-            });
-
-            this.postScript(capInfo.streamer, fullname, null);
-            return;
-        }
-
-        // Need to remember post-processing is happening, so that
-        // the offline check does not kill postprocess jobs.
-        let item = null;
-        if (this.streamerList.has(capInfo.streamer.uid)) {
-            item = this.streamerList.get(capInfo.streamer.uid);
-            item.postProcess = 1;
-        }
-
-        const mySpawnArguments = [
-            "-hide_banner",
-            "-v",
-            "fatal",
-            "-i",
-            this.tui.config.recording.captureDirectory + "/" + fullname,
-            "-c",
-            "copy"
-        ];
-
-        if (this.tui.config.recording.autoConvertType === "mp4") {
-            mySpawnArguments.push("-bsf:a");
-            mySpawnArguments.push("aac_adtstoasc");
-        }
-
-        mySpawnArguments.push("-copyts");
-        mySpawnArguments.push("-start_at_zero");
-        mySpawnArguments.push(completeDir + "/" + finalName);
-
-        this.msg(colors.name(capInfo.streamer.nm) + " converting to " + finalName);
-        const myCompleteProcess = spawn("ffmpeg", mySpawnArguments);
-        this.storeCapInfo(capInfo.streamer.uid, finalName);
-
-        myCompleteProcess.on("close", () => {
-            if (!this.tui.config.recording.keepTsFile) {
-                fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
-            }
-
-            this.msg(colors.name(capInfo.streamer.nm) + " done converting " + finalName);
-            this.postScript(capInfo.streamer, finalName, item);
-        });
-
-        myCompleteProcess.on("error", (err) => {
-            this.errMsg(err.toString());
-        });
     }
 
     msg(msg, options) {

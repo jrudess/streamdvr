@@ -2,7 +2,11 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
-const {Tui} = require("./core/tui");
+const fs      = require("fs");
+const mv      = require("mv");
+const colors  = require("colors/safe");
+const {spawn} = require("child_process");
+const {Tui}   = require("./core/tui");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -25,6 +29,7 @@ class Streamdvr {
     constructor() {
         this.tui = new Tui();
 
+        this.postProcessQ = [];
         this.plugins = new Map();
 
         this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",      urlback: "",       enable: this.tui.config.enable.MFC,     handle: null});
@@ -43,8 +48,104 @@ class Streamdvr {
             if (data.enable) {
                 const plugin = this.plugins.get(site);
                 this[site] = require(plugin.file);
-                plugin.handle = new this[site].Plugin(plugin.name, this.tui, plugin.urlback);
+                plugin.handle = new this[site].Plugin(plugin.name, this, this.tui, plugin.urlback);
             }
+        }
+    }
+
+    async postProcess() {
+
+        if (this.postProcessQ.length === 0) {
+            throw new Error("post process queue is empty -- this should not happen");
+        }
+
+        // peek into queue, and pop in finalize()
+        const capInfo     = this.postProcessQ[0];
+        const site        = capInfo.site;
+        const streamer    = capInfo.streamer;
+        const fullname    = capInfo.filename + ".ts";
+        const finalName   = capInfo.filename + "." + this.tui.config.recording.autoConvertType;
+        const completeDir = await site.getCompleteDir(streamer);
+
+        if (this.tui.config.recording.autoConvertType !== "mp4" && this.tui.config.recording.autoConvertType !== "mkv") {
+            this.dbgMsg(colors.name(streamer.nm) + " recording moved (" + this.tui.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
+            mv(this.tui.config.recording.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
+                if (err) {
+                    this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
+                }
+            });
+
+            this.postScript(site, streamer, fullname, null);
+            return;
+        }
+
+        // Need to remember post-processing is happening, so that
+        // the offline check does not kill postprocess jobs.
+        let item = null;
+        if (site.streamerList.has(streamer.uid)) {
+            item = site.streamerList.get(streamer.uid);
+            item.postProcess = 1;
+        }
+
+        const mySpawnArguments = [
+            "-hide_banner",
+            "-v",
+            "fatal",
+            "-i",
+            this.tui.config.recording.captureDirectory + "/" + fullname,
+            "-c",
+            "copy"
+        ];
+
+        if (this.tui.config.recording.autoConvertType === "mp4") {
+            mySpawnArguments.push("-bsf:a");
+            mySpawnArguments.push("aac_adtstoasc");
+        }
+
+        mySpawnArguments.push("-copyts");
+        mySpawnArguments.push("-start_at_zero");
+        mySpawnArguments.push(completeDir + "/" + finalName);
+
+        site.msg(colors.name(streamer.nm) + " converting to " + finalName);
+        const myCompleteProcess = spawn("ffmpeg", mySpawnArguments);
+        site.storeCapInfo(streamer.uid, finalName);
+
+        myCompleteProcess.on("close", () => {
+            if (!this.tui.config.recording.keepTsFile) {
+                fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
+            }
+
+            site.msg(colors.name(streamer.nm) + " done converting " + finalName);
+            this.postScript(site, streamer, finalName, item);
+        });
+
+        myCompleteProcess.on("error", (err) => {
+            site.errMsg(err.toString());
+        });
+    }
+
+    postScript(site, streamer, finalName, item) {
+        if (this.tui.config.postprocess) {
+            const args = [this.tui.config.recording.completeDirectory, finalName];
+            const userPostProcess = spawn(this.tui.config.postprocess, args);
+
+            userPostProcess.on("close", () => {
+                site.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
+                this.finalize(site, streamer, finalName, item);
+            });
+        } else {
+            this.finalize(site, streamer, finalName, item);
+        }
+    }
+
+    finalize(site, streamer, finalName, item) {
+
+        site.finalize(streamer, finalName, item);
+
+        // Pop current job, and start next post-process job (if any)
+        this.postProcessQ.shift();
+        if (this.postProcessQ.length > 0) {
+            this.postProcess();
         }
     }
 
