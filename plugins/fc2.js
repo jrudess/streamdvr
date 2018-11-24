@@ -1,10 +1,4 @@
-const {Streamlink} = require("../core/streamlink");
+const {Basicsite} = require("../core/basicsite");
 
-class Fc2 extends Streamlink {
-    constructor(name, tui) {
-        super(name, tui, "best");
-    }
-}
-
-exports.Plugin = Fc2;
+exports.Plugin = Basicsite;
 

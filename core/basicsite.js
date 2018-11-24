@@ -8,11 +8,10 @@ const {Site}      = require("./site");
 // wrap youtube-dl, streamlink, and ffmpeg functionality.  This allows for
 // easier support of new programs by adding new shell script wrappers.
 class Basicsite extends Site {
-    constructor(siteName, tui, cmdfront, cmdback) {
+    constructor(siteName, tui, urlback) {
         super(siteName, tui);
 
-        this.cmdfront = cmdfront;
-        this.cmdback  = cmdback;
+        this.urlback = urlback;
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
             const nm = this.siteConfig.streamers[i];
@@ -36,18 +35,21 @@ class Basicsite extends Site {
         // arg0 = url
         // arg1 = proxy enable
         // arg2 = proxy server
-        const mycmd = this.siteConfig.m3u8fetch + " " + this.siteConfig.siteUrl + nm +
-                     (this.tui.config.proxy.enable ? " 1 " : " 0 ") + this.tui.config.proxy.server;
-        this.dbgMsg(colors.name(nm) + " running: " + colors.site(mycmd));
+        const streamerUrl = this.siteConfig.siteUrl + nm + this.urlback;
+        const proxy       = (this.tui.config.proxy.enable ? "1 " : "0 ") + this.tui.config.proxy.server;
+        const cmd         = this.siteConfig.m3u8fetch + " " + streamerUrl + " " + proxy;
+        this.dbgMsg(colors.name(nm) + " running: " + colors.site(cmd));
         try {
-            const stdio = await exec(mycmd, {stdio : ["pipe", "pipe", "ignore"]});
+            const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
             let url = stdio.stdout.toString();
             url = url.replace(/\r?\n|\r/g, "");
 
             return {status: true, m3u8: url};
         } catch (stdio) {
-            if (stdio.stdout || stdio.stderr) {
+            if (stdio.stdout) {
                 this.errMsg(stdio.stdout);
+            }
+            if (stdio.stderr) {
                 this.errMsg(stdio.stderr);
             }
             return {status: false, m3u8: ""};

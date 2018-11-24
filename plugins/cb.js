@@ -1,4 +1,4 @@
-const {Youtubedl} = require("../core/youtubedl");
+const {Basicsite} = require("../core/basicsite");
 
-exports.Plugin = Youtubedl;
+exports.Plugin = Basicsite;
 

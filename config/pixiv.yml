@@ -1,0 +1,5 @@
+siteUrl: "https://sketch.pixiv.net/@"
+m3u8fetch: scripts/m3u8_streamlink.sh
+scanInterval: 300
+batchSize: 5
+streamers: []

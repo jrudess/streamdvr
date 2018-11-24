@@ -525,7 +525,7 @@ class Site {
     }
 
     dbgMsg(msg) {
-        if (this.tui.config.debuglog) {
+        if (this.tui.config.debug.log) {
             this.msg(colors.debug("[DEBUG] ") + msg);
         }
     }

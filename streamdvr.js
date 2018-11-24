@@ -9,10 +9,11 @@ function sleep(time) {
 }
 
 const MFC     = Symbol("Myfreecams");
-// const MFCSL   = Symbol("Myfreecams with streamlink");
 const CB      = Symbol("Chaturbate");
+const PIXIV   = Symbol("Pixiv");
 const TWITCH  = Symbol("Twitch");
 const MIXER   = Symbol("Mixer");
+// const MFCSL   = Symbol("Myfreecams with streamlink");
 // const BONGA   = Symbol("BongaCams");
 // const CAMSODA = Symbol("Camsoda");
 // const FC2     = Symbol("FC2");
@@ -25,21 +26,22 @@ class Streamdvr {
 
         this.plugins = new Map();
 
-        this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",       enable: this.tui.config.enable.MFC,     handle: null});
-        // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/mfcsl",     enable: this.tui.config.enable.MFCSL,   handle: null});
-        this.plugins.set(CB,      {name: "CB",      file: "./plugins/cb",        enable: this.tui.config.enable.CB,      handle: null});
-        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/twitch",    enable: this.tui.config.enable.Twitch,  handle: null});
-        this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/mixer",     enable: this.tui.config.enable.Mixer,   handle: null});
-        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", enable: this.tui.config.enable.Bonga,   handle: null});
-        // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/camsoda",   enable: this.tui.config.enable.Camsoda, handle: null});
-        // this.plugins.set(FC2,     {name: "FC2",    file: "./plugins/fc2",       enable: this.tui.config.enable.FC2,     handle: null});
-        // this.plugins.set(CAM4,    {name: "CAM4",   file: "./plugins/cam4",      enable: this.tui.config.enable.Cam4,    handle: null});
+        this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",       urlback: "",       enable: this.tui.config.enable.MFC,     handle: null});
+        this.plugins.set(CB,      {name: "CB",      file: "./plugins/cb",        urlback: "",       enable: this.tui.config.enable.CB,      handle: null});
+        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./plugins/pixiv",     urlback: "/lives", enable: this.tui.config.enable.Pixiv,   handle: null});
+        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/twitch",    urlback: "",       enable: this.tui.config.enable.Twitch,  handle: null});
+        this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/mixer",     urlback: "",       enable: this.tui.config.enable.Mixer,   handle: null});
+        // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/mfcsl",     urlback: "",       enable: this.tui.config.enable.MFCSL,   handle: null});
+        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/bongacams", urlback: "",       enable: this.tui.config.enable.Bonga,   handle: null});
+        // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/camsoda",   urlback: "",       enable: this.tui.config.enable.Camsoda, handle: null});
+        // this.plugins.set(FC2,     {name: "FC2",     file: "./plugins/fc2",       urlback: "",       enable: this.tui.config.enable.FC2,     handle: null});
+        // this.plugins.set(CAM4,    {name: "CAM4",    file: "./plugins/cam4",      urlback: "",       enable: this.tui.config.enable.Cam4,    handle: null});
 
         for (const [site, data] of this.plugins) {
             if (data.enable) {
                 const plugin = this.plugins.get(site);
                 this[site] = require(plugin.file);
-                plugin.handle = new this[site].Plugin(plugin.name, this.tui);
+                plugin.handle = new this[site].Plugin(plugin.name, this.tui, plugin.urlback);
             }
         }
     }

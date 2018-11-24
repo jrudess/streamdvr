@@ -1,10 +1,4 @@
-const {Streamlink} = require("../core/streamlink");
+const {Basicsite} = require("../core/basicsite");
 
-class Mfcsl extends Streamlink {
-    constructor(name, tui) {
-        super(name, tui, "best");
-    }
-}
-
-exports.Plugin = Mfcsl;
+exports.Plugin = Basicsite;
 
