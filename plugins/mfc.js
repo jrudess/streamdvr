@@ -172,11 +172,13 @@ class Mfc extends Site {
 
         const url = this.mfcGuest.getHlsUrl(mod);
 
-        // Checking if this is 16:9 stream via base64 key-characters in url
+        // MFC is upscaling streams to 1280x960 wasting bandwidth
+        // These mappings work around it to select the true resolution
         const params = [];
-        if (url.indexOf("==") === -1) {
-            // MFC is upscaling streams to 1280x960 wasting bandwidth
-            // These mappings work around it to select the true resolution
+        if (this.tui.config.recording.streamlink) {
+            params.push("--stream-sorting-excludes=960p");
+        } else if (url.indexOf("==") === -1) {
+            // Checking if this is 16:9 stream via base64 key-characters in url
             params.push("-map");
             params.push("0:1");
             params.push("-map");

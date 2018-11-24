@@ -109,8 +109,10 @@ class Site {
                 this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
                 url,
                 "best"
-                // "--stream-sorting-excludes=live"
             ];
+            if (options && options.params) {
+                params = params.concat(options.params);
+            }
             if (this.tui.config.debug.recorder) {
                 params.push("-l");
                 params.push("debug");
