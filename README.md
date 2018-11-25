@@ -23,7 +23,8 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 ### Setup ###
 
-* Dependencies: `node.js >= 10.13.0`, `npm`, `git`, and `ffmpeg`
+* Dependencies: `bash`, `node.js >= 10.13.0`, `npm`, `git`, and `ffmpeg`
+  * streamdvr does not work in a windows command prompt.  Use WSL to run streamdvr in Windows.
 * Optional Dependencies: `streamlink`, `youtube-dl`
 
   * `streamlink` can be used to record instead of ffmpeg with a streamlink plugin at https://github.com/back-to/generic
