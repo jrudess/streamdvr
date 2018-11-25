@@ -11,13 +11,11 @@ proxyserver=${args[3]}   #       the arg-list is constant for all recorders
 debug=${args[4]}
 
 extraargs=" "
-if [[ $cnt > 5 ]]; then
-    counter=5
-    while [ $counter -lt $cnt ]; do
-        extraargs+="${args[$counter]} "
-        let counter=counter+1
-    done
-fi
+counter=5
+while [ $counter -lt $cnt ]; do
+    extraargs+="${args[$counter]} "
+    let counter=counter+1
+done
 
 debugargs=""
 if [ "$debug" -eq 0 ]; then

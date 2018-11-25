@@ -11,13 +11,11 @@ proxyserver=${args[3]}
 debug=${args[4]}
 
 extraargs=" "
-if [[ $cnt > 5 ]]; then
-    counter=5
-    while [ $counter -lt $cnt ]; do
-        extraargs+="${args[$counter]} "
-        let counter=counter+1
-    done
-fi
+counter=5
+while [ $counter -lt $cnt ]; do
+    extraargs+="${args[$counter]} "
+    let counter=counter+1
+done
 
 proxyserver=""
 if [ "$proxyen" -eq 1 ]; then
