@@ -152,7 +152,7 @@ class Basic extends Site {
         }
 
         const filename  = this.getFileName(streamer.nm);
-        const newurl    = this.siteConfig.recorder === "streamlink" ? this.siteConfig.siteUrl + streamer.nm : url;
+        const newurl    = this.siteConfig.recorder === "scripts/record_streamlink.sh" ? this.siteConfig.siteUrl + streamer.nm : url;
         const spawnArgs = this.getCaptureArguments(newurl, filename);
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
