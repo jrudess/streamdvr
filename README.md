@@ -27,7 +27,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 * Optional Dependencies: `streamlink`, `youtube-dl`
 
   * `streamlink` can be used to record instead of ffmpeg with a streamlink plugin at https://github.com/back-to/generic
-  * `streamlink` is used to fetch m3u8 URLS for FC2, and Pixiv by default
+  * `streamlink` is used to fetch m3u8 URLS for FC2 and Pixiv by default
     * `fc2` requires a streamlink plugin provided at `plugins/streamlink/fc2.py`
   * `youtube-dl` is used to fetch m3u8 URLs for CB, Twitch, Mixer, and Youtube by default
   * `mfcauto` is used to fetch m3u8 URLs for MyFreeCams
