@@ -84,7 +84,8 @@ class Streamdvr {
         const args = [
             this.tui.config.recording.captureDirectory + "/" + fullname,
             completeDir + "/" + finalName,
-            this.tui.config.recording.autoConvertType
+            this.tui.config.recording.autoConvertType,
+            this.tui.config.recording.convertToHEVC
         ];
 
         site.msg(colors.name(streamer.nm) + " converting to " + finalName);

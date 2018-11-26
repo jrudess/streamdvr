@@ -8,6 +8,7 @@ enable:
   FC2: true
 recording:
   autoConvertType: mp4
+  convertToHEVC: true
   captureDirectory: capturing
   completeDirectory: captured
   dateFormat: YYYYMMDD_HHmmss

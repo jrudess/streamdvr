@@ -8,13 +8,18 @@ args=("$@")
 input=${args[0]}
 output=${args[1]}
 filetype=${args[2]}
+hevc=${args[3]}
 
 mp4args=""
 if [ "$filetype" = "mp4" ]; then
-    mp4args="-bsf:a aac_adtstoasc"
+    mp4args="-c copy -bsf:a aac_adtstoasc"
 fi
 
-ffmpeg -hide_banner -v fatal -i $input -c copy $mp4args -copyts -start_at_zero $output > $tmp/stdout 2> $tmp/stderr
+if [ "$hevc" = "true" ]; then
+    mp4args="-c:v libx265 -tag:v hvc1 -bsf:a aac_adtstoasc"
+fi
+
+ffmpeg -hide_banner -v fatal -i $input $mp4args -copyts -start_at_zero $output > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -ne 0 ]; then
     # on errors print ffmpeg output for streamdvr to reprint 
