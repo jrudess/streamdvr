@@ -1,4 +1,4 @@
-const blessed = require("blessed");
+const blessed = require("neo-blessed");
 const colors  = require("colors/safe");
 const fs      = require("fs");
 const path    = require("path");
