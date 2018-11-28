@@ -59,7 +59,7 @@ class Streamdvr {
             throw new Error("post process queue is empty -- this should not happen");
         }
 
-        // peek into queue, and pop in finalize()
+        // peek into queue, and pop in next()
         const capInfo     = this.postProcessQ[0];
         const site        = capInfo.site;
         const streamer    = capInfo.streamer;
@@ -88,7 +88,7 @@ class Streamdvr {
         ];
 
         site.msg(colors.name(streamer.nm) + " converting to " + finalName);
-        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
+        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args, {windowsVerbatimArguments: true});
         site.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {

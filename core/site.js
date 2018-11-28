@@ -102,7 +102,7 @@ class Site {
 
     getCaptureArguments(url, filename, options) {
         let args = [
-            this.tui.config.recording.captureDirectory + "/" + filename + ".ts ",
+            this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
             url,
             this.tui.config.proxy.enable ? "1" : "0",
             this.tui.config.proxy.server,
@@ -350,7 +350,7 @@ class Site {
 
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
-        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs);
+        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs, {windowsVerbatimArguments: true});
 
         if (this.tui.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
