@@ -178,7 +178,8 @@ class Mfc extends Site {
         if (this.siteConfig.recorder === "scripts/record_streamlink.sh") {
             params.push("--stream-sorting-excludes=960p");
         } else if (url.indexOf("==") === -1) {
-            // Checking if this is 16:9 stream via base64 key-characters in url
+            // Skip adding these params for 16:9 streams by checking for
+            // base64 key chars in those streams
             params.push("-map");
             params.push("0:1");
             params.push("-map");

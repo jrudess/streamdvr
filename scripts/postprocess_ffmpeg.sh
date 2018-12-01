@@ -17,7 +17,7 @@ fi
 ffmpeg -hide_banner -v fatal -i $input -c copy $mp4args -copyts -start_at_zero $output > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -ne 0 ]; then
-    # on errors print ffmpeg output for streamdvr to reprint 
+    # on errors print ffmpeg output for streamdvr to reprint
     cat $tmp/stdout
     cat $tmp/stderr
     exit 1

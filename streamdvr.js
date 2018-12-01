@@ -87,8 +87,8 @@ class Streamdvr {
             this.tui.config.recording.autoConvertType
         ];
 
-        site.msg(colors.name(streamer.nm) + " converting to " + finalName);
-        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args, {windowsVerbatimArguments: true});
+        site.msg(colors.name(streamer.nm) + " converting to " + this.tui.config.recording.autoConvertType + ": scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " "));
+        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
         site.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
@@ -108,7 +108,7 @@ class Streamdvr {
     postScript(site, streamer, finalName) {
         if (this.tui.config.postprocess) {
             const args = [this.tui.config.recording.completeDirectory, finalName];
-            const userPostProcess = spawn(this.tui.config.postprocess, args);
+            const userPostProcess = spawn(this.tui.config.postprocess, args, {windowsVerbatimArguments: true});
 
             userPostProcess.on("close", () => {
                 site.msg(colors.name(streamer.nm) + " done post-processing " + finalName);

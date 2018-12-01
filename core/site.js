@@ -350,6 +350,8 @@ class Site {
 
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
+
+        this.dbgMsg("Starting recording: " + colors.site(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
         const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs, {windowsVerbatimArguments: true});
 
         if (this.tui.config.debug.recorder) {
@@ -398,6 +400,8 @@ class Site {
         if (this.streamerList.has(streamer.uid)) {
             const item = this.streamerList.get(streamer.uid);
             item.postProcess = 1;
+        } else {
+            this.errMsg("Could not find " + colors.name(streamer.nm) + " in streamer list");
         }
     }
 
@@ -413,6 +417,8 @@ class Site {
             }
 
             this.refresh(streamer.uid);
+        } else {
+            this.errMsg("Could not find " + colors.name(streamer.nm) + " in streamer list");
         }
     }
 
