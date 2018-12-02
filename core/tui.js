@@ -50,6 +50,7 @@ class Tui {
 
         this.logHidden = false;
         this.listHidden = true;
+        this.longestName = 7;
 
         process.on("SIGINT", () => {
             this.exit();
@@ -59,32 +60,39 @@ class Tui {
             this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
             this.screen.title = "streamdvr";
 
-            this.list = blessed.box({
+            this.list = blessed.listtable({
                 top: 0,
                 left: 0,
                 height: "100%-1",
-                width: 72,
+                width: 26,
+                align: "left",
+                interactive: false,
                 keys: true,
                 mouse: false,
-                alwaysScroll: true,
-                scrollable: true,
+                noCellBorders: true,
                 draggable: false,
                 shadow: false,
+                alwaysScroll: true,
+                scrollable: true,
                 scrollbar: {
                     ch: " ",
                     bg: "blue"
                 },
                 border: {
-                    type: "line",
-                    fg: "blue"
+                    type: "line"
+                },
+                style: {
+                    border: {
+                        fg: "blue"
+                    }
                 }
             });
 
             this.logbody = blessed.box({
                 top: 0,
-                left: 71,
+                left: 26,
                 height: "100%-1",
-                width: "100%-71",
+                shrink: true,
                 keys: true,
                 mouse: false,
                 alwaysScroll: true,
@@ -94,8 +102,12 @@ class Tui {
                     bg: "blue"
                 },
                 border: {
-                    type: "line",
-                    fg: "blue"
+                    type: "line"
+                },
+                style: {
+                    border: {
+                        fg: "blue"
+                    }
                 }
             });
 
@@ -111,6 +123,10 @@ class Tui {
                     fg: "white",
                     bg: "none"
                 }
+            });
+
+            this.screen.key("1", () => {
+                this.list.focus();
             });
 
             this.screen.key("pageup", () => {
@@ -199,22 +215,15 @@ class Tui {
         // so correct the shown status for the new lists.
         if (this.config.tui.enable) {
             this.display(this.config.tui.listshown ? "show" : "hide", "list");
-
-
-            const hotkeys = ["1"];
-            for (let i = 0; i < hotkeys.length; i++) {
-                this.screen.key(hotkeys[i], () => {
-                    this.list.focus();
-                });
-            }
+            this.display(this.config.tui.logshown  ? "show" : "hide", "log");
         }
     }
 
     log(text, options) {
         if (this.config.tui.enable) {
             this.logbody.pushLine(text);
-            this.logbody.setScrollPerc(100);
             if (!this.logHidden) {
+                this.logbody.setScrollPerc(100);
                 this.render();
             }
         } else if (options && options.trace && this.config.debug.errortrace) {
@@ -233,21 +242,19 @@ class Tui {
         }
 
         if (!this.listHidden) {
-            // TODO: Hack
-            for (let i = 0; i < 300; i++) {
-                this.list.deleteLine(0);
-            }
+            const table = [];
             let first = true;
+            this.longestName = 7;
             for (let i = 0; i < this.SITES.length; i++) {
                 let sortedKeys = [];
                 const streamerList = this.SITES[i].streamerList;
                 if (streamerList.size > 0) {
                     if (!first) {
-                        this.list.pushLine("");
+                        table.push(["", ""]);
                     } else {
                         first = false;
                     }
-                    this.list.pushLine(this.SITES[i].siteName);
+                    table.push([this.SITES[i].siteName, ""]);
 
                     // Map keys are UID, but want to sort list by name.
                     sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
@@ -262,15 +269,23 @@ class Tui {
                 }
                 for (let j = 0; j < sortedKeys.length; j++) {
                     const value = streamerList.get(sortedKeys[j]);
-                    const name  = colors.name(value.nm.padEnd(26, " "));
+                    const name  = colors.name(value.nm);
                     let state;
                     if (value.filename === "") {
                         state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
                     } else {
                         state = colors.file(value.filename);
                     }
-                    this.list.pushLine(name + state);
+                    table.push([name, state]);
+                    if (value.nm.length > this.longestName) {
+                        this.longestName = value.nm.length;
+                    }
                 }
+            }
+            this.list.setData(table);
+            this.list.width = (this.longestName * 2) + 26;
+            if (!this.listHidden) {
+                this.logbody.left = this.list.width + 1;
             }
         }
         this.screen.render();
@@ -281,14 +296,14 @@ class Tui {
         switch (window) {
         case "list":
             switch (cmd) {
-            case "show": this.list.show(); this.logbody.left = 71; this.logbody.width = "100%-72"; this.listHidden = false; break;
-            case "hide": this.list.hide(); this.logbody.left = 0;  this.logbody.width = "100%";    this.listHidden = true;  break;
+            case "show": this.logbody.left = (this.longestName * 2) + 24; this.listHidden = false; this.list.show(); break;
+            case "hide": this.logbody.left = 0;                           this.listHidden = true;  this.list.hide(); break;
             }
             break;
         case "log":
             switch (cmd) {
-            case "show": this.logbody.show(); this.list.width = 72;     this.logHidden = false; break;
-            case "hide": this.logbody.hide(); this.list.width = "100%"; this.logHidden = true;  break;
+            case "show": this.list.width = (this.longestName * 2) + 26; this.logHidden = false; this.logbody.show(); this.logbody.setScrollPerc(100); break;
+            case "hide": this.list.width = (this.longestName * 2) + 26; this.logHidden = true;  this.logbody.hide(); break;
             }
             break;
         }
@@ -333,7 +348,8 @@ class Tui {
         try {
             this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
-            this.errMsg("Failed to load config.yml:" + err.toString());
+            console.log("ERROR: Failed to load config.yml:" + err.toString());
+            process.exit(1);
         }
 
         colors.setTheme({
@@ -343,6 +359,7 @@ class Tui {
             file:    this.config.colors.file,
             time:    this.config.colors.time,
             site:    this.config.colors.site,
+            cmd:     this.config.colors.cmd,
             debug:   this.config.colors.debug,
             error:   this.config.colors.error
         });
@@ -386,7 +403,7 @@ class Tui {
         if (!this.tryingToExit) {
             this.tryingToExit = true;
             if (this.busy()) {
-                this.log("Waiting for all captures to terminate...");
+                this.log("Stopping all recordings...");
             }
             this.tryExit();
         }

@@ -74,8 +74,8 @@ class Site {
             }
 
             const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamers.filename);
-            const sizeMB = stat.size / 1048576;
-            this.dbgMsg(colors.name(streamers.nm) + ": " + streamers.filename + ", size=" + sizeMB + ", maxSize=" + maxSize);
+            const sizeMB = Math.round(stat.size / 1048576);
+            this.dbgMsg(colors.name(streamers.nm) + ": " + colors.file(streamers.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamers.filesize) {
                 this.msg(colors.name(streamers.nm) + " recording appears to be stuck, file size is not increasing: " + sizeMB);
                 streamers.stuckcounter++;
@@ -351,7 +351,7 @@ class Site {
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
 
-        this.dbgMsg("Starting recording: " + colors.site(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
+        this.dbgMsg("Starting recording: " + colors.cmd(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
         const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs, {windowsVerbatimArguments: true});
 
         if (this.tui.config.debug.recorder) {
@@ -361,7 +361,7 @@ class Site {
         }
 
         if (captureProcess.pid) {
-            this.msg(colors.name(streamer.nm) + " recording started (" + capInfo.filename + ".ts)");
+            this.msg(colors.name(streamer.nm) + " recording started: " + colors.file(capInfo.filename + ".ts"));
             this.storeCapInfo(streamer.uid, fullname, captureProcess);
         }
 
@@ -370,7 +370,7 @@ class Site {
             fs.stat(this.tui.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
                 if (err) {
                     if (err.code === "ENOENT") {
-                        this.errMsg(colors.name(streamer.nm) + ", " + capInfo.filename + ".ts not found in capturing directory, cannot convert to " + this.tui.config.recording.autoConvertType);
+                        this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.tui.config.recording.autoConvertType);
                     } else {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }

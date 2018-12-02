@@ -87,7 +87,7 @@ class Streamdvr {
             this.tui.config.recording.autoConvertType
         ];
 
-        site.msg(colors.name(streamer.nm) + " converting to " + this.tui.config.recording.autoConvertType + ": scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " "));
+        site.msg(colors.name(streamer.nm) + " converting to " + this.tui.config.recording.autoConvertType + ": " + colors.cmd("scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " ")));
         const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
         site.storeCapInfo(streamer.uid, finalName);
 
