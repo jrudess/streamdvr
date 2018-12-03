@@ -75,9 +75,9 @@ class Site {
 
             const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamers.filename);
             const sizeMB = Math.round(stat.size / 1048576);
-            this.dbgMsg(colors.name(streamers.nm) + ": " + colors.file(streamers.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
+            this.dbgMsg(colors.file(streamers.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamers.filesize) {
-                this.msg(colors.name(streamers.nm) + " recording appears to be stuck, file size is not increasing: " + sizeMB);
+                this.msg(colors.name(streamers.nm) + " recording appears to be stuck, file size is not increasing: " + sizeMB + "MB");
                 streamers.stuckcounter++;
             }
             streamers.filesize = sizeMB;
