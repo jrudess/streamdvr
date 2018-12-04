@@ -222,8 +222,8 @@ class Tui {
                     this.logbody.pushLine("Commands:");
                     this.logbody.pushLine("add     [site] [streamer]");
                     this.logbody.pushLine("addtemp [site] [streamer]");
-                    this.logbody.pushLine("pause   [site] [streamer]");
-                    this.logbody.pushLine("unpause [site] [streamer]");
+                    this.logbody.pushLine("pause   [site] <streamer>");
+                    this.logbody.pushLine("unpause [site] <streamer>");
                     this.logbody.pushLine("remove  [site] [streamer]");
                     this.logbody.pushLine("reload");
                     this.logbody.pushLine("show    [log|list]");

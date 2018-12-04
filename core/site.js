@@ -439,8 +439,6 @@ class Site {
             const item = this.streamerList.get(streamer.uid);
             item.postProcess = 1;
             this.streamerListDamaged = true;
-        } else {
-            this.errMsg("Could not find " + colors.name(streamer.nm) + " in streamer list");
         }
     }
 

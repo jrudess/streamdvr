@@ -61,8 +61,8 @@ Refer to `config/config.yml` for all configuration options.
 * TUI Console Commands:
     * add     [site] [streamer]
     * addtemp [site] [streamer]
-    * pause   [site] [streamer]
-    * unpause [site] [streamer]
+    * pause   [site] <streamer>
+    * unpause [site] <streamer>
     * remove  [site] [streamer]
     * reload
     * hide [log|list]
