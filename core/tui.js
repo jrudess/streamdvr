@@ -64,7 +64,7 @@ class Tui {
                 top: 0,
                 left: 0,
                 height: "100%-1",
-                width: 26,
+                shrink: "true",
                 align: "left",
                 interactive: false,
                 keys: true,
@@ -90,9 +90,8 @@ class Tui {
 
             this.logbody = blessed.box({
                 top: 0,
-                left: 26,
                 height: "100%-1",
-                shrink: true,
+                grow: true,
                 keys: true,
                 mouse: false,
                 alwaysScroll: true,
@@ -247,6 +246,7 @@ class Tui {
                 const streamerList = this.SITES[i].streamerList;
                 if (streamerList.size > 0) {
                     listDamaged |= this.SITES[i].streamerListDamaged;
+                    this.SITES[i].streamerListDamaged = false;
                 }
             }
         }
@@ -293,10 +293,14 @@ class Tui {
                 }
             }
             this.list.setData(table);
-            this.list.width   = (this.longestName * 2) + 26;
-            this.logbody.left = this.list.width + 1;
+            this.list.width   = this.calcListWidth();
+            this.logbody.left = this.list.width;
         }
         this.screen.render();
+    }
+
+    calcListWidth() {
+        return (this.longestName * 2) + 26;
     }
 
     // Runtime UI adjustments
@@ -304,14 +308,30 @@ class Tui {
         switch (window) {
         case "list":
             switch (cmd) {
-            case "show": this.logbody.left = this.list.width + 1; this.listHidden = false; this.list.show(); break;
-            case "hide": this.logbody.left = 0;                   this.listHidden = true;  this.list.hide(); break;
+            case "show":
+                this.list.width   = this.calcListWidth();
+                this.logbody.left = this.list.width;
+                this.listHidden   = false;
+                this.list.show();
+                break;
+            case "hide":
+                this.logbody.left = 0;
+                this.listHidden   = true;
+                this.list.hide();
+                break;
             }
             break;
         case "log":
             switch (cmd) {
-            case "show": this.logbody.setScrollPerc(100); this.logHidden = false; this.logbody.show(); break;
-            case "hide":                                  this.logHidden = true;  this.logbody.hide(); break;
+            case "show":
+                this.logbody.setScrollPerc(100);
+                this.logHidden = false;
+                this.logbody.show();
+                break;
+            case "hide":
+                this.logHidden = true;
+                this.logbody.hide();
+                break;
             }
             break;
         }
