@@ -88,6 +88,7 @@ class Mfc extends Site {
 
         if (!this.streamerList.has(uid)) {
             this.streamerList.set(uid, {uid: uid, nm: model.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0});
+            this.streamerListDamaged = true;
         }
 
         const streamer = this.streamerList.get(uid);

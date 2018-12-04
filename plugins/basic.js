@@ -25,6 +25,7 @@ class Basic extends Site {
                 postProcess:    0
             });
         }
+        this.streamerListDamaged = true;
     }
 
     updateList(nm, add, isTemp) {

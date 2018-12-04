@@ -38,6 +38,7 @@ class Site {
         //     filesize
         //     stuckcounter
         this.streamerList = new Map();
+        this.streamerListDamaged = false;
 
         tui.addSite(this);
 
@@ -89,6 +90,7 @@ class Site {
                 this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 streamers.captureProcess.kill("SIGINT");
             }
+            this.streamerListDamaged = true;
         }
     }
 
@@ -210,6 +212,7 @@ class Site {
         }
         if (!this.streamerList.has(streamer.uid)) {
             this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0, filesize: 0, stuckcounter: 0});
+            this.streamerListDamaged = true;
             this.tui.render();
         }
         return added;
@@ -220,7 +223,8 @@ class Site {
         if (this.streamerList.has(streamer.uid)) {
             this.msg(colors.name(streamer.nm) + " removed from capture list.");
             this.haltCapture(streamer.uid);
-            this.streamerList.delete(streamer.uid);
+            this.streamerList.delete(streamer.uid); // Note: deleting before recording/post-processing finishes
+            this.streamerListDamaged = true;
             this.tui.render();
             dirty = true;
         } else {
@@ -232,6 +236,7 @@ class Site {
     checkStreamerState(streamer, msg, isStreaming, prevState) {
         if (streamer.state !== prevState) {
             this.msg(msg);
+            this.streamerListDamaged = true;
         }
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
@@ -256,6 +261,7 @@ class Site {
             const streamer = this.streamerList.get(uid);
             streamer.filename = filename;
             streamer.captureProcess = captureProcess;
+            this.streamerListDamaged = true;
             this.tui.render();
         }
     }
@@ -400,25 +406,28 @@ class Site {
         if (this.streamerList.has(streamer.uid)) {
             const item = this.streamerList.get(streamer.uid);
             item.postProcess = 1;
+            this.streamerListDamaged = true;
         } else {
             this.errMsg("Could not find " + colors.name(streamer.nm) + " in streamer list");
         }
     }
 
     clearProcessing(streamer) {
+        // Note: When manually deleting a streamer that is actively recording,
+        // the record process callback occurs after the streamer is already
+        // removed from streamerList
         if (this.streamerList.has(streamer.uid)) {
             const item = this.streamerList.get(streamer.uid);
 
             // Note: setting postProcess to null releases program to exit
             this.storeCapInfo(streamer.uid, "", null);
+            this.streamerListDamaged = true;
 
             if (item !== null) {
                 item.postProcess = 0;
             }
 
             this.refresh(streamer.uid);
-        } else {
-            this.errMsg("Could not find " + colors.name(streamer.nm) + " in streamer list");
         }
     }
 

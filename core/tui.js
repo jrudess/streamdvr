@@ -50,7 +50,7 @@ class Tui {
 
         this.logHidden = false;
         this.listHidden = true;
-        this.longestName = 7;
+        this.longestName = 13;
 
         process.on("SIGINT", () => {
             this.exit();
@@ -241,7 +241,17 @@ class Tui {
             return;
         }
 
+        let listDamaged = false;
         if (!this.listHidden) {
+            for (let i = 0; i < this.SITES.length; i++) {
+                const streamerList = this.SITES[i].streamerList;
+                if (streamerList.size > 0) {
+                    listDamaged |= this.SITES[i].streamerListDamaged;
+                }
+            }
+        }
+
+        if (listDamaged) {
             const table = [];
             let first = true;
             this.longestName = 7;
@@ -274,7 +284,7 @@ class Tui {
                     if (value.filename === "") {
                         state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
                     } else {
-                        state = colors.file(value.filename);
+                        state = colors.file(value.filename) + " ";
                     }
                     table.push([name, state]);
                     if (value.nm.length > this.longestName) {
@@ -283,10 +293,8 @@ class Tui {
                 }
             }
             this.list.setData(table);
-            this.list.width = (this.longestName * 2) + 26;
-            if (!this.listHidden) {
-                this.logbody.left = this.list.width + 1;
-            }
+            this.list.width   = (this.longestName * 2) + 26;
+            this.logbody.left = this.list.width + 1;
         }
         this.screen.render();
     }
@@ -296,14 +304,14 @@ class Tui {
         switch (window) {
         case "list":
             switch (cmd) {
-            case "show": this.logbody.left = (this.longestName * 2) + 24; this.listHidden = false; this.list.show(); break;
-            case "hide": this.logbody.left = 0;                           this.listHidden = true;  this.list.hide(); break;
+            case "show": this.logbody.left = this.list.width + 1; this.listHidden = false; this.list.show(); break;
+            case "hide": this.logbody.left = 0;                   this.listHidden = true;  this.list.hide(); break;
             }
             break;
         case "log":
             switch (cmd) {
-            case "show": this.list.width = (this.longestName * 2) + 26; this.logHidden = false; this.logbody.show(); this.logbody.setScrollPerc(100); break;
-            case "hide": this.list.width = (this.longestName * 2) + 26; this.logHidden = true;  this.logbody.hide(); break;
+            case "show": this.logbody.setScrollPerc(100); this.logHidden = false; this.logbody.show(); break;
+            case "hide":                                  this.logHidden = true;  this.logbody.hide(); break;
             }
             break;
         }
