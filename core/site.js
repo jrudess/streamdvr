@@ -211,7 +211,18 @@ class Site {
             this.errMsg(colors.name(streamer.nm) + " is already in the capture list");
         }
         if (!this.streamerList.has(streamer.uid)) {
-            this.streamerList.set(streamer.uid, {uid: streamer.uid, nm: streamer.nm, site: this.padName, state: "Offline", filename: "", captureProcess: null, postProcess: 0, filesize: 0, stuckcounter: 0});
+            this.streamerList.set(streamer.uid, {
+                uid: streamer.uid,
+                nm: streamer.nm,
+                site: this.padName,
+                state: "Offline",
+                filename: "",
+                captureProcess: null,
+                postProcess: 0,
+                filesize: 0,
+                stuckcounter: 0,
+                isTemp: isTemp
+            });
             this.streamerListDamaged = true;
             this.tui.render();
         }

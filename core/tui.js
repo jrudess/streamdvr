@@ -70,8 +70,6 @@ class Tui {
                 keys: true,
                 mouse: false,
                 noCellBorders: true,
-                draggable: false,
-                shadow: false,
                 alwaysScroll: true,
                 scrollable: true,
                 scrollbar: {
@@ -289,7 +287,7 @@ class Tui {
                     } else {
                         first = false;
                     }
-                    table.push([this.SITES[i].siteName, ""]);
+                    table.push([this.SITES[i].siteName, "", ""]);
 
                     // Map keys are UID, but want to sort list by name.
                     sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
@@ -309,9 +307,10 @@ class Tui {
                     if (value.filename === "") {
                         state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
                     } else {
-                        state = colors.file(value.filename) + " ";
+                        state = colors.file(value.filename);
                     }
-                    table.push([name, state]);
+                    const temp = colors.state(value.isTemp ? "[temp]" : " ");
+                    table.push([name, temp, state]);
                     if (value.nm.length > this.longestName) {
                         this.longestName = value.nm.length;
                     }
@@ -325,7 +324,7 @@ class Tui {
     }
 
     calcListWidth() {
-        return (this.longestName * 2) + 26;
+        return (this.longestName * 2) + 32;
     }
 
     // Runtime UI adjustments
