@@ -35,19 +35,19 @@ class Mfc extends Site {
         }
     }
 
-    async updateList(nm, add, isTemp) {
+    async updateList(nm, add, isTemp, pause) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
             try {
                 const streamer = await this.mfcGuest.queryUser(nm);
                 if (streamer) {
-                    if (super.updateList(streamer, add, isTemp)) {
+                    if (super.updateList(streamer, add, isTemp, pause)) {
                         this.dirty = true;
+                        return true;
                     }
                 } else {
                     this.errMsg(colors.name(nm) + " does not exist on this site");
                 }
-                return true;
             } catch (err) {
                 this.errMsg(err.toString());
             }
@@ -126,7 +126,9 @@ class Mfc extends Site {
 
         super.checkStreamerState(streamer, msg, isStreaming, prevState);
 
-        if (isStreaming) {
+        if (streamer.paused) {
+            this.dbgMsg(colors.name(streamer.nm) + " is paused, recording not started.");
+        } else if (isStreaming) {
             this.startCapture(this.setupCapture(streamer));
         }
 

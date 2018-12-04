@@ -194,8 +194,12 @@ class Tui {
                 case "add":
                 case "addtemp":
                 case "remove":
+                case "pause":
+                case "unpause":
                     if (tokens.length >= 3) {
-                        this.updateList(tokens[0], tokens[1], tokens[2], tokens[0] === "addtemp");
+                        const temp  = tokens[0] === "temp";
+                        const pause = tokens[0] === "pause" ? 1 : tokens[0] === "unpause" ? 2 : 0;
+                        this.updateList(tokens[0], tokens[1], tokens[2], temp, pause);
                     }
                     break;
 
@@ -214,6 +218,8 @@ class Tui {
                     this.logbody.pushLine("Commands:");
                     this.logbody.pushLine("add     [site] [streamer]");
                     this.logbody.pushLine("addtemp [site] [streamer]");
+                    this.logbody.pushLine("pause   [site] [streamer]");
+                    this.logbody.pushLine("unpause [site] [streamer]");
                     this.logbody.pushLine("remove  [site] [streamer]");
                     this.logbody.pushLine("reload");
                     this.logbody.pushLine("show    [log|list]");
@@ -305,7 +311,8 @@ class Tui {
                     const name  = colors.name(value.nm);
                     let state;
                     if (value.filename === "") {
-                        state = value.state === "Offline" ? colors.offline(value.state) : colors.state(value.state);
+                        state = value.state + (value.paused ? " [paused]" : "");
+                        state = (value.state === "Offline") ? colors.offline(state) : colors.state(state);
                     } else {
                         state = colors.file(value.filename);
                     }
@@ -372,11 +379,11 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(cmd, site, nm, isTemp) {
+    async updateList(cmd, site, nm, isTemp, pause) {
         for (let i = 0; i < this.SITES.length; i++) {
             if (site === this.SITES[i].listName) {
                 const isAdd = cmd === "add" || cmd === "addtemp";
-                const dirty = await this.SITES[i].updateList(nm, isAdd, isTemp) && !isTemp;
+                const dirty = await this.SITES[i].updateList(nm, isAdd, isTemp, pause) && !isTemp;
                 if (dirty) {
                     await this.SITES[i].writeConfig();
                 }

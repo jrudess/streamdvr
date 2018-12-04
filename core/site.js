@@ -28,16 +28,7 @@ class Site {
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
 
-        // Contains JSON indexed by UID:
-        //     uid
-        //     nm
-        //     state
-        //     filename
-        //     captureProcess
-        //     postProcess
-        //     filesize
-        //     stuckcounter
-        this.streamerList = new Map();
+        this.streamerList = new Map(); // Refer to addStreamer() for entry JSON
         this.streamerListDamaged = false;
 
         tui.addSite(this);
@@ -162,10 +153,26 @@ class Site {
         }
     }
 
-    updateList(streamer, add, isTemp) {
+    updateList(streamer, add, isTemp, pause) {
         let dirty = false;
         let list = isTemp ? this.tempList : this.siteConfig.streamers;
-        if (add) {
+        if (pause > 0) {
+            if (this.streamerList.has(streamer.uid)) {
+                const item = this.streamerList.get(streamer.uid);
+                if (pause === 1) {
+                    this.msg(colors.name(streamer.nm) + " is paused.");
+                    item.paused = true;
+                    this.haltCapture(streamer.uid);
+                } else if (pause === 2) {
+                    this.msg(colors.name(streamer.nm) + " is unpaused.");
+                    item.paused = false;
+                    this.refresh(streamer.uid);
+                }
+                this.streamerListDamaged = true;
+                this.tui.render();
+            }
+            return false;
+        } else if (add) {
             if (this.addStreamer(streamer, list, isTemp)) {
                 list.push(streamer.uid);
                 dirty = true;
@@ -190,7 +197,7 @@ class Site {
         let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
-            dirty |= this.updateList(list[i], add, false);
+            dirty |= this.updateList(list[i], add, false, 0);
         }
 
         return dirty;
@@ -221,7 +228,8 @@ class Site {
                 postProcess: 0,
                 filesize: 0,
                 stuckcounter: 0,
-                isTemp: isTemp
+                isTemp: isTemp,
+                paused: false
             });
             this.streamerListDamaged = true;
             this.tui.render();

@@ -28,8 +28,8 @@ class Basic extends Site {
         this.streamerListDamaged = true;
     }
 
-    updateList(nm, add, isTemp) {
-        return super.updateList({nm: nm, uid: nm}, add, isTemp);
+    updateList(nm, add, isTemp, pause) {
+        return super.updateList({nm: nm, uid: nm}, add, isTemp, pause);
     }
 
     async m3u8Script(nm) {
@@ -74,7 +74,9 @@ class Basic extends Site {
 
         super.checkStreamerState(streamer, msg, stream.status, prevState);
 
-        if (stream.status) {
+        if (streamer.paused) {
+            this.dbgMsg(colors.name(nm) + " is paused, recording not started.");
+        } else if (stream.status) {
             this.startCapture(this.setupCapture(streamer, stream.m3u8));
         }
 
