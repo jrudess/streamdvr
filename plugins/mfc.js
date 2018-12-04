@@ -35,13 +35,13 @@ class Mfc extends Site {
         }
     }
 
-    async updateList(nm, add, isTemp, pause) {
+    async updateList(nm, options) {
         // Fetch the UID. The streamer does not have to be online for this.
         if (this.mfcGuest.state === mfc.ClientState.ACTIVE) {
             try {
                 const streamer = await this.mfcGuest.queryUser(nm);
                 if (streamer) {
-                    if (super.updateList(streamer, add, isTemp, pause)) {
+                    if (super.updateList(streamer, options)) {
                         this.dirty = true;
                         return true;
                     }

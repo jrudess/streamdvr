@@ -13,13 +13,13 @@ class Site {
         this.cfgname    = tui.configdir + this.listName + ".yml";
         this.updatename = tui.configdir + this.listName + "_updates.yml";
 
-        // sitename.yml
+        // site.yml
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
 
         // Directory suffix
         this.siteDir = "_" + this.listName;
 
-        // Handle to parent dvr for post-process queue
+        // Handle to parent dvr for global post-process queue
         this.dvr = dvr;
 
         // Blessed UI elements
@@ -28,7 +28,7 @@ class Site {
         // Streamers that are being temporarily captured for this session only
         this.tempList = [];
 
-        this.streamerList = new Map(); // Refer to addStreamer() for entry JSON
+        this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
         this.streamerListDamaged = false;
 
         tui.addSite(this);
@@ -153,17 +153,17 @@ class Site {
         }
     }
 
-    updateList(streamer, add, isTemp, pause) {
+    updateList(streamer, options) {
         let dirty = false;
-        let list = isTemp ? this.tempList : this.siteConfig.streamers;
-        if (pause > 0) {
+        let list = options.isTemp ? this.tempList : this.siteConfig.streamers;
+        if (options.pause > 0) {
             if (this.streamerList.has(streamer.uid)) {
                 const item = this.streamerList.get(streamer.uid);
-                if (pause === 1) {
+                if (options.pause === 1) {
                     this.msg(colors.name(streamer.nm) + " is paused.");
                     item.paused = true;
                     this.haltCapture(streamer.uid);
-                } else if (pause === 2) {
+                } else if (options.pause === 2) {
                     this.msg(colors.name(streamer.nm) + " is unpaused.");
                     item.paused = false;
                     this.refresh(streamer.uid);
@@ -172,8 +172,8 @@ class Site {
                 this.tui.render();
             }
             return false;
-        } else if (add) {
-            if (this.addStreamer(streamer, list, isTemp)) {
+        } else if (options.add) {
+            if (this.addStreamer(streamer, list, options.isTemp)) {
                 list.push(streamer.uid);
                 dirty = true;
             }
@@ -184,13 +184,26 @@ class Site {
             }
         }
         if (dirty) {
-            if (isTemp) {
+            if (options.isTemp) {
                 this.tempList = list;
             } else {
                 this.siteConfig.streamers = list;
             }
         }
-        return dirty && !isTemp;
+        return dirty && !options.isTemp;
+    }
+
+    pause(state) {
+        this.streamerList.forEach((value) => {
+            value.paused = state;
+            if (state) {
+                this.haltCapture(value.uid);
+            } else if (value.state !== "Offline") {
+                this.refresh(value.uid);
+            }
+        });
+        this.streamerListDamaged = true;
+        this.tui.render();
     }
 
     updateStreamers(list, add) {

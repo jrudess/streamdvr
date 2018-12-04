@@ -190,6 +190,10 @@ class Tui {
                     return;
                 }
 
+                const temp  = tokens[0] === "addtemp";
+                const pause = tokens[0] === "pause" ? 1 : tokens[0] === "unpause" ? 2 : 0;
+                const add   = tokens[0] === "add" || tokens[0] === "addtemp";
+
                 switch (tokens[0]) {
                 case "add":
                 case "addtemp":
@@ -197,9 +201,9 @@ class Tui {
                 case "pause":
                 case "unpause":
                     if (tokens.length >= 3) {
-                        const temp  = tokens[0] === "temp";
-                        const pause = tokens[0] === "pause" ? 1 : tokens[0] === "unpause" ? 2 : 0;
-                        this.updateList(tokens[0], tokens[1], tokens[2], temp, pause);
+                        this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp});
+                    } else if (tokens.length === 2) {
+                        this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp});
                     }
                     break;
 
@@ -379,13 +383,20 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(cmd, site, nm, isTemp, pause) {
+    async updateList(site, nm, options) {
         for (let i = 0; i < this.SITES.length; i++) {
             if (site === this.SITES[i].listName) {
-                const isAdd = cmd === "add" || cmd === "addtemp";
-                const dirty = await this.SITES[i].updateList(nm, isAdd, isTemp, pause) && !isTemp;
-                if (dirty) {
-                    await this.SITES[i].writeConfig();
+                if (nm === "") {
+                    // Site operations
+                    switch (options.pause) {
+                    case 1: this.SITES[i].pause(true);  break;
+                    case 2: this.SITES[i].pause(false); break;
+                    }
+                } else {
+                    const dirty = await this.SITES[i].updateList(nm, options) && !options.isTemp;
+                    if (dirty) {
+                        await this.SITES[i].writeConfig();
+                    }
                 }
                 return;
             }

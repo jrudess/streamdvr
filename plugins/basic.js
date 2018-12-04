@@ -28,8 +28,8 @@ class Basic extends Site {
         this.streamerListDamaged = true;
     }
 
-    updateList(nm, add, isTemp, pause) {
-        return super.updateList({nm: nm, uid: nm}, add, isTemp, pause);
+    updateList(nm, options) {
+        return super.updateList({nm: nm, uid: nm}, options);
     }
 
     async m3u8Script(nm) {
