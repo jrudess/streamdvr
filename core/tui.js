@@ -121,7 +121,11 @@ class Tui {
                     bg: "none"
                 }
             });
-            this.prompt.content = "> ";
+            if (this.config.tui.allowUnicode) {
+                this.prompt.content = colors.prompt("❯ ");
+            } else {
+                this.prompt.content = colors.prompt("> ");
+            }
             this.prompt.hide();
 
             this.inputBar = blessed.textbox({
@@ -405,6 +409,7 @@ class Tui {
             name:    this.config.colors.name,
             state:   this.config.colors.state,
             offline: this.config.colors.offline,
+            prompt:  this.config.colors.prompt,
             file:    this.config.colors.file,
             time:    this.config.colors.time,
             site:    this.config.colors.site,

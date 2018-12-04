@@ -25,10 +25,12 @@ tui:
   enable: false
   logshown: true
   listshown: true
+  allowUnicode: false
 colors:
   name: magenta
   state: yellow
   offline: blue
+  prompt: blue
   file: green
   time: grey
   site: green
