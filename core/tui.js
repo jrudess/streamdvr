@@ -110,9 +110,23 @@ class Tui {
                 }
             });
 
-            this.inputBar = blessed.textbox({
+            this.prompt = blessed.text({
                 bottom: 0,
                 left: 0,
+                width: 2,
+                height: 1,
+                mouse: false,
+                style: {
+                    fg: "white",
+                    bg: "none"
+                }
+            });
+            this.prompt.content = "> ";
+            this.prompt.hide();
+
+            this.inputBar = blessed.textbox({
+                bottom: 0,
+                left: 2,
                 height: 1,
                 width: "100%",
                 keys: true,
@@ -125,6 +139,8 @@ class Tui {
             });
 
             this.screen.key("1", () => {
+                this.list.interactive = true;
+                this.render();
                 this.list.focus();
             });
 
@@ -139,6 +155,9 @@ class Tui {
             });
 
             this.screen.key("enter", () => {
+                this.list.interactive = false;
+                this.prompt.show();
+                this.render();
                 this.inputBar.focus();
             });
 
@@ -154,11 +173,13 @@ class Tui {
 
             this.screen.append(this.list);
             this.screen.append(this.logbody);
+            this.screen.append(this.prompt);
             this.screen.append(this.inputBar);
             this.logbody.focus();
 
             // CLI
             this.inputBar.on("submit", (text) => {
+                this.prompt.hide();
                 this.inputBar.clearValue();
 
                 const tokens = text.split(" ");
