@@ -133,8 +133,9 @@ class Streamdvr {
     async run(site) {
         while (true) {
             try {
-                await site.processUpdates();
+                await site.processUpdates({add: true});
                 await site.getStreamers();
+                await site.processUpdates({add: false});
             } catch (err) {
                 site.errMsg(err.toString());
             }

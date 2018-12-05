@@ -109,42 +109,41 @@ class Site {
         return args;
     }
 
-    async processUpdates() {
+    async processUpdates(options) {
         const stats = fs.statSync(this.updatename);
         if (!stats.isFile()) {
             this.dbgMsg(this.updatename + " does not exist");
             return;
         }
 
-        let includeStreamers = [];
-        let excludeStreamers = [];
-
         const updates = yaml.safeLoad(fs.readFileSync(this.updatename, "utf8"));
+        let streamers = [];
 
-        if (!updates.include) {
-            updates.include = [];
-        } else if (updates.include.length > 0) {
-            this.msg(updates.include.length + " streamer(s) to include");
-            includeStreamers = updates.include;
-            updates.include = [];
+        if (options.add) {
+            if (!updates.include) {
+                updates.include = [];
+            } else if (updates.include.length > 0) {
+                this.msg(updates.include.length + " streamer(s) to include");
+                streamers = updates.include;
+                updates.include = [];
+            }
+        } else {
+            if (!updates.exclude) {
+                updates.exclude = [];
+            } else if (updates.exclude.length > 0) {
+                this.msg(updates.exclude.length + " streamer(s) to exclude");
+                streamers = updates.exclude;
+                updates.exclude = [];
+            }
         }
 
-        if (!updates.exclude) {
-            updates.exclude = [];
-        } else if (updates.exclude.length > 0) {
-            this.msg(updates.exclude.length + " streamer(s) to exclude");
-            excludeStreamers = updates.exclude;
-            updates.exclude = [];
-        }
-
-        // reset update.yml
-        if (includeStreamers.length > 0 || excludeStreamers.length > 0) {
+        // clear the processed array from file
+        if (streamers.length > 0) {
             fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
         }
 
         try {
-            let dirty = await this.updateStreamers(includeStreamers, true);
-            dirty |= await this.updateStreamers(excludeStreamers, false);
+            const dirty = await this.updateStreamers(streamers, options.add);
             if (dirty) {
                 await this.writeConfig();
             }
