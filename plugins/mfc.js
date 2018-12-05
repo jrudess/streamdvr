@@ -57,7 +57,7 @@ class Mfc extends Site {
 
     async updateStreamers(list, add) {
         this.dirty = false;
-        const queries = list.map((x) => this.updateList(x, add, false));
+        const queries = list.map((x) => this.updateList(x, {add: add, pause: 0, isTemp: false}));
         try {
             await Promise.all(queries);
         } catch (err) {

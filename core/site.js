@@ -210,7 +210,7 @@ class Site {
         let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
-            dirty |= this.updateList(list[i], add, false, 0);
+            dirty |= this.updateList(list[i], {add: add, pause: 0, isTemp: false});
         }
 
         return dirty;
