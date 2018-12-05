@@ -50,7 +50,7 @@ class Tui {
 
         this.logHidden = false;
         this.listHidden = true;
-        this.longestName = 13;
+        this.longestName = 7;
 
         process.on("SIGINT", () => {
             this.exit();
@@ -268,74 +268,74 @@ class Tui {
         }
     }
 
+    rebuildStreamerList() {
+        const table = [];
+        let first = true;
+        this.longestName = 7; // Sets a minimum size
+        for (let i = 0; i < this.SITES.length; i++) {
+            let sortedKeys = [];
+            const streamerList = this.SITES[i].streamerList;
+            if (streamerList.size > 0) {
+                if (!first) {
+                    table.push(["", ""]);
+                } else {
+                    first = false;
+                }
+                table.push([this.SITES[i].siteName, "", ""]);
+
+                // Map keys are UID, but want to sort list by name.
+                sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
+                    if (streamerList.get(a).nm < streamerList.get(b).nm) {
+                        return -1;
+                    }
+                    if (streamerList.get(a).nm > streamerList.get(b).nm) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            }
+            for (let j = 0; j < sortedKeys.length; j++) {
+                const value = streamerList.get(sortedKeys[j]);
+                const name  = colors.name(value.nm);
+                let state;
+                if (value.filename === "") {
+                    state = value.state + (value.paused ? " [paused]" : "");
+                    state = (value.state === "Offline") ? colors.offline(state) : colors.state(state);
+                } else {
+                    state = colors.file(value.filename);
+                }
+                const temp = colors.state(value.isTemp ? "[temp]" : " ");
+                table.push([name, temp, state]);
+                if (value.nm.length > this.longestName) {
+                    this.longestName = value.nm.length;
+                }
+            }
+        }
+        this.list.setData(table);
+        this.logbody.left = this.calcListWidth();
+    }
+
     render() {
         if (!this.config.tui.enable || typeof this.screen === "undefined") {
             return;
         }
 
-        let listDamaged = false;
         if (!this.listHidden) {
+            let listDamaged = false;
             for (let i = 0; i < this.SITES.length; i++) {
-                const streamerList = this.SITES[i].streamerList;
-                if (streamerList.size > 0) {
-                    listDamaged |= this.SITES[i].streamerListDamaged;
-                    this.SITES[i].streamerListDamaged = false;
-                }
+                listDamaged |= this.SITES[i].streamerListDamaged;
+                this.SITES[i].streamerListDamaged = false;
+            }
+            if (listDamaged) {
+                this.rebuildStreamerList();
             }
         }
 
-        if (listDamaged) {
-            const table = [];
-            let first = true;
-            this.longestName = 7;
-            for (let i = 0; i < this.SITES.length; i++) {
-                let sortedKeys = [];
-                const streamerList = this.SITES[i].streamerList;
-                if (streamerList.size > 0) {
-                    if (!first) {
-                        table.push(["", ""]);
-                    } else {
-                        first = false;
-                    }
-                    table.push([this.SITES[i].siteName, "", ""]);
-
-                    // Map keys are UID, but want to sort list by name.
-                    sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
-                        if (streamerList.get(a).nm < streamerList.get(b).nm) {
-                            return -1;
-                        }
-                        if (streamerList.get(a).nm > streamerList.get(b).nm) {
-                            return 1;
-                        }
-                        return 0;
-                    });
-                }
-                for (let j = 0; j < sortedKeys.length; j++) {
-                    const value = streamerList.get(sortedKeys[j]);
-                    const name  = colors.name(value.nm);
-                    let state;
-                    if (value.filename === "") {
-                        state = value.state + (value.paused ? " [paused]" : "");
-                        state = (value.state === "Offline") ? colors.offline(state) : colors.state(state);
-                    } else {
-                        state = colors.file(value.filename);
-                    }
-                    const temp = colors.state(value.isTemp ? "[temp]" : " ");
-                    table.push([name, temp, state]);
-                    if (value.nm.length > this.longestName) {
-                        this.longestName = value.nm.length;
-                    }
-                }
-            }
-            this.list.setData(table);
-            this.list.width   = this.calcListWidth();
-            this.logbody.left = this.list.width;
-        }
         this.screen.render();
     }
 
     calcListWidth() {
-        return (this.longestName * 2) + 32;
+        return (this.longestName * 2) + 35;
     }
 
     // Runtime UI adjustments
@@ -344,8 +344,7 @@ class Tui {
         case "list":
             switch (cmd) {
             case "show":
-                this.list.width   = this.calcListWidth();
-                this.logbody.left = this.list.width;
+                this.logbody.left = this.calcListWidth();
                 this.listHidden   = false;
                 this.list.show();
                 break;
