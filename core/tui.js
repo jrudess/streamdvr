@@ -28,6 +28,7 @@ class Tui {
             keys: true,
             mouse: false,
             noCellBorders: true,
+            tags: true,
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
@@ -263,15 +264,20 @@ class Tui {
             }
             for (let j = 0; j < sortedKeys.length; j++) {
                 const value = streamerList.get(sortedKeys[j]);
-                const name  = colors.name(value.nm);
+                const name  = "{" + this.dvr.config.colors.name + "-fg}" + value.nm + "{/}";
                 let state;
                 if (value.filename === "") {
-                    state = value.state + (value.paused ? " [paused]" : "");
-                    state = (value.state === "Offline") ? colors.offline(state) : colors.state(state);
+                    if (value.state === "Offline") {
+                        state = "{" + this.dvr.config.colors.offline + "-fg}";
+                    } else {
+                        state = "{" + this.dvr.config.colors.state + "-fg}";
+                    }
+                    state += value.state + (value.paused ? " [paused]" : "");
                 } else {
-                    state = colors.file(value.filename);
+                    state = "{" + this.dvr.config.colors.file + "-fg}" + value.filename;
                 }
-                const temp = colors.state(value.isTemp ? "[temp]" : " ");
+                state += "{/}";
+                const temp = value.isTemp ? ("{" + this.dvr.config.colors.state + "-fg}[temp]{/}") : "";
                 table.push([name, temp, state]);
                 if (value.nm.length > this.longestName) {
                     this.longestName = value.nm.length;
@@ -302,7 +308,7 @@ class Tui {
     }
 
     calcListWidth() {
-        return (this.longestName * 2) + 35;
+        return (this.longestName * 2) + 29;
     }
 
     // Runtime UI adjustments
