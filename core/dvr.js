@@ -207,7 +207,7 @@ class Dvr {
 
     start() {
         if (this.config.tui.enable) {
-            this.tui.init();
+            this.tui.start();
         }
     }
 

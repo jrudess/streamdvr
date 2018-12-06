@@ -222,14 +222,9 @@ class Tui {
         this.SITES.push(site);
     }
 
-    // Called after SITES is populated
-    init() {
-        // Initial loadConfig is called before sites are created
-        // so correct the shown status for the new lists.
-        if (this.config.tui.enable) {
-            this.display(this.config.tui.listshown ? "show" : "hide", "list");
-            this.display(this.config.tui.logshown  ? "show" : "hide", "log");
-        }
+    start() {
+        this.display(this.config.tui.listshown ? "show" : "hide", "list");
+        this.display(this.config.tui.logshown  ? "show" : "hide", "log");
     }
 
     log(text) {
