@@ -225,19 +225,11 @@ class Dvr {
     }
 
     exit() {
-        // Prevent bad things from happening if user holds down ctrl+c
-        if (!this.tryingToExit) {
-            this.tryingToExit = true;
-            if (this.busy()) {
-                this.log("Stopping all recordings...");
-            }
-            this.tryExit();
-        }
+        // Virtual function that can be implemented by extended class
+        // Should probably be using events here.  The TUI exit
+        // characters trigger this.
     }
 
-    tryExit() {
-        // Implement this in extended classes
-    }
 }
 
 exports.Dvr = Dvr;

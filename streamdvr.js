@@ -93,9 +93,12 @@ class Streamdvr extends Dvr {
     }
 
     exit() {
-        super.exit();
-
+        // Prevent bad things from happening if user holds down ctrl+c
         if (!this.tryingToExit) {
+            this.tryingToExit = true;
+            if (this.busy()) {
+                this.log("Stopping all recordings...");
+            }
             this.tryExit();
         }
 
