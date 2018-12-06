@@ -27,7 +27,7 @@ class Site {
             tui.addSite(this);
         }
 
-        this.msg(this.siteConfig.streamers.length + " streamer(s) in config");
+        this.infoMsg(this.siteConfig.streamers.length + " streamer(s) in config");
 
         if (typeof this.siteConfig.siteUrl === "undefined") {
             this.errMsg(this.cfgname + " is missing siteUrl");
@@ -58,18 +58,18 @@ class Site {
             const sizeMB = Math.round(stat.size / 1048576);
             this.dbgMsg(colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamer.filesize) {
-                this.msg(colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
+                this.infoMsg(colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
                 streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
             if (streamer.stuckcounter >= 2) {
-                this.msg(colors.name(streamer.nm) + " terminating stuck recording");
+                this.infoMsg(colors.name(streamer.nm) + " terminating stuck recording");
                 this.haltCapture(streamer.uid);
                 streamer.stuckcounter = 0;
                 this.streamerListDamaged = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.msg(colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
+                this.infoMsg(colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 this.haltCapture(streamer.uid);
                 this.streamerListDamaged = true;
             }
@@ -114,14 +114,14 @@ class Site {
             if (!updates.include) {
                 updates.include = [];
             } else if (updates.include.length > 0) {
-                this.msg(updates.include.length + " streamer(s) to include");
+                this.infoMsg(updates.include.length + " streamer(s) to include");
                 streamers = updates.include;
                 updates.include = [];
             }
         } else if (!updates.exclude) {
             updates.exclude = [];
         } else if (updates.exclude.length > 0) {
-            this.msg(updates.exclude.length + " streamer(s) to exclude");
+            this.infoMsg(updates.exclude.length + " streamer(s) to exclude");
             streamers = updates.exclude;
             updates.exclude = [];
         }
@@ -148,11 +148,11 @@ class Site {
             if (this.streamerList.has(streamer.uid)) {
                 const item = this.streamerList.get(streamer.uid);
                 if (options.pause === 1) {
-                    this.msg(colors.name(streamer.nm) + " is paused.");
+                    this.infoMsg(colors.name(streamer.nm) + " is paused.");
                     item.paused = true;
                     this.haltCapture(streamer.uid);
                 } else if (options.pause === 2) {
-                    this.msg(colors.name(streamer.nm) + " is unpaused.");
+                    this.infoMsg(colors.name(streamer.nm) + " is unpaused.");
                     item.paused = false;
                     this.refresh(streamer.uid);
                 }
@@ -217,7 +217,7 @@ class Site {
 
         let added = false;
         if (list.indexOf(streamer.uid) === -1) {
-            this.msg(colors.name(streamer.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
+            this.infoMsg(colors.name(streamer.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
             this.errMsg(colors.name(streamer.nm) + " is already in the capture list");
@@ -247,7 +247,7 @@ class Site {
     removeStreamer(streamer) {
         let dirty = false;
         if (this.streamerList.has(streamer.uid)) {
-            this.msg(colors.name(streamer.nm) + " removed from capture list.");
+            this.infoMsg(colors.name(streamer.nm) + " removed from capture list.");
             this.haltCapture(streamer.uid);
             this.streamerList.delete(streamer.uid); // Note: deleting before recording/post-processing finishes
             this.streamerListDamaged = true;
@@ -263,7 +263,7 @@ class Site {
 
     checkStreamerState(streamer, msg, isStreaming, prevState) {
         if (streamer.state !== prevState) {
-            this.msg(msg);
+            this.infoMsg(msg);
             this.streamerListDamaged = true;
         }
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
@@ -398,7 +398,7 @@ class Site {
         }
 
         if (captureProcess.pid) {
-            this.msg(colors.name(streamer.nm) + " recording started: " + colors.file(capInfo.filename + ".ts"));
+            this.infoMsg(colors.name(streamer.nm) + " recording started: " + colors.file(capInfo.filename + ".ts"));
             this.storeCapInfo(streamer.uid, fullname, captureProcess);
         }
 
@@ -415,7 +415,7 @@ class Site {
                 } else {
                     const sizeMB = stats.size / 1048576;
                     if (sizeMB < this.dvr.config.recording.minSize) {
-                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
+                        this.infoMsg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
                         fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                         this.storeCapInfo(streamer.uid, "", null);
                     } else {
@@ -462,6 +462,10 @@ class Site {
 
     msg(msg, options) {
         this.dvr.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg, options);
+    }
+
+    infoMsg(msg) {
+        this.msg("[INFO]  " + msg);
     }
 
     errMsg(msg) {

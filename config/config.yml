@@ -6,6 +6,7 @@ enable:
   Mixer: true
   Youtube: true
   FC2: true
+  daemon: false
 recording:
   autoConvertType: mp4
   captureDirectory: capturing

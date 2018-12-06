@@ -143,7 +143,7 @@ class Dvr {
             this.config.recording.autoConvertType
         ];
 
-        site.msg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " + colors.cmd("scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " ")));
+        site.infoMsg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " + colors.cmd("scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " ")));
         const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
         site.storeCapInfo(streamer.uid, finalName);
 
@@ -152,7 +152,7 @@ class Dvr {
                 fs.unlinkSync(this.config.recording.captureDirectory + "/" + fullname);
             }
 
-            site.msg(colors.name(streamer.nm) + " done converting " + finalName);
+            site.infoMsg(colors.name(streamer.nm) + " done converting " + finalName);
             this.postScript(site, streamer, finalName);
         });
 
@@ -167,7 +167,7 @@ class Dvr {
             const userPostProcess = spawn(this.config.postprocess, args, {windowsVerbatimArguments: true});
 
             userPostProcess.on("close", () => {
-                site.msg(colors.name(streamer.nm) + " done post-processing " + finalName);
+                site.infoMsg(colors.name(streamer.nm) + " done post-processing " + finalName);
                 this.next(site, streamer);
             });
         } else {
@@ -216,7 +216,7 @@ class Dvr {
             this.tui.log(text);
         } else if (options && options.trace && this.config.debug.errortrace) {
             console.trace(text);
-        } else {
+        } else if (!this.config.enable.daemon) {
             console.log(text);
         }
         if (this.logger) {
