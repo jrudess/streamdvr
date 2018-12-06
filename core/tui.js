@@ -169,6 +169,12 @@ class Tui {
                 this.exit()
             ));
 
+            this.list.key("r", () => {
+                for (let i = 0; i < this.SITES.length; i++) {
+                    this.SITES[i].getStreamers();
+                }
+            });
+
             this.inputBar.key(["C-c"], () => (
                 this.exit()
             ));

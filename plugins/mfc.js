@@ -66,7 +66,7 @@ class Mfc extends Site {
         return this.dirty;
     }
 
-    async checkStreamerState(uid) {
+    async checkStreamerState(uid, options) {
         if (this.mfcGuest.state !== mfc.ClientState.ACTIVE) {
             return false;
         }
@@ -129,13 +129,15 @@ class Mfc extends Site {
         if (streamer.paused) {
             this.dbgMsg(colors.name(streamer.nm) + " is paused, recording not started.");
         } else if (isStreaming) {
-            this.startCapture(this.setupCapture(streamer));
+            if (!options || !options.init) {
+                this.startCapture(this.setupCapture(streamer));
+            }
         }
 
         return true;
     }
 
-    async getStreamers() {
+    async getStreamers(options) {
         if (!super.getStreamers()) {
             return;
         }
@@ -143,14 +145,14 @@ class Mfc extends Site {
         const queries = [];
 
         for (let i = 0; i < this.siteConfig.streamers.length; i++) {
-            queries.push(this.checkStreamerState(this.siteConfig.streamers[i]));
+            queries.push(this.checkStreamerState(this.siteConfig.streamers[i], options));
         }
 
         // Only add a streamer from temp list if they are not
         // in the primary list.  Prevents duplicate recording.
         for (let i = 0; i < this.tempList.length; i++) {
             if (!_.contains(this.siteConfig.streamers, this.tempList[i])) {
-                queries.push(this.checkStreamerState(this.tempList[i]));
+                queries.push(this.checkStreamerState(this.tempList[i], options));
             }
         }
 

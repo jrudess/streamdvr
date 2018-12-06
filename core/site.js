@@ -60,28 +60,30 @@ class Site {
 
     checkFileSize() {
         const maxSize = this.tui.config.recording.maxSize;
-        for (const streamers of this.streamerList.values()) {
-            if (streamers.captureProcess === null) {
+        for (const streamer of this.streamerList.values()) {
+            if (streamer.captureProcess === null) {
                 continue;
             }
 
-            const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamers.filename);
+            const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamer.filename);
             const sizeMB = Math.round(stat.size / 1048576);
-            this.dbgMsg(colors.file(streamers.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
-            if (sizeMB === streamers.filesize) {
-                this.msg(colors.name(streamers.nm) + " recording appears to be stuck, file size is not increasing: " + sizeMB + "MB");
-                streamers.stuckcounter++;
+            this.dbgMsg(colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
+            if (sizeMB === streamer.filesize) {
+                this.msg(colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
+                streamer.stuckcounter++;
+            } else {
+                streamer.filesize = sizeMB;
             }
-            streamers.filesize = sizeMB;
-            if (streamers.stuckcounter >= 2) {
-                this.msg(colors.name(streamers.nm) + " terminating stuck recording with SIGINT");
-                streamers.captureProcess.kill("SIGINT");
-                streamers.stuckcounter = 0;
+            if (streamer.stuckcounter >= 2) {
+                this.msg(colors.name(streamer.nm) + " terminating stuck recording");
+                this.haltCapture(streamer.uid);
+                streamer.stuckcounter = 0;
+                this.streamerListDamaged = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.msg(colors.name(streamers.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
-                streamers.captureProcess.kill("SIGINT");
+                this.msg(colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
+                this.haltCapture(streamer.uid);
+                this.streamerListDamaged = true;
             }
-            this.streamerListDamaged = true;
         }
     }
 
@@ -127,14 +129,12 @@ class Site {
                 streamers = updates.include;
                 updates.include = [];
             }
-        } else {
-            if (!updates.exclude) {
-                updates.exclude = [];
-            } else if (updates.exclude.length > 0) {
-                this.msg(updates.exclude.length + " streamer(s) to exclude");
-                streamers = updates.exclude;
-                updates.exclude = [];
-            }
+        } else if (!updates.exclude) {
+            updates.exclude = [];
+        } else if (updates.exclude.length > 0) {
+            this.msg(updates.exclude.length + " streamer(s) to exclude");
+            streamers = updates.exclude;
+            updates.exclude = [];
         }
 
         // clear the processed array from file
@@ -376,7 +376,6 @@ class Site {
     async refresh(uid) {
         if (!this.tui.tryingToExit && this.streamerList.has(uid)) {
             await this.checkStreamerState(uid);
-            this.tui.render();
         }
     }
 

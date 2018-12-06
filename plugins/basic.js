@@ -57,7 +57,7 @@ class Basic extends Site {
         }
     }
 
-    async checkStreamerState(nm) {
+    async checkStreamerState(nm, options) {
         // Detect if streamer is online or actively streaming
         const streamer  = this.streamerList.get(nm);
         const prevState = streamer.state;
@@ -77,17 +77,19 @@ class Basic extends Site {
         if (streamer.paused) {
             this.dbgMsg(colors.name(nm) + " is paused, recording not started.");
         } else if (stream.status) {
-            this.startCapture(this.setupCapture(streamer, stream.m3u8));
+            if (!options || !options.init) {
+                this.startCapture(this.setupCapture(streamer, stream.m3u8));
+            }
         }
 
         return true;
     }
 
-    async checkBatch(batch) {
+    async checkBatch(batch, options) {
         const queries = [];
 
         for (let i = 0; i < batch.length; i++) {
-            queries.push(this.checkStreamerState(batch[i]));
+            queries.push(this.checkStreamerState(batch[i], options));
         }
 
         try {
@@ -124,22 +126,18 @@ class Basic extends Site {
         return serRuns;
     }
 
-    async getStreamers() {
+    async getStreamers(options) {
         if (!super.getStreamers()) {
             return [];
         }
 
-        const nms = [];
-        this.streamerList.forEach((value) => {
-            nms.push(value.nm);
-        });
-
+        const nms = Array.from(this.streamerList.values, (streamer) => streamer.nm);
         const serRuns = this.serialize(nms);
 
         try {
             let streamers = [];
             for (let i = 0; i < serRuns.length; i++) {
-                const batch = await this.checkBatch(serRuns[i]);
+                const batch = await this.checkBatch(serRuns[i], options);
                 streamers = streamers.concat(batch);
             }
             return streamers;
