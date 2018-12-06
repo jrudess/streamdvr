@@ -38,9 +38,8 @@ class Streamdvr extends Dvr {
         // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/basic", urlback: "",       enable: this.config.enable.Camsoda, handle: null});
         // this.plugins.set(CAM4,    {name: "CAM4",    file: "./plugins/basic", urlback: "",       enable: this.config.enable.Cam4,    handle: null});
 
-        for (const [site, data] of this.plugins) {
-            if (data.enable) {
-                const plugin = this.plugins.get(site);
+        for (const [site, plugin] of this.plugins) {
+            if (plugin.enable) {
                 this[site] = require(plugin.file);
                 plugin.handle = new this[site].Plugin(plugin.name, this, this.tui, plugin.urlback);
             }
@@ -52,20 +51,18 @@ class Streamdvr extends Dvr {
     }
 
     async start() {
-        for (const [site, data] of this.plugins) {
-            if (data.enable) {
-                const plugin = this.plugins.get(site).handle;
-                await plugin.connect();
-                this.run(plugin);
+        for (const plugin of this.plugins.values()) {
+            if (plugin.enable) {
+                await plugin.handle.connect();
+                this.run(plugin.handle);
             }
         }
         super.start();
     }
 
     busy() {
-        for (const [site, data] of this.plugins) {
-            if (data.enable) {
-                const plugin = this.plugins.get(site);
+        for (const plugin of this.plugins.values()) {
+            if (plugin.enable) {
                 if (plugin.handle.getNumCapsInProgress() > 0) {
                     return true;
                 }
@@ -79,9 +76,8 @@ class Streamdvr extends Dvr {
             // delay exiting until all capture and postprocess
             // ffmpeg jobs have completed.
             if (!this.busy()) {
-                for (const [site, data] of this.plugins) {
-                    if (data.enable) {
-                        const plugin = this.plugins.get(site);
+                for (const plugin of this.plugins.values()) {
+                    if (plugin.enable) {
                         await plugin.handle.disconnect();
                     }
                 }
@@ -104,9 +100,8 @@ class Streamdvr extends Dvr {
 
         // Allow this to execute multiple times so that SIGINT
         // can get passed again to ffmpeg/streamdvr in case some get hung.
-        for (const [site, data] of this.plugins) {
-            if (data.enable) {
-                const plugin = this.plugins.get(site);
+        for (const plugin of this.plugins.values()) {
+            if (plugin.enable) {
                 plugin.handle.haltAllCaptures();
             }
         }
