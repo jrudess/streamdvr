@@ -37,7 +37,7 @@ class Basic extends Site {
         // arg1 = proxy enable
         // arg2 = proxy server
         const streamerUrl = this.siteConfig.siteUrl + nm + this.urlback;
-        const proxy       = (this.tui.config.proxy.enable ? "1 " : "0 ") + this.tui.config.proxy.server;
+        const proxy       = (this.dvr.config.proxy.enable ? "1 " : "0 ") + this.dvr.config.proxy.server;
         const cmd         = this.siteConfig.m3u8fetch + " " + streamerUrl + " " + proxy;
         this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
         try {

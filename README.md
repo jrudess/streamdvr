@@ -54,8 +54,8 @@ Refer to `config/config.yml` for all configuration options.
 * To suppress node warnings: `node --no-warnings streamdvr.js`
 
 * TUI navigation:
-    * `1` to focus the streamer list
-    * `enter` to focus the input bar.  `enter` a second time to re-focus the log (if enabled)
+    * `1` to focus the streamer list, esc to unfocus
+    * `enter` to focus the input bar for CLI
     * `Up/Down/PgUp/PgDn` to scroll the active focus
 
 * TUI Console Commands:

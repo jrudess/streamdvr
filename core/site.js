@@ -10,8 +10,8 @@ class Site {
         this.siteName   = siteName;
         this.padName    = siteName.padEnd(9, " ");
         this.listName   = siteName.toLowerCase();
-        this.cfgname    = tui.configdir + this.listName + ".yml";
-        this.updatename = tui.configdir + this.listName + "_updates.yml";
+        this.cfgname    = dvr.configdir + this.listName + ".yml";
+        this.updatename = dvr.configdir + this.listName + "_updates.yml";
 
         // site.yml
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
@@ -23,7 +23,10 @@ class Site {
         this.streamerList = new Map();      // Refer to addStreamer() for JSON entries
         this.streamerListDamaged = false;
 
-        tui.addSite(this);
+        if (this.dvr.config.tui.enable) {
+            tui.addSite(this);
+        }
+
         this.msg(this.siteConfig.streamers.length + " streamer(s) in config");
 
         if (typeof this.siteConfig.siteUrl === "undefined") {
@@ -32,7 +35,7 @@ class Site {
     }
 
     getDateTime() {
-        return moment().format(this.tui.config.recording.dateFormat);
+        return moment().format(this.dvr.config.recording.dateFormat);
     }
 
     getStreamerList() {
@@ -40,18 +43,18 @@ class Site {
     }
 
     getFileName(nm) {
-        const site = this.tui.config.recording.includeSiteInFile ? this.listName + "_" : "";
+        const site = this.dvr.config.recording.includeSiteInFile ? this.listName + "_" : "";
         return nm + "_" + site + this.getDateTime();
     }
 
     checkFileSize() {
-        const maxSize = this.tui.config.recording.maxSize;
+        const maxSize = this.dvr.config.recording.maxSize;
         for (const streamer of this.streamerList.values()) {
             if (streamer.captureProcess === null) {
                 continue;
             }
 
-            const stat = fs.statSync(this.tui.config.recording.captureDirectory + "/" + streamer.filename);
+            const stat = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
             const sizeMB = Math.round(stat.size / 1048576);
             this.dbgMsg(colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamer.filesize) {
@@ -83,11 +86,11 @@ class Site {
 
     getCaptureArguments(url, filename, options) {
         let args = [
-            this.tui.config.recording.captureDirectory + "/" + filename + ".ts",
+            this.dvr.config.recording.captureDirectory + "/" + filename + ".ts",
             url,
-            this.tui.config.proxy.enable ? "1" : "0",
-            this.tui.config.proxy.server,
-            this.tui.config.debug.recorder ? "1" : "0"
+            this.dvr.config.proxy.enable ? "1" : "0",
+            this.dvr.config.proxy.server,
+            this.dvr.config.debug.recorder ? "1" : "0"
         ];
 
         if (options && options.params) {
@@ -154,7 +157,9 @@ class Site {
                     this.refresh(streamer.uid);
                 }
                 this.streamerListDamaged = true;
-                this.tui.render();
+                if (this.dvr.config.tui.enable) {
+                    this.tui.render();
+                }
             }
             return false;
         } else if (options.add) {
@@ -188,7 +193,9 @@ class Site {
             }
         });
         this.streamerListDamaged = true;
-        this.tui.render();
+        if (this.dvr.config.tui.enable) {
+            this.tui.render();
+        }
     }
 
     updateStreamers(list, add) {
@@ -230,7 +237,9 @@ class Site {
                 paused: false
             });
             this.streamerListDamaged = true;
-            this.tui.render();
+            if (this.dvr.config.tui.enable) {
+                this.tui.render();
+            }
         }
         return added;
     }
@@ -242,7 +251,9 @@ class Site {
             this.haltCapture(streamer.uid);
             this.streamerList.delete(streamer.uid); // Note: deleting before recording/post-processing finishes
             this.streamerListDamaged = true;
-            this.tui.render();
+            if (this.dvr.config.tui.enable) {
+                this.tui.render();
+            }
             dirty = true;
         } else {
             this.errMsg(colors.name(streamer.nm) + " not in capture list.");
@@ -261,11 +272,13 @@ class Site {
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + this.siteConfig.recorder + " capture process.");
             this.haltCapture(streamer.uid);
         }
-        this.tui.render();
+        if (this.dvr.config.tui.enable) {
+            this.tui.render();
+        }
     }
 
     getStreamers() {
-        if (this.tui.tryingToExit) {
+        if (this.dvr.tryingToExit) {
             this.dbgMsg("Skipping lookup while exit in progress...");
             return false;
         }
@@ -279,7 +292,9 @@ class Site {
             streamer.filename = filename;
             streamer.captureProcess = captureProcess;
             this.streamerListDamaged = true;
-            this.tui.render();
+            if (this.dvr.config.tui.enable) {
+                this.tui.render();
+            }
         }
     }
 
@@ -339,14 +354,14 @@ class Site {
     }
 
     async getCompleteDir(streamer) {
-        let completeDir = this.tui.config.recording.completeDirectory;
+        let completeDir = this.dvr.config.recording.completeDirectory;
 
-        if (this.tui.config.recording.siteSubdir) {
+        if (this.dvr.config.recording.siteSubdir) {
             completeDir += "/" + this.siteName;
         }
-        if (this.tui.config.recording.streamerSubdir) {
+        if (this.dvr.config.recording.streamerSubdir) {
             completeDir += "/" + streamer.nm;
-            if (this.tui.config.recording.includeSiteInDir) {
+            if (this.dvr.config.recording.includeSiteInDir) {
                 completeDir += this.siteDir;
             }
             try {
@@ -360,7 +375,7 @@ class Site {
     }
 
     async refresh(uid) {
-        if (!this.tui.tryingToExit && this.streamerList.has(uid)) {
+        if (!this.dvr.tryingToExit && this.streamerList.has(uid)) {
             await this.checkStreamerState(uid);
         }
     }
@@ -376,7 +391,7 @@ class Site {
         this.dbgMsg("Starting recording: " + colors.cmd(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
         const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs, {windowsVerbatimArguments: true});
 
-        if (this.tui.config.debug.recorder) {
+        if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
             captureProcess.stdout.pipe(logStream);
             captureProcess.stderr.pipe(logStream);
@@ -389,19 +404,19 @@ class Site {
 
         captureProcess.on("close", () => {
 
-            fs.stat(this.tui.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
+            fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
                 if (err) {
                     if (err.code === "ENOENT") {
-                        this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.tui.config.recording.autoConvertType);
+                        this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
                     } else {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }
                     this.storeCapInfo(streamer.uid, "", null);
                 } else {
                     const sizeMB = stats.size / 1048576;
-                    if (sizeMB < this.tui.config.recording.minSize) {
-                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.tui.config.recording.minSize + ")");
-                        fs.unlinkSync(this.tui.config.recording.captureDirectory + "/" + fullname);
+                    if (sizeMB < this.dvr.config.recording.minSize) {
+                        this.msg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
+                        fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                         this.storeCapInfo(streamer.uid, "", null);
                     } else {
                         this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
@@ -446,7 +461,7 @@ class Site {
     }
 
     msg(msg, options) {
-        this.tui.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg, options);
+        this.dvr.log(colors.time("[" + this.getDateTime() + "] ") + colors.site(this.padName) + msg, options);
     }
 
     errMsg(msg) {
@@ -454,7 +469,7 @@ class Site {
     }
 
     dbgMsg(msg) {
-        if (this.tui.config.debug.log) {
+        if (this.dvr.config.debug.log) {
             this.msg(colors.debug("[DEBUG] ") + msg);
         }
     }
