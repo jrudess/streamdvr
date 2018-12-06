@@ -41,6 +41,7 @@ class Basic extends Site {
         const cmd         = this.siteConfig.m3u8fetch + " " + streamerUrl + " " + proxy;
         this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
         try {
+            // m3u8 url in stdout
             const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
             let url = stdio.stdout.toString();
             url = url.replace(/\r?\n|\r/g, "");
@@ -131,7 +132,11 @@ class Basic extends Site {
             return [];
         }
 
-        const nms = Array.from(this.streamerList.values, (streamer) => streamer.nm);
+        const nms = [];
+        this.streamerList.forEach((value) => {
+            nms.push(value.nm);
+        });
+
         const serRuns = this.serialize(nms);
 
         try {

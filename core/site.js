@@ -16,23 +16,14 @@ class Site {
         // site.yml
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
 
-        // Directory suffix
-        this.siteDir = "_" + this.listName;
-
-        // Handle to parent dvr for global post-process queue
-        this.dvr = dvr;
-
-        // Blessed UI elements
-        this.tui = tui;
-
-        // Streamers that are being temporarily captured for this session only
-        this.tempList = [];
-
-        this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
+        this.siteDir = "_" + this.listName; // Directory suffix
+        this.dvr = dvr;                     // Handle to parent dvr for global post-process queue
+        this.tui = tui;                     // Blessed UI elements
+        this.tempList = [];                 // temp record list (session only)
+        this.streamerList = new Map();      // Refer to addStreamer() for JSON entries
         this.streamerListDamaged = false;
 
         tui.addSite(this);
-
         this.msg(this.siteConfig.streamers.length + " streamer(s) in config");
 
         if (typeof this.siteConfig.siteUrl === "undefined") {
@@ -49,13 +40,8 @@ class Site {
     }
 
     getFileName(nm) {
-        let filename = nm + "_";
-
-        if (this.tui.config.recording.includeSiteInFile) {
-            filename += this.listName + "_";
-        }
-        filename += this.getDateTime();
-        return filename;
+        const site = this.tui.config.recording.includeSiteInFile ? this.listName + "_" : "";
+        return nm + "_" + site + this.getDateTime();
     }
 
     checkFileSize() {
