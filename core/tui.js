@@ -21,8 +21,12 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
+            // TODO: Listbar behaves screwy when shrink is set, and also need
+            // to align log to right side of list as well, but list.width is
+            // some very large value.
+            // shrink: "true",
+            width: this.calcLogLeft(),
             height: "100%-1",
-            shrink: "true",
             align: "left",
             interactive: false,
             keys: true,
@@ -285,7 +289,7 @@ class Tui {
             }
         }
         this.list.setData(table);
-        this.logbody.left = this.calcListWidth();
+        this.logbody.left = this.calcLogLeft();
     }
 
     render() {
@@ -307,8 +311,8 @@ class Tui {
         this.screen.render();
     }
 
-    calcListWidth() {
-        return (this.longestName * 2) + 29;
+    calcLogLeft() {
+        return 55;
     }
 
     // Runtime UI adjustments
@@ -317,7 +321,7 @@ class Tui {
         case "list":
             switch (cmd) {
             case "show":
-                this.logbody.left = this.calcListWidth();
+                this.logbody.left = this.calcLogLeft();
                 this.listHidden   = false;
                 this.list.show();
                 break;
