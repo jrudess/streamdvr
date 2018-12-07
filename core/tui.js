@@ -103,6 +103,36 @@ class Tui {
             }
         });
 
+        this.listmenu = blessed.list({
+            top: 8,
+            left: 18,
+            width: 16,
+            height: 7,
+            padding: {
+                left: 3,
+                right: 3,
+                top: 1,
+                bottom: 1
+            },
+            interactive: true,
+            keys: true,
+            mouse: false,
+            tags: true,
+            border: {
+                type: "bg",
+                ch: "░"
+            },
+            style: {
+                border: {
+                    bg: "blue",
+                    fg: "blue"
+                },
+                bg: "black",
+                fg: "white"
+            }
+        });
+        this.listmenu.hide();
+
         this.screen.key("1", () => {
             this.list.interactive = true;
             this.list.focus();
@@ -120,7 +150,7 @@ class Tui {
         });
 
         this.screen.key("enter", () => {
-            if (this.screen.focused !== this.list) {
+            if (this.screen.focused === this.logbody) {
                 this.list.interactive = false;
                 this.prompt.show();
                 this.render();
@@ -136,11 +166,30 @@ class Tui {
 
         // this.list.on("select", (item, index) => {
         this.list.on("select", () => {
+            this.list.interactive = false;
+            this.listmenu.show();
+            this.listmenu.focus();
+            this.render();
         });
 
         this.list.on("cancel", () => {
             this.list.interactive = false;
             this.logbody.focus();
+            this.render();
+        });
+
+        // this.list.on("select", (item, index) => {
+        this.listmenu.on("select", () => {
+            this.listmenu.hide();
+            this.list.interactive = true;
+            this.list.focus();
+            this.render();
+        });
+
+        this.listmenu.on("cancel", () => {
+            this.listmenu.hide();
+            this.list.interactive = true;
+            this.list.focus();
             this.render();
         });
 
@@ -164,7 +213,13 @@ class Tui {
         this.screen.append(this.logbody);
         this.screen.append(this.prompt);
         this.screen.append(this.inputBar);
+        this.screen.append(this.listmenu);
         this.logbody.focus();
+
+        this.listmenu.pushItem("pause");
+        this.listmenu.pushItem("remove");
+        this.listmenu.pushItem("browse");
+        this.listmenu.setScrollPerc(100);
 
         // CLI
         this.inputBar.on("submit", (text) => {
