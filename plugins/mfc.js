@@ -181,7 +181,7 @@ class Mfc extends Site {
         // These mappings work around it to select the true resolution
         const params = [];
         if (this.siteConfig.recorder === "scripts/record_streamlink.sh") {
-            params.push("--stream-sorting-excludes=960p");
+            params.push("--stream-sorting-excludes=960p,5564k");
         } else if (url.indexOf("==") === -1) {
             // Skip adding these params for 16:9 streams by checking for
             // base64 key chars in those streams
