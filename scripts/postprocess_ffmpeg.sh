@@ -14,7 +14,7 @@ if [ "$filetype" = "mp4" ]; then
     mp4args="-bsf:a aac_adtstoasc"
 fi
 
-ffmpeg -hide_banner -v fatal -i $input -c copy $mp4args -copyts -start_at_zero $output > $tmp/stdout 2> $tmp/stderr
+ffmpeg -hide_banner -v fatal -i $input -c copy $mp4args -copyts -start_at_zero -analyzeduration 300000000 $output > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -ne 0 ]; then
     # on errors print ffmpeg output for streamdvr to reprint
