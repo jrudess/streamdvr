@@ -22,6 +22,8 @@ class Dvr {
         this.config = null;
         this.loadConfig();
 
+        this.startup = 1;
+
         this.logger = null;
         if (this.config.log.enable) {
             const {Console} = require("console");
@@ -190,6 +192,12 @@ class Dvr {
         await site.getStreamers({init: true});
         while (true) {
             try {
+                if (this.startup) {
+                    this.startup = 0;
+                } else {
+                    await site.disconnect();
+                    await site.connect();
+                }
                 await site.processUpdates({add: true});
                 await site.processUpdates({add: false});
                 await site.getStreamers();
