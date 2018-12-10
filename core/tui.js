@@ -178,7 +178,7 @@ class Tui {
             this.render();
         });
 
-        // this.list.on("select", (item, index) => {
+        //this.listmenu.on("select", (item, index) => {
         this.listmenu.on("select", () => {
             this.listmenu.hide();
             this.list.interactive = true;
@@ -250,7 +250,8 @@ class Tui {
                 break;
 
             case "reload":
-                this.config = this.loadConfig();
+                this.dvr.loadConfig();
+                this.config = this.dvr.config;
                 break;
 
             case "show":
