@@ -389,7 +389,7 @@ class Site {
         const fullname = capInfo.filename + ".ts";
 
         this.dbgMsg("Starting recording: " + colors.cmd(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
-        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs, {windowsVerbatimArguments: true});
+        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs);
 
         if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
