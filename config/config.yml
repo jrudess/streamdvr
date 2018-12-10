@@ -11,6 +11,7 @@ recording:
   autoConvertType: mp4
   captureDirectory: capturing
   completeDirectory: captured
+  postprocess: "scripts/postprocess_ffmpeg.sh"
   dateFormat: YYYYMMDD_HHmmss
   includeSiteInFile: false
   includeSiteInDir: false

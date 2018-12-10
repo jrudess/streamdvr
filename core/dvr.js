@@ -146,7 +146,7 @@ class Dvr {
         ];
 
         site.infoMsg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " + colors.cmd("scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " ")));
-        const myCompleteProcess = spawn("scripts/postprocess_ffmpeg.sh", args);
+        const myCompleteProcess = spawn(this.config.recording.postprocess, args);
         site.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
