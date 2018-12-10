@@ -21,7 +21,7 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            // TODO: Listbar behaves screwy when shrink is set, and also need
+            // TODO: Listtable behaves screwy when shrink is set, and also need
             // to align log to right side of list as well, but list.width is
             // some very large value.
             // shrink: "true",
@@ -178,7 +178,7 @@ class Tui {
             this.render();
         });
 
-        //this.listmenu.on("select", (item, index) => {
+        // this.listmenu.on("select", (item, index) => {
         this.listmenu.on("select", () => {
             this.listmenu.hide();
             this.list.interactive = true;

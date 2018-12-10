@@ -157,9 +157,14 @@ class Basic extends Site {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 
+        const params = [];
+        if (this.siteConfig.recorder === "scripts/record_streamlink.sh") {
+            params.push("--stream-sorting-excludes=live");
+        }
+
         const filename  = this.getFileName(streamer.nm);
         const newurl    = this.siteConfig.recorder === "scripts/record_streamlink.sh" ? this.siteConfig.siteUrl + streamer.nm : url;
-        const spawnArgs = this.getCaptureArguments(newurl, filename);
+        const spawnArgs = this.getCaptureArguments(newurl, filename, {params: params});
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }
 }
