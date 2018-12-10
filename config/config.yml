@@ -20,6 +20,7 @@ recording:
   keepTsFile: false
   minSize: 0
   maxSize: 0
+postprocess: ""
 log:
   enable: true
   append: true

@@ -166,7 +166,7 @@ class Dvr {
     postScript(site, streamer, finalName) {
         if (this.config.postprocess) {
             const args = [this.config.recording.completeDirectory, finalName];
-            const userPostProcess = spawn(this.config.postprocess, args, {windowsVerbatimArguments: true});
+            const userPostProcess = spawn(this.config.postprocess, args);
 
             userPostProcess.on("close", () => {
                 site.infoMsg(colors.name(streamer.nm) + " done post-processing " + finalName);
