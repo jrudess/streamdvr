@@ -58,7 +58,7 @@ Refer to `config/config.yml` for all configuration options.
     * `Up/Down/PgUp/PgDn` to scroll the active focus
 
 * CLI:
-
+`
     add     [site] [streamer]
     addtemp [site] [streamer]
     pause   [site] <streamer>
@@ -68,7 +68,7 @@ Refer to `config/config.yml` for all configuration options.
     hide [log|list]
     show [log|list]
     help
-
+`
 * Custom Post Processing is enabled in `config.yml` with `postprocess: /path/to/script`
 ```bash
     #!/bin/bash
