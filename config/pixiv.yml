@@ -1,4 +1,8 @@
-siteUrl: "https://sketch.pixiv.net/@"
+name: PIXIV
+plugin: ./plugins/basic
+siteUrl: https://sketch.pixiv.net/@
+urlback: ""
+enable: true
 m3u8fetch: scripts/m3u8_streamlink.sh
 recorder: scripts/record_streamlink.sh
 scanInterval: 300

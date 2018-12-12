@@ -1,4 +1,8 @@
-siteUrl: "https://www.chaturbate.com/"
+name: CB
+plugin: ./plugins/basic
+siteUrl: https://chaturbate.com/
+urlback: ""
+enable: true
 m3u8fetch: scripts/m3u8_youtubedl.sh
 recorder: scripts/record_ffmpeg.sh
 scanInterval: 300

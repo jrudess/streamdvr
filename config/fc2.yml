@@ -1,4 +1,8 @@
-siteUrl: "https://live.fc2.com/"
+name: FC2
+plugin: ./plugins/basic
+siteUrl: https://live.fc2.com/
+urlback: ""
+enable: false
 m3u8fetch: scripts/m3u8_streamlink.sh
 recorder: scripts/record_streamlink.sh
 scanInterval: 300

@@ -2,47 +2,41 @@
 
 require("events").EventEmitter.prototype._maxListeners = 100;
 
+const fs    = require("fs");
+const yaml  = require("js-yaml");
 const {Dvr} = require("./core/dvr");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-const MFC     = Symbol("Myfreecams");
-const CB      = Symbol("Chaturbate");
-const PIXIV   = Symbol("Pixiv");
-const TWITCH  = Symbol("Twitch");
-const MIXER   = Symbol("Mixer");
-const YOUTUBE = Symbol("Youtube");
-const FC2     = Symbol("FC2");
-// const MFCSL   = Symbol("Myfreecams with streamlink");
-// const BONGA   = Symbol("BongaCams");
-// const CAMSODA = Symbol("Camsoda");
-// const CAM4    = Symbol("CAM4");
-
 class Streamdvr extends Dvr {
 
     constructor() {
         super();
-        this.plugins = new Map();
+        this.plugins = [];
 
-        this.plugins.set(MFC,     {name: "MFC",     file: "./plugins/mfc",   urlback: "",       enable: this.config.enable.MFC,     handle: null});
-        this.plugins.set(CB,      {name: "CB",      file: "./plugins/basic", urlback: "",       enable: this.config.enable.CB,      handle: null});
-        this.plugins.set(PIXIV,   {name: "PIXIV",   file: "./plugins/basic", urlback: "/lives", enable: this.config.enable.Pixiv,   handle: null});
-        this.plugins.set(TWITCH,  {name: "TWITCH",  file: "./plugins/basic", urlback: "",       enable: this.config.enable.Twitch,  handle: null});
-        this.plugins.set(MIXER,   {name: "MIXER",   file: "./plugins/basic", urlback: "",       enable: this.config.enable.Mixer,   handle: null});
-        this.plugins.set(YOUTUBE, {name: "YOUTUBE", file: "./plugins/basic", urlback: "",       enable: this.config.enable.Youtube, handle: null});
-        this.plugins.set(FC2,     {name: "FC2",     file: "./plugins/basic", urlback: "",       enable: this.config.enable.FC2,     handle: null});
-        // this.plugins.set(MFCSL,   {name: "MFCSL",   file: "./plugins/basic", urlback: "",       enable: this.config.enable.MFCSL,   handle: null});
-        // this.plugins.set(BONGA,   {name: "BONGA",   file: "./plugins/basic", urlback: "",       enable: this.config.enable.Bonga,   handle: null});
-        // this.plugins.set(CAMSODA, {name: "CAMSODA", file: "./plugins/basic", urlback: "",       enable: this.config.enable.Camsoda, handle: null});
-        // this.plugins.set(CAM4,    {name: "CAM4",    file: "./plugins/basic", urlback: "",       enable: this.config.enable.Cam4,    handle: null});
+        // Scan the config.yml directory for plugins to load
+        const allfiles = fs.readdirSync(this.configdir);
+        const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
 
-        for (const [site, plugin] of this.plugins) {
-            if (plugin.enable) {
-                this[site] = require(plugin.file);
-                plugin.handle = new this[site].Plugin(plugin.name, this, this.tui, plugin.urlback);
+        for (let i = 0; i < ymlfiles.length; i++) {
+            const siteConfig = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
+            if (typeof siteConfig.plugin !== "undefined" && siteConfig.enable) {
+                const plugin = require(siteConfig.plugin);
+                this.plugins.push({
+                    code:    plugin,
+                    name:    siteConfig.name,
+                    file:    siteConfig.plugin,
+                    urlback: siteConfig.urlback,
+                    enable:  siteConfig.enable,
+                    handle:  null
+                });
             }
+        }
+
+        for (let i = 0; i < this.plugins.length; i++) {
+            this.plugins[i].handle = new this.plugins[i].code.Plugin(this.plugins[i].name, this, this.tui, this.plugins[i].urlback);
         }
 
         process.on("SIGINT", () => {
@@ -51,10 +45,10 @@ class Streamdvr extends Dvr {
     }
 
     async start() {
-        for (const plugin of this.plugins.values()) {
-            if (plugin.enable) {
-                await plugin.handle.connect();
-                this.run(plugin.handle);
+        for (let i = 0; i < this.plugins.length; i++) {
+            if (this.plugins[i].enable) {
+                await this.plugins[i].handle.connect();
+                this.run(this.plugins[i].handle);
             }
         }
         super.start();

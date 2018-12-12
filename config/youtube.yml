@@ -1,4 +1,8 @@
-siteUrl: "https://www.youtube.com/channel/"
+name: YOUTUBE
+plugin: ./plugins/basic
+siteUrl: https://www.youtube.com/channel/
+urlback: ""
+enable: true
 m3u8fetch: scripts/m3u8_youtubedl.sh
 recorder: scripts/record_ffmpeg.sh
 scanInterval: 300
