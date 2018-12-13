@@ -1,11 +1,4 @@
 enable:
-  MFC: true
-  CB: true
-  Pixiv: true
-  Twitch: true
-  Mixer: true
-  Youtube: true
-  FC2: true
   daemon: false
 recording:
   autoConvertType: mp4

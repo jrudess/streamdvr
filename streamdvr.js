@@ -23,9 +23,8 @@ class Streamdvr extends Dvr {
         for (let i = 0; i < ymlfiles.length; i++) {
             const siteConfig = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
             if (typeof siteConfig.plugin !== "undefined" && siteConfig.enable) {
-                const plugin = require(siteConfig.plugin);
                 this.plugins.push({
-                    code:    plugin,
+                    code:    require(siteConfig.plugin),
                     name:    siteConfig.name,
                     file:    siteConfig.plugin,
                     urlback: siteConfig.urlback,
