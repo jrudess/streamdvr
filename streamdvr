@@ -36,8 +36,8 @@ class Streamdvr extends Dvr {
             }
         }
 
-        for (let i = 0; i < this.plugins.length; i++) {
-            this.plugins[i].handle = new this.plugins[i].code.Plugin(this.plugins[i].name, this, this.tui, this.plugins[i].urlback);
+        for (const plugin of this.plugins.values()) {
+            plugin.handle = new plugin.code.Plugin(plugin.name, this, this.tui, plugin.urlback);
         }
 
         process.on("SIGINT", () => {

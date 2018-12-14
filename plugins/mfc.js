@@ -1,7 +1,9 @@
-const mfc     = require("MFCAuto");
-const {Site}  = require("../core/site");
-const _       = require("underscore");
-const colors  = require("colors/safe");
+"use strict";
+
+const mfc    = require("MFCAuto");
+const {Site} = require("../core/site");
+const _      = require("underscore");
+const colors = require("colors/safe");
 
 class Mfc extends Site {
     constructor(name, dvr, tui, urlback) {

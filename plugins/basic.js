@@ -1,3 +1,5 @@
+"use strict";
+
 const colors      = require("colors/safe");
 const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
@@ -133,9 +135,9 @@ class Basic extends Site {
         }
 
         const nms = [];
-        this.streamerList.forEach((value) => {
-            nms.push(value.nm);
-        });
+        for (const streamer of this.streamerList.values()) {
+            nms.push(streamer.nm);
+        }
 
         const serRuns = this.serialize(nms);
 

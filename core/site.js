@@ -1,3 +1,5 @@
+"use strict";
+
 const yaml    = require("js-yaml");
 const fs      = require("fs");
 const _       = require("underscore");
@@ -8,29 +10,29 @@ const {spawn} = require("child_process");
 class Site {
     constructor(siteName, dvr, tui) {
         this.siteName   = siteName;
+        this.dvr        = dvr;
+        this.tui        = tui;
         this.padName    = siteName.padEnd(9, " ");
         this.listName   = siteName.toLowerCase();
-        this.cfgname    = dvr.configdir + this.listName + ".yml";
-        this.updatename = dvr.configdir + this.listName + "_updates.yml";
+        this.cfgName    = dvr.configdir + this.listName + ".yml";
+        this.updateName = dvr.configdir + this.listName + "_updates.yml";
 
-        // site.yml
-        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgname, "utf8"));
+        // <plugin>.yml
+        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgName, "utf8"));
 
         this.siteDir = "_" + this.listName; // Directory suffix
-        this.dvr = dvr;                     // Handle to parent dvr for global post-process queue
-        this.tui = tui;                     // Blessed UI elements
         this.tempList = [];                 // temp record list (session only)
         this.streamerList = new Map();      // Refer to addStreamer() for JSON entries
         this.streamerListDamaged = false;
 
-        if (this.dvr.config.tui.enable) {
+        if (dvr.config.tui.enable) {
             tui.addSite(this);
         }
 
         this.infoMsg(this.siteConfig.streamers.length + " streamer(s) in config");
 
         if (typeof this.siteConfig.siteUrl === "undefined") {
-            this.errMsg(this.cfgname + " is missing siteUrl");
+            this.errMsg(this.cfgName + " is missing siteUrl");
         }
     }
 
@@ -101,13 +103,13 @@ class Site {
     }
 
     async processUpdates(options) {
-        const stats = fs.statSync(this.updatename);
+        const stats = fs.statSync(this.updateName);
         if (!stats.isFile()) {
-            this.dbgMsg(this.updatename + " does not exist");
+            this.dbgMsg(this.updateName + " does not exist");
             return;
         }
 
-        const updates = yaml.safeLoad(fs.readFileSync(this.updatename, "utf8"));
+        const updates = yaml.safeLoad(fs.readFileSync(this.updateName, "utf8"));
         let streamers = [];
 
         if (options.add) {
@@ -128,7 +130,7 @@ class Site {
 
         // clear the processed array from file
         if (streamers.length > 0) {
-            fs.writeFileSync(this.updatename, yaml.safeDump(updates), "utf8");
+            fs.writeFileSync(this.updateName, yaml.safeDump(updates), "utf8");
         }
 
         try {
@@ -156,8 +158,8 @@ class Site {
                     item.paused = false;
                     this.refresh(streamer.uid);
                 }
-                this.streamerListDamaged = true;
                 if (this.dvr.config.tui.enable) {
+                    this.streamerListDamaged = true;
                     this.tui.render();
                 }
             }
@@ -184,16 +186,16 @@ class Site {
     }
 
     pause(state) {
-        this.streamerList.forEach((value) => {
-            value.paused = state;
+        for (const streamer of this.streamerList.values) {
+            streamer.paused = state;
             if (state) {
-                this.haltCapture(value.uid);
-            } else if (value.state !== "Offline") {
-                this.refresh(value.uid);
+                this.haltCapture(streamer.uid);
+            } else if (streamer.state !== "Offline") {
+                this.refresh(streamer.uid);
             }
-        });
-        this.streamerListDamaged = true;
+        }
         if (this.dvr.config.tui.enable) {
+            this.streamerListDamaged = true;
             this.tui.render();
         }
     }
@@ -236,8 +238,8 @@ class Site {
                 isTemp: isTemp,
                 paused: false
             });
-            this.streamerListDamaged = true;
             if (this.dvr.config.tui.enable) {
+                this.streamerListDamaged = true;
                 this.tui.render();
             }
         }
@@ -250,8 +252,8 @@ class Site {
             this.infoMsg(colors.name(streamer.nm) + " removed from capture list.");
             this.haltCapture(streamer.uid);
             this.streamerList.delete(streamer.uid); // Note: deleting before recording/post-processing finishes
-            this.streamerListDamaged = true;
             if (this.dvr.config.tui.enable) {
+                this.streamerListDamaged = true;
                 this.tui.render();
             }
             dirty = true;
@@ -291,8 +293,8 @@ class Site {
             const streamer = this.streamerList.get(uid);
             streamer.filename = filename;
             streamer.captureProcess = captureProcess;
-            this.streamerListDamaged = true;
             if (this.dvr.config.tui.enable) {
+                this.streamerListDamaged = true;
                 this.tui.render();
             }
         }
@@ -301,20 +303,20 @@ class Site {
     getNumCapsInProgress() {
         let count = 0;
 
-        this.streamerList.forEach((value) => {
-            count += value.captureProcess !== null;
-        });
+        for (const streamer of this.streamerList.values()) {
+            count += streamer.captureProcess !== null;
+        }
 
         return count;
     }
 
     haltAllCaptures() {
-        this.streamerList.forEach((streamer) => {
+        for (const streamer of this.streamerList.values()) {
             // Don't kill post-process jobs, or recording can get lost.
             if (streamer.captureProcess !== null && streamer.postProcess === 0) {
                 streamer.captureProcess.kill("SIGINT");
             }
-        });
+        }
     }
 
     haltCapture(uid) {
@@ -329,14 +331,14 @@ class Site {
     async writeConfig() {
         let filehandle;
         try {
-            filehandle = await fs.promises.open(this.cfgname, "w");
+            filehandle = await fs.promises.open(this.cfgName, "w");
             await filehandle.writeFile(yaml.safeDump(this.siteConfig));
         } finally {
             if (filehandle) {
-                this.dbgMsg("Rewriting " + this.cfgname);
+                this.dbgMsg("Rewriting " + this.cfgName);
                 await filehandle.close();
             } else {
-                this.errMsg("Could not write " + this.cfgname);
+                this.errMsg("Could not write " + this.cfgName);
             }
         }
     }

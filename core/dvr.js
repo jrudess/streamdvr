@@ -1,3 +1,5 @@
+"use strict";
+
 const fs      = require("fs");
 const mv      = require("mv");
 const colors  = require("colors/safe");
@@ -223,7 +225,7 @@ class Dvr {
             if (site.siteConfig.scanInterval) {
                 await sleep(site.siteConfig.scanInterval * 1000);
             } else {
-                site.errMsg("Missing scanInterval option in " + site.cfgname + ". Using 300s instead");
+                site.errMsg("Missing scanInterval option in " + site.cfgName + ". Using 300s instead");
                 await sleep(300 * 1000);
             }
         }

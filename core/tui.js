@@ -1,3 +1,5 @@
+"use strict";
+
 const blessed = require("neo-blessed");
 const colors  = require("colors/safe");
 
