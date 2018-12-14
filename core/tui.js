@@ -302,16 +302,16 @@ class Tui {
         const table = [];
         let first = true;
         this.longestName = 7; // Sets a minimum size
-        for (let i = 0; i < this.SITES.length; i++) {
+        for (const site of this.SITES.values()) {
             let sortedKeys = [];
-            const streamerList = this.SITES[i].streamerList;
+            const streamerList = site.streamerList;
             if (streamerList.size > 0) {
                 if (!first) {
                     table.push(["", ""]);
                 } else {
                     first = false;
                 }
-                table.push([this.SITES[i].siteName, "", ""]);
+                table.push([site.siteName, "", ""]);
 
                 // Map keys are UID, but want to sort list by name.
                 sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
@@ -357,9 +357,9 @@ class Tui {
 
         if (!this.listHidden) {
             let listDamaged = false;
-            for (let i = 0; i < this.SITES.length; i++) {
-                listDamaged |= this.SITES[i].streamerListDamaged;
-                this.SITES[i].streamerListDamaged = false;
+            for (const site of this.SITES.values()) {
+                listDamaged |= site.streamerListDamaged;
+                site.streamerListDamaged = false;
             }
             if (listDamaged) {
                 this.rebuildStreamerList();
@@ -417,19 +417,19 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(site, nm, options) {
-        for (let i = 0; i < this.SITES.length; i++) {
-            if (site === this.SITES[i].listName) {
+    async updateList(siteName, nm, options) {
+        for (const site of this.SITES.values()) {
+            if (siteName === site.listName) {
                 if (nm === "") {
                     // Site operations
                     switch (options.pause) {
-                    case 1: this.SITES[i].pause(true);  break;
-                    case 2: this.SITES[i].pause(false); break;
+                    case 1: site.pause(true);  break;
+                    case 2: site.pause(false); break;
                     }
                 } else {
-                    const dirty = await this.SITES[i].updateList(nm, options) && !options.isTemp;
+                    const dirty = await site.updateList(nm, options) && !options.isTemp;
                     if (dirty) {
-                        await this.SITES[i].writeConfig();
+                        await site.writeConfig();
                     }
                 }
                 return;
