@@ -48,9 +48,7 @@ Refer to `config/config.yml` for all configuration options.
     * %LOCALAPPDATA%/streamdvr/ on windows
   * $cwd/config/
 
-* To run: `node streamdvr.js`
-* To run without color: `node --no-color streamdvr.js`
-* To suppress node warnings: `node --no-warnings streamdvr.js`
+* To run: `streamdvr`
 
 * TUI navigation:
     * `1` to focus the streamer list, `Esc` to unfocus
