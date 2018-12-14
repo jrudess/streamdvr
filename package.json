@@ -21,9 +21,9 @@
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
         "MFCAuto": "github:Damianonymous/MFCAuto",
-        "colors": "^1.3.2",
+        "colors": "^1.3.3",
         "js-yaml": "^3.12.0",
-        "moment": "^2.22.2",
+        "moment": "^2.23.0",
         "mv": "^2.1.1",
         "neo-blessed": "github:embark-framework/neo-blessed",
         "request-promise-native": "^1.0.5",
