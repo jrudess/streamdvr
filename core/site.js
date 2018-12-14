@@ -387,9 +387,10 @@ class Site {
 
         const streamer = capInfo.streamer;
         const fullname = capInfo.filename + ".ts";
+        const script   = this.dvr.calcPath(this.siteConfig.recorder);
 
-        this.dbgMsg("Starting recording: " + colors.cmd(this.siteConfig.recorder + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
-        const captureProcess = spawn(this.siteConfig.recorder, capInfo.spawnArgs);
+        this.dbgMsg("Starting recording: " + colors.cmd(script + " " + capInfo.spawnArgs.toString().replace(/,/g, " ")));
+        const captureProcess = spawn(script, capInfo.spawnArgs);
 
         if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});

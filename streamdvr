@@ -15,7 +15,7 @@ function sleep(time) {
 class Streamdvr extends Dvr {
 
     constructor() {
-        super();
+        super(__dirname);
         this.plugins = [];
 
         // Scan the config.yml directory for plugins to load

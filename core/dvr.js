@@ -12,8 +12,8 @@ function sleep(time) {
 
 class Dvr {
 
-    constructor() {
-
+    constructor(dir) {
+        this.path = dir;
         this.tryingToExit = false;
 
         this.configdir = "";
@@ -108,6 +108,14 @@ class Dvr {
         return fulldir;
     }
 
+    calcPath(file) {
+        // Check if file is relative or absolute
+        if (file.charAt(0) !== "/") {
+            return this.path + "/" + file;
+        }
+        return file;
+    }
+
     // Post processing is handled globally instead of per-site for easier
     // control of the number of jobs running.  Only one job at a time is
     // allowed right now, but a config option should be added to control it.
@@ -145,8 +153,12 @@ class Dvr {
             this.config.recording.autoConvertType
         ];
 
-        site.infoMsg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " + colors.cmd("scripts/postprocess_ffmpeg.sh " + args.toString().replace(/,/g, " ")));
-        const myCompleteProcess = spawn(this.config.recording.postprocess, args);
+        const script = this.calcPath(this.config.recording.postprocess);
+
+        site.infoMsg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " +
+            colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+
+        const myCompleteProcess = spawn(script, args);
         site.storeCapInfo(streamer.uid, finalName);
 
         myCompleteProcess.on("close", () => {
@@ -165,8 +177,12 @@ class Dvr {
 
     postScript(site, streamer, finalName) {
         if (this.config.postprocess) {
+            const script = this.calcPath(this.config.postprocess);
             const args = [this.config.recording.completeDirectory, finalName];
-            const userPostProcess = spawn(this.config.postprocess, args);
+
+            site.infoMsg(colors.name(streamer.nm) + " running global postprocess script: " +
+                colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+            const userPostProcess = spawn(script, args);
 
             userPostProcess.on("close", () => {
                 site.infoMsg(colors.name(streamer.nm) + " done post-processing " + finalName);
