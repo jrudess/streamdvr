@@ -158,10 +158,7 @@ class Site {
                     streamer.paused = false;
                     this.refresh(streamer);
                 }
-                if (this.dvr.config.tui.enable) {
-                    this.streamerListDamaged = true;
-                    this.tui.render();
-                }
+                this.render(true);
             }
             return false;
         } else if (options.add) {
@@ -194,10 +191,7 @@ class Site {
                 this.refresh(streamer);
             }
         }
-        if (this.dvr.config.tui.enable) {
-            this.streamerListDamaged = true;
-            this.tui.render();
-        }
+        this.render(true);
     }
 
     updateStreamers(list, add) {
@@ -211,19 +205,15 @@ class Site {
     }
 
     addStreamer(id, list, isTemp) {
-        if (typeof id === "undefined") {
-            // For mfc, when a bad username is looked up, an empty
-            // object is returned
-            return false;
-        }
-
         let added = false;
+
         if (list.indexOf(id.uid) === -1) {
             this.infoMsg(colors.name(id.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
             this.errMsg(colors.name(id.nm) + " is already in the capture list");
         }
+
         if (!this.streamerList.has(id.uid)) {
             this.streamerList.set(id.uid, {
                 uid: id.uid,
@@ -238,35 +228,28 @@ class Site {
                 isTemp: isTemp,
                 paused: false
             });
-            if (this.dvr.config.tui.enable) {
-                this.streamerListDamaged = true;
-                this.tui.render();
-            }
+            this.render(true);
+            this.refresh(this.streamerList.get(id.uid));
         }
         return added;
     }
 
     removeStreamer(id) {
-        let dirty = false;
         if (this.streamerList.has(id.uid)) {
             this.infoMsg(colors.name(id.nm) + " removed from capture list.");
             this.haltCapture(id.uid);
             this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
-            if (this.dvr.config.tui.enable) {
-                this.streamerListDamaged = true;
-                this.tui.render();
-            }
-            dirty = true;
-        } else {
-            this.errMsg(colors.name(id.nm) + " not in capture list.");
+            this.render(true);
+            return true;
         }
-        return dirty;
+        this.errMsg(colors.name(id.nm) + " not in capture list.");
+        return false;
     }
 
     checkStreamerState(streamer, msg, isStreaming, prevState) {
         if (streamer.state !== prevState) {
             this.infoMsg(msg);
-            this.streamerListDamaged = true;
+            this.streamerLististDamaged = true;
         }
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
@@ -274,9 +257,7 @@ class Site {
             this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + this.siteConfig.recorder + " capture process.");
             this.haltCapture(streamer.uid);
         }
-        if (this.dvr.config.tui.enable) {
-            this.tui.render();
-        }
+        this.render(false);
     }
 
     getStreamers() {
@@ -293,10 +274,7 @@ class Site {
             const streamer = this.streamerList.get(uid);
             streamer.filename = filename;
             streamer.captureProcess = captureProcess;
-            if (this.dvr.config.tui.enable) {
-                this.streamerListDamaged = true;
-                this.tui.render();
-            }
+            this.render(true);
         }
     }
 
@@ -465,6 +443,12 @@ class Site {
             }
 
             this.refresh(streamer);
+        }
+    }
+
+    render(listDamaged) {
+        if (this.dvr.config.tui.enable) {
+            this.tui.render(listDamaged || this.streamerListDamaged, this);
         }
     }
 

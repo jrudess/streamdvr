@@ -350,19 +350,15 @@ class Tui {
         this.logbody.left = this.calcLogLeft();
     }
 
-    render() {
+    render(listDamaged, site) {
         if (!this.config.tui.enable || typeof this.screen === "undefined") {
             return;
         }
 
-        if (!this.listHidden) {
-            let listDamaged = false;
-            for (const site of this.SITES.values()) {
-                listDamaged |= site.streamerListDamaged;
+        if (!this.listHidden && listDamaged) {
+            this.rebuildStreamerList();
+            if (site) {
                 site.streamerListDamaged = false;
-            }
-            if (listDamaged) {
-                this.rebuildStreamerList();
             }
         }
 
@@ -381,6 +377,7 @@ class Tui {
             case "show":
                 this.logbody.left = this.calcLogLeft();
                 this.listHidden   = false;
+                this.rebuildStreamerList();
                 this.list.show();
                 break;
             case "hide":
