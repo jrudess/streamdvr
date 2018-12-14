@@ -49,7 +49,7 @@ Refer to `config/config.yml` for all configuration options.
   * $cwd/config/
 
 * To run: `streamdvr`
-* To supress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
+* To suppress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
 
 * TUI navigation:
     * `1` to focus the streamer list, `Esc` to unfocus

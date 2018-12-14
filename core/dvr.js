@@ -161,7 +161,7 @@ class Dvr {
             colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
 
         const myCompleteProcess = spawn(script, args);
-        site.storeCapInfo(streamer.uid, finalName);
+        site.storeCapInfo(streamer, finalName);
 
         myCompleteProcess.on("close", () => {
             if (!this.config.recording.keepTsFile) {

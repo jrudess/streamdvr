@@ -52,7 +52,7 @@ class Site {
     checkFileSize() {
         const maxSize = this.dvr.config.recording.maxSize;
         for (const streamer of this.streamerList.values()) {
-            if (streamer.captureProcess === null) {
+            if (streamer.captureProcess === null || streamer.postProcess) {
                 continue;
             }
 
@@ -254,7 +254,7 @@ class Site {
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, ending " + this.siteConfig.recorder + " capture process.");
+            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, terminating capture process (pid=" + streamer.captureProcess.pid + ")");
             this.haltCapture(streamer.uid);
         }
         this.render(false);
@@ -269,13 +269,10 @@ class Site {
         return true;
     }
 
-    storeCapInfo(uid, filename, captureProcess) {
-        if (this.streamerList.has(uid)) {
-            const streamer = this.streamerList.get(uid);
-            streamer.filename = filename;
-            streamer.captureProcess = captureProcess;
-            this.render(true);
-        }
+    storeCapInfo(streamer, filename, captureProcess) {
+        streamer.filename = filename;
+        streamer.captureProcess = captureProcess;
+        this.render(true);
     }
 
     getNumCapsInProgress() {
@@ -385,7 +382,7 @@ class Site {
 
         if (captureProcess.pid) {
             this.infoMsg(colors.name(streamer.nm) + " recording started: " + colors.file(capInfo.filename + ".ts"));
-            this.storeCapInfo(streamer.uid, fullname, captureProcess);
+            this.storeCapInfo(streamer, fullname, captureProcess);
         }
 
         captureProcess.on("close", () => {
@@ -397,13 +394,13 @@ class Site {
                     } else {
                         this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
                     }
-                    this.storeCapInfo(streamer.uid, "", null);
+                    this.storeCapInfo(streamer, "", null);
                 } else {
                     const sizeMB = stats.size / 1048576;
                     if (sizeMB < this.dvr.config.recording.minSize) {
                         this.infoMsg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
                         fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
-                        this.storeCapInfo(streamer.uid, "", null);
+                        this.storeCapInfo(streamer, "", null);
                     } else {
                         this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
                         if (this.dvr.postProcessQ.length === 1) {
@@ -420,30 +417,17 @@ class Site {
     setProcessing(streamer) {
         // Need to remember post-processing is happening, so that
         // the offline check does not kill postprocess jobs.
-        if (this.streamerList.has(streamer.uid)) {
-            const item = this.streamerList.get(streamer.uid);
-            item.postProcess = 1;
-            this.streamerListDamaged = true;
-        }
+        streamer.postProcess = 1;
+        this.streamerListDamaged = true;
     }
 
     clearProcessing(streamer) {
-        // Note: When manually deleting a streamer that is actively recording,
-        // the record process callback occurs after the streamer is already
-        // removed from streamerList
-        if (this.streamerList.has(streamer.uid)) {
-            const item = this.streamerList.get(streamer.uid);
+        // Note: setting postProcess to null releases program to exit
+        this.storeCapInfo(streamer, "", null);
+        this.streamerListDamaged = true;
 
-            // Note: setting postProcess to null releases program to exit
-            this.storeCapInfo(streamer.uid, "", null);
-            this.streamerListDamaged = true;
-
-            if (item !== null) {
-                item.postProcess = 0;
-            }
-
-            this.refresh(streamer);
-        }
+        streamer.postProcess = 0;
+        this.refresh(streamer);
     }
 
     render(listDamaged) {
