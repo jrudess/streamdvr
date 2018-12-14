@@ -46,10 +46,10 @@ class Streamdvr extends Dvr {
     }
 
     async start() {
-        for (let i = 0; i < this.plugins.length; i++) {
-            if (this.plugins[i].enable) {
-                await this.plugins[i].handle.connect();
-                this.run(this.plugins[i].handle);
+        for (const plugin of this.plugins.values()) {
+            if (plugin.enable) {
+                await plugin.handle.connect();
+                this.run(plugin.handle);
             }
         }
         super.start();

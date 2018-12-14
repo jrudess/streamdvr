@@ -13,8 +13,7 @@ class Basic extends Site {
 
         this.urlback = urlback;
 
-        for (let i = 0; i < this.siteConfig.streamers.length; i++) {
-            const nm = this.siteConfig.streamers[i];
+        for (const nm of this.siteConfig.streamers.values()) {
             this.streamerList.set(nm, {
                 uid:            nm,
                 nm:             nm,
