@@ -24,8 +24,6 @@ class Dvr {
         this.config = null;
         this.loadConfig();
 
-        this.startup = true;
-
         this.logger = null;
         if (this.config.log.enable) {
             const {Console} = require("console");
