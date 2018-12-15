@@ -24,7 +24,7 @@ class Dvr {
         this.config = null;
         this.loadConfig();
 
-        this.startup = 1;
+        this.startup = true;
 
         this.logger = null;
         if (this.config.log.enable) {
@@ -187,7 +187,7 @@ class Dvr {
             const userPostProcess = spawn(script, args);
 
             userPostProcess.on("close", () => {
-                site.infoMsg(colors.name(streamer.nm) + " done post-processing " + finalName);
+                site.infoMsg(colors.name(streamer.nm) + " done post-processing " + colors.file(finalName));
                 this.next(site, streamer);
             });
         } else {
@@ -207,18 +207,18 @@ class Dvr {
     }
 
     async run(site) {
-        await site.getStreamers({init: true});
+        let startup = true;
+        await site.getStreamers({init: startup});
         while (true) {
             try {
-                if (this.startup) {
-                    this.startup = 0;
-                } else {
+                if (!startup) {
                     await site.disconnect();
                     await site.connect();
                 }
-                await site.processUpdates({add: true});
-                await site.processUpdates({add: false});
+                await site.processUpdates({add: true,  init: startup});
+                await site.processUpdates({add: false, init: startup});
                 await site.getStreamers();
+                startup = false;
             } catch (err) {
                 site.errMsg(err.toString());
             }

@@ -134,7 +134,7 @@ class Site {
         }
 
         try {
-            const dirty = await this.updateStreamers(list, options.add);
+            const dirty = await this.updateStreamers(list, options);
             if (dirty) {
                 await this.writeConfig();
             }
@@ -156,13 +156,13 @@ class Site {
                 } else if (options.pause === 2) {
                     this.infoMsg(colors.name(id.nm) + " is unpaused.");
                     streamer.paused = false;
-                    this.refresh(streamer);
+                    this.refresh(streamer, options);
                 }
                 this.render(true);
             }
             return false;
         } else if (options.add) {
-            if (this.addStreamer(id, list, options.isTemp)) {
+            if (this.addStreamer(id, list, options)) {
                 list.push(id.uid);
                 dirty = true;
             }
@@ -194,21 +194,21 @@ class Site {
         this.render(true);
     }
 
-    updateStreamers(list, add) {
+    updateStreamers(list, options) {
         let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
-            dirty |= this.updateList(list[i], {add: add, pause: 0, isTemp: false});
+            dirty |= this.updateList(list[i], {add: options.add, pause: 0, isTemp: false, init: options.init});
         }
 
         return dirty;
     }
 
-    addStreamer(id, list, isTemp) {
+    addStreamer(id, list, options) {
         let added = false;
 
         if (list.indexOf(id.uid) === -1) {
-            this.infoMsg(colors.name(id.nm) + " added to capture list" + (isTemp ? " (temporarily)" : ""));
+            this.infoMsg(colors.name(id.nm) + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
             this.errMsg(colors.name(id.nm) + " is already in the capture list");
@@ -225,11 +225,13 @@ class Site {
                 postProcess: 0,
                 filesize: 0,
                 stuckcounter: 0,
-                isTemp: isTemp,
+                isTemp: options.isTemp,
                 paused: false
             });
             this.render(true);
-            this.refresh(this.streamerList.get(id.uid));
+            if (!options || !options.init) {
+                this.refresh(this.streamerList.get(id.uid), options);
+            }
         }
         return added;
     }
@@ -249,7 +251,7 @@ class Site {
     checkStreamerState(streamer, msg, isStreaming, prevState) {
         if (streamer.state !== prevState) {
             this.infoMsg(msg);
-            this.streamerLististDamaged = true;
+            this.streamerListDamaged = true;
         }
         if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
@@ -351,9 +353,11 @@ class Site {
         return completeDir;
     }
 
-    async refresh(streamer) {
-        if (!this.dvr.tryingToExit) {
-            await this.checkStreamerState(streamer.uid);
+    async refresh(streamer, options) {
+        if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
+            if (!options || !options.init) {
+                await this.checkStreamerState(streamer.uid);
+            }
         }
     }
 

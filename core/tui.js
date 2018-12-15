@@ -245,9 +245,9 @@ class Tui {
             case "pause":
             case "unpause":
                 if (tokens.length >= 3) {
-                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp});
+                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
                 } else if (tokens.length === 2) {
-                    this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp});
+                    this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
                 }
                 break;
 
