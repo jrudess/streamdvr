@@ -2,7 +2,6 @@
 
 const fs      = require("fs");
 const mv      = require("mv");
-const colors  = require("colors/safe");
 const yaml    = require("js-yaml");
 const path    = require("path");
 const {spawn} = require("child_process");
@@ -15,6 +14,7 @@ function sleep(time) {
 class Dvr {
 
     constructor(dir) {
+        this.colors = require("colors/safe");
         this.path = dir;
         this.tryingToExit = false;
 
@@ -74,7 +74,7 @@ class Dvr {
             process.exit(1);
         }
 
-        colors.setTheme({
+        this.colors.setTheme({
             name:    this.config.colors.name,
             state:   this.config.colors.state,
             offline: this.config.colors.offline,
@@ -134,10 +134,10 @@ class Dvr {
         const completeDir = await site.getCompleteDir(streamer);
 
         if (this.config.recording.autoConvertType !== "mp4" && this.config.recording.autoConvertType !== "mkv") {
-            site.dbgMsg(colors.name(streamer.nm) + " recording moved (" + this.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
+            site.dbgMsg(this.colors.name(streamer.nm) + " recording moved (" + this.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
             mv(this.config.recording.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
                 if (err) {
-                    this.errMsg(colors.site(capInfo.filename) + ": " + err.toString());
+                    this.errMsg(this.colors.site(capInfo.filename) + ": " + err.toString());
                 }
             });
 
@@ -155,8 +155,8 @@ class Dvr {
 
         const script = this.calcPath(this.config.recording.postprocess);
 
-        site.infoMsg(colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " +
-            colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+        site.infoMsg(this.colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " +
+            this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
 
         const myCompleteProcess = spawn(script, args);
         site.storeCapInfo(streamer, finalName);
@@ -166,7 +166,7 @@ class Dvr {
                 fs.unlinkSync(this.config.recording.captureDirectory + "/" + fullname);
             }
 
-            site.infoMsg(colors.name(streamer.nm) + " done converting " + finalName);
+            site.infoMsg(this.colors.name(streamer.nm) + " done converting " + finalName);
             this.postScript(site, streamer, finalName);
         });
 
@@ -180,12 +180,12 @@ class Dvr {
             const script = this.calcPath(this.config.postprocess);
             const args = [this.config.recording.completeDirectory, finalName];
 
-            site.infoMsg(colors.name(streamer.nm) + " running global postprocess script: " +
-                colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+            site.infoMsg(this.colors.name(streamer.nm) + " running global postprocess script: " +
+                this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
             const userPostProcess = spawn(script, args);
 
             userPostProcess.on("close", () => {
-                site.infoMsg(colors.name(streamer.nm) + " done post-processing " + colors.file(finalName));
+                site.infoMsg(this.colors.name(streamer.nm) + " done post-processing " + this.colors.file(finalName));
                 this.next(site, streamer);
             });
         } else {

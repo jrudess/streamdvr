@@ -1,6 +1,5 @@
 "use strict";
 
-const colors      = require("colors/safe");
 const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("../core/site");
@@ -41,7 +40,7 @@ class Basic extends Site {
         const proxy       = (this.dvr.config.proxy.enable ? "1 " : "0 ") + this.dvr.config.proxy.server;
         const script      = this.dvr.calcPath(this.siteConfig.m3u8fetch);
         const cmd         = script + " " + streamerUrl + " " + proxy;
-        this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
+        this.dbgMsg(this.colors.name(nm) + " running: " + this.colors.cmd(cmd));
         try {
             // m3u8 url in stdout
             const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
@@ -66,7 +65,7 @@ class Basic extends Site {
         const prevState = streamer.state;
         const stream    = await this.m3u8Script(nm);
 
-        let msg = colors.name(nm);
+        let msg = this.colors.name(nm);
         if (stream.status) {
             msg += " is streaming.";
             streamer.state = "Streaming";
@@ -77,10 +76,10 @@ class Basic extends Site {
 
         super.checkStreamerState(streamer, msg, stream.status, prevState);
 
-        if (streamer.paused) {
-            this.dbgMsg(colors.name(nm) + " is paused, recording not started.");
-        } else if (stream.status) {
-            if (!options || !options.init) {
+        if (stream.status) {
+            if (streamer.paused) {
+                this.dbgMsg(this.colors.name(streamer.nm) + " is paused, recording not started.");
+            } else if (!options || !options.init) {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }
         }

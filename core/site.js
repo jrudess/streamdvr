@@ -16,6 +16,7 @@ class Site {
         this.listName   = siteName.toLowerCase();
         this.cfgName    = dvr.configdir + this.listName + ".yml";
         this.updateName = dvr.configdir + this.listName + "_updates.yml";
+        this.colors     = dvr.colors;
 
         // <plugin>.yml
         this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgName, "utf8"));

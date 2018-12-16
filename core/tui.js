@@ -1,13 +1,13 @@
 "use strict";
 
 const blessed = require("neo-blessed");
-const colors  = require("colors/safe");
 
 class Tui {
     constructor(config, dvr) {
 
         this.config = config;
         this.dvr = dvr;
+        this.colors = dvr.colors;
         this.SITES = [];
         this.logHidden = false;
         this.listHidden = true;
@@ -85,9 +85,9 @@ class Tui {
             }
         });
         if (this.config.tui.allowUnicode) {
-            this.prompt.content = colors.prompt("❯ ");
+            this.prompt.content = this.colors.prompt("❯ ");
         } else {
-            this.prompt.content = colors.prompt("> ");
+            this.prompt.content = this.colors.prompt("> ");
         }
         this.prompt.hide();
 
