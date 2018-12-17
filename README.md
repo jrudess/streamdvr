@@ -78,3 +78,6 @@ Refer to `config/config.yml` for all configuration options.
 
 Every site that is supported by either streamlink or youtube-dl will work with StreamDVR.  All that is necessary is to create a new configuration file with the site's details.  Refer to any existing yml file in the config directory for an example.
 
+* Adding new lookup utilities and recorders
+
+All support for streaming sites is handled by 3rd party programs.  The site configuration yml files specify the m3u8 lookup and record scripts to use.   Adding support for new programs requires adding new wrapper scripts and using those scripts in the yml configuration file.
