@@ -17,7 +17,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
     * generate thumbnail previews
     * do anything you want
 
-* Supported sites: Twitch, Mixer, Youtube, Pixiv
+* Supported sites: Twitch, Mixer, Youtube, Pixiv, Smashcast
 
 * Docker available at https://hub.docker.com/r/purrsevere/streamdvr-docker/
 
