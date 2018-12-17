@@ -74,3 +74,7 @@ Refer to `config/config.yml` for all configuration options.
     args=("$@")
     notify-send "streamdvr" "Done recording ${args[1]}"
 ```
+* Adding new plugins
+
+Every site that is supported by either streamlink or youtube-dl will work with StreamDVR.  All that is necessary is to create a new configuration file with the site's details.  Refer to any existing yml file in the config directory for an example.
+
