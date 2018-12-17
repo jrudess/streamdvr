@@ -93,7 +93,10 @@ class Site {
             url,
             this.dvr.config.proxy.enable ? "1" : "0",
             this.dvr.config.proxy.server,
-            this.dvr.config.debug.recorder ? "1" : "0"
+            this.dvr.config.debug.recorder ? "1" : "0",
+            this.siteConfig.username ? "1" : "0",
+            this.siteConfig.username ? "--" + this.listName + "-username=" + this.siteConfig.username : "",
+            this.siteConfig.password ? "--" + this.listName + "-password=" + this.siteConfig.password : ""
         ];
 
         if (options && options.params) {

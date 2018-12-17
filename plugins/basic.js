@@ -39,7 +39,10 @@ class Basic extends Site {
         const streamerUrl = this.siteConfig.siteUrl + nm + this.urlback;
         const proxy       = (this.dvr.config.proxy.enable ? "1 " : "0 ") + this.dvr.config.proxy.server;
         const script      = this.dvr.calcPath(this.siteConfig.m3u8fetch);
-        const cmd         = script + " " + streamerUrl + " " + proxy;
+        const username    = this.siteConfig.username ? "--" + this.listName + "-username=" + this.siteConfig.username : "";
+        const password    = this.siteConfig.password ? "--" + this.listName + "-password=" + this.siteConfig.password : "";
+        const auth        = (this.siteConfig.username ? " 1 " : " 0 ") + username + " " + password;
+        const cmd         = script + " " + streamerUrl + " " + proxy + auth;
         this.dbgMsg(this.colors.name(nm) + " running: " + this.colors.cmd(cmd));
         try {
             // m3u8 url in stdout

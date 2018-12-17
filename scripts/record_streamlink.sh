@@ -5,7 +5,7 @@ source $DIR/record_setup.sh
 debugargs=$([ "$debug" = 1 ] && echo "-ldebug" || echo "-Q")
 proxyserver=$([ "$proxyen" = 1 ] && echo "-https-proxy ${args[3]}" || echo "")
 
-streamlink --stream-sorting-excludes live -o "$output" $proxyserver $extraargs $debugargs $url best,best-unfiltered &
+streamlink --stream-sorting-excludes live -o "$output" $proxyserver $username $password $extraargs $debugargs $url best,best-unfiltered &
 record_pid=$!
 
 killarg="" # Note: Streamlink does not respond to SIGINT

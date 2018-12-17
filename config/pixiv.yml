@@ -5,6 +5,8 @@ urlback: ""
 enable: true
 m3u8fetch: scripts/m3u8_streamlink.sh
 recorder: scripts/record_streamlink.sh
+username: ""
+password: ""
 scanInterval: 300
 batchSize: 5
 streamers: []
