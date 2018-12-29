@@ -308,7 +308,8 @@ class Dvr {
     }
 
     msg(msg, options) {
-        this.log(this.colors.time("[" + this.getDateTime() + "]          ") + msg, options);
+        const name = "DVR";
+        this.log(this.colors.time("[" + this.getDateTime() + "] ") + this.colors.site(name.padEnd(9, " ")) + msg, options);
     }
 
     infoMsg(msg) {
