@@ -1,6 +1,7 @@
 "use strict";
 
 const fs      = require("fs");
+const moment  = require("moment");
 const mv      = require("mv");
 const yaml    = require("js-yaml");
 const path    = require("path");
@@ -37,6 +38,20 @@ class Dvr {
         }
 
         this.postProcessQ = [];
+
+        // Scan capture directory for leftover ts files to convert due to bad
+        // prior shutdown
+        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
+        const tsfiles = allfiles.filter((x) => x.match(/.*\.ts/ig));
+
+        for (const ts of tsfiles.values()) {
+            this.postProcessQ.push({site: null, streamer: null, filename: ts.slice(0, -3)});
+        }
+        if (this.postProcessQ.length > 0) {
+            this.dbgMsg("starting startup postprocess");
+            this.postProcess();
+        }
+
     }
 
     findConfig() {
@@ -101,7 +116,7 @@ class Dvr {
         const fulldir = path.resolve(dir);
         fs.mkdirSync(fulldir, {recursive: true}, (err) => {
             if (err) {
-                this.log(err.toString());
+                this.errMsg(err.toString());
                 process.exit(1);
             }
         });
@@ -116,6 +131,17 @@ class Dvr {
         return file;
     }
 
+    async getCompleteDir(site, streamer) {
+        if (streamer === null) {
+            const dir = this.config.recording.completeDirectory + "/UNKNOWN";
+            this.mkdir(dir);
+            return dir;
+        }
+
+        const dir = await site.getCompleteDir(streamer);
+        return dir;
+    }
+
     // Post processing is handled globally instead of per-site for easier
     // control of the number of jobs running.  Only one job at a time is
     // allowed right now, but a config option should be added to control it.
@@ -127,46 +153,66 @@ class Dvr {
 
         // peek into queue, and pop in next()
         const capInfo     = this.postProcessQ[0];
-        const site        = capInfo.site;
+        const site        = capInfo.site === null ? this : capInfo.site;
         const streamer    = capInfo.streamer;
-        const fullname    = capInfo.filename + ".ts";
+        const origname    = capInfo.filename + ".ts";
         const finalName   = capInfo.filename + "." + this.config.recording.autoConvertType;
-        const completeDir = await site.getCompleteDir(streamer);
+        const completeDir = await this.getCompleteDir(site, streamer);
+        const nameprint   = streamer === null ? "" : this.colors.name(streamer.nm) + " ";
 
         if (this.config.recording.autoConvertType !== "mp4" && this.config.recording.autoConvertType !== "mkv") {
-            site.dbgMsg(this.colors.name(streamer.nm) + " recording moved (" + this.config.recording.captureDirectory + "/" + capInfo.filename + ".ts to " + completeDir + "/" + capInfo.filename + ".ts)");
-            mv(this.config.recording.captureDirectory + "/" + fullname, completeDir + "/" + fullname, (err) => {
+            site.dbgMsg(nameprint + "recording moved (" + this.config.recording.captureDirectory + "/" +
+                origname + " to " + completeDir + "/" + origname);
+            mv(this.config.recording.captureDirectory + "/" + origname, completeDir + "/" + origname, (err) => {
                 if (err) {
                     this.errMsg(this.colors.site(capInfo.filename) + ": " + err.toString());
                 }
             });
 
-            this.postScript(site, streamer, fullname);
+            this.postScript(site, streamer, origname);
             return;
         }
 
-        site.setProcessing(streamer);
+        if (site !== this) {
+            site.setProcessing(streamer);
+        }
 
         const args = [
-            this.config.recording.captureDirectory + "/" + fullname,
+            this.config.recording.captureDirectory + "/" + origname,
             completeDir + "/" + finalName,
             this.config.recording.autoConvertType
         ];
 
+        // If the output file already exists, make filename unique
+        let unique = false;
+        let count = 0;
+        while (!unique) {
+            if (fs.existsSync(args[1])) {
+                this.errMsg(args[1] + " already exists");
+                args[1] = completeDir + "/" + capInfo.filename + " (" + count + ")." +
+                    this.config.recording.autoConvertType;
+                count++;
+            } else {
+                unique = true;
+            }
+        }
+
         const script = this.calcPath(this.config.recording.postprocess);
 
-        site.infoMsg(this.colors.name(streamer.nm) + " converting to " + this.config.recording.autoConvertType + ": " +
+        site.infoMsg(nameprint + "converting to " + this.config.recording.autoConvertType + ": " +
             this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
 
         const myCompleteProcess = spawn(script, args);
-        site.storeCapInfo(streamer, finalName);
+        if (site !== this) {
+            site.storeCapInfo(streamer, finalName);
+        }
 
         myCompleteProcess.on("close", () => {
             if (!this.config.recording.keepTsFile) {
-                fs.unlinkSync(this.config.recording.captureDirectory + "/" + fullname);
+                fs.unlinkSync(args[0]);
             }
 
-            site.infoMsg(this.colors.name(streamer.nm) + " done converting " + finalName);
+            site.infoMsg(nameprint + "done converting " + finalName);
             this.postScript(site, streamer, finalName);
         });
 
@@ -177,15 +223,16 @@ class Dvr {
 
     postScript(site, streamer, finalName) {
         if (this.config.postprocess) {
-            const script = this.calcPath(this.config.postprocess);
-            const args = [this.config.recording.completeDirectory, finalName];
+            const script    = this.calcPath(this.config.postprocess);
+            const args      = [this.config.recording.completeDirectory, finalName];
+            const nameprint = streamer === null ? "" : this.colors.name(streamer.nm) + " ";
 
-            site.infoMsg(this.colors.name(streamer.nm) + " running global postprocess script: " +
+            site.infoMsg(nameprint + "running global postprocess script: " +
                 this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
             const userPostProcess = spawn(script, args);
 
             userPostProcess.on("close", () => {
-                site.infoMsg(this.colors.name(streamer.nm) + " done post-processing " + this.colors.file(finalName));
+                site.infoMsg(nameprint + "done post-processing " + this.colors.file(finalName));
                 this.next(site, streamer);
             });
         } else {
@@ -195,7 +242,9 @@ class Dvr {
 
     next(site, streamer) {
 
-        site.clearProcessing(streamer);
+        if (site !== this) {
+            site.clearProcessing(streamer);
+        }
 
         // Pop current job, and start next post-process job (if any)
         this.postProcessQ.shift();
@@ -235,6 +284,16 @@ class Dvr {
         }
     }
 
+    exit() {
+        // Virtual function that can be implemented by extended class
+        // Should probably be using events here.  The TUI exit
+        // characters trigger this.
+    }
+
+    getDateTime() {
+        return moment().format(this.config.recording.dateFormat);
+    }
+
     log(text, options) {
         if (this.config.tui.enable) {
             this.tui.log(text);
@@ -248,10 +307,22 @@ class Dvr {
         }
     }
 
-    exit() {
-        // Virtual function that can be implemented by extended class
-        // Should probably be using events here.  The TUI exit
-        // characters trigger this.
+    msg(msg, options) {
+        this.log(this.colors.time("[" + this.getDateTime() + "]          ") + msg, options);
+    }
+
+    infoMsg(msg) {
+        this.msg("[INFO]  " + msg);
+    }
+
+    errMsg(msg) {
+        this.msg(this.colors.error("[ERROR] ") + msg, {trace: true});
+    }
+
+    dbgMsg(msg) {
+        if (this.config.debug.log) {
+            this.msg(this.colors.debug("[DEBUG] ") + msg);
+        }
     }
 
 }

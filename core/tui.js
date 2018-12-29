@@ -180,6 +180,12 @@ class Tui {
             this.render();
         });
 
+        this.list.key("r", () => {
+            for (let i = 0; i < this.SITES.length; i++) {
+                this.SITES[i].getStreamers();
+            }
+        });
+
         // this.listmenu.on("select", (item, index) => {
         this.listmenu.on("select", () => {
             this.listmenu.hide();
@@ -193,12 +199,6 @@ class Tui {
             this.list.interactive = true;
             this.list.focus();
             this.render();
-        });
-
-        this.list.key("r", () => {
-            for (let i = 0; i < this.SITES.length; i++) {
-                this.SITES[i].getStreamers();
-            }
         });
 
         this.inputBar.on("cancel", () => {

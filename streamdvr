@@ -88,7 +88,7 @@ class Streamdvr extends Dvr {
         if (!this.tryingToExit) {
             this.tryingToExit = true;
             if (this.busy()) {
-                this.log("Stopping all recordings...");
+                this.msg("Stopping all recordings...");
             }
             this.tryExit();
         }
