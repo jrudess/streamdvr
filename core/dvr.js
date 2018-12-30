@@ -28,7 +28,7 @@ class Dvr {
         this.logger = null;
         if (this.config.log.enable) {
             const {Console} = require("console");
-            const attr = (this.config.log.append) ? "a" : "w";
+            const attr = this.config.log.append ? "a" : "w";
             const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
             this.logger = new Console({stdout: logFile, stderr: logFile});
         }
@@ -217,7 +217,7 @@ class Dvr {
         });
 
         myCompleteProcess.on("error", (err) => {
-            site.errMsg(err.toString());
+            this.errMsg(err.toString());
         });
     }
 
