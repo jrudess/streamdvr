@@ -48,7 +48,7 @@ class Dvr {
             this.postProcessQ.push({site: null, streamer: null, filename: ts.slice(0, -3)});
         }
         if (this.postProcessQ.length > 0) {
-            this.dbgMsg("starting startup postprocess");
+            this.dbgMsg("Converting orphaned captures");
             this.postProcess();
         }
 
@@ -65,7 +65,11 @@ class Dvr {
         }
 
         if (checkHome) {
-            this.configdir = process.platform === "win32" ? process.env.APPDATA + "/streamdvr/" : process.env.HOME + "/.config/streamdvr/";
+            if (process.platform === "win32") {
+                this.configdir = process.env.APPDATA + "/streamdvr/";
+            } else {
+                this.configdir = process.env.HOME + "/.config/streamdvr/";
+            }
         }
 
         if (!fs.existsSync(this.configdir + "config.yml")) {

@@ -1,5 +1,5 @@
 [Unit]
-Description=Streamdvr Service
+Description=StreamDVR Service
 After=network.target
 
 [Service]
@@ -7,7 +7,7 @@ Type=simple
 User=user #Your Username
 Group=group #Your Group name. Usually same as your username.
 WorkingDirectory=/home/[username]/StreamDVR
-ExecStart=/home/[username]/.nvm/versions/node/v9.11.1/bin/node /home/[username]/StreamDVR/streamdvr.js
+ExecStart=/usr/bin/streamdvr
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 
