@@ -16,13 +16,16 @@ class Basic extends Site {
 
         for (const nm of this.config.streamers.values()) {
             this.streamerList.set(nm, {
-                uid:         nm,
-                nm:          nm,
-                site:        this.padName,
-                state:       "Offline",
-                filename:    "",
-                capture:     null,
-                postProcess: 0
+                uid:          nm,
+                nm:           nm,
+                site:         this.padName,
+                state:        "Offline",
+                filename:     "",
+                capture:      null,
+                postProcess:  0,
+                filsesize:    0,
+                stuckcounter: 0,
+                paused:       false
             });
         }
         this.redrawList = true;

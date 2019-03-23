@@ -18,6 +18,7 @@ class Site {
         this.tempList     = []; // temp record list (session only)
         this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
         this.redrawList   = false;
+        this.paused       = false;
 
         if (dvr.config.tui.enable) {
             tui.addSite(this);
@@ -139,17 +140,17 @@ class Site {
     updateList(id, options) {
         let dirty = false;
         let list = options.isTemp ? this.tempList : this.config.streamers;
-        if (options.pause > 0) {
+        if (options.pause) {
             if (this.streamerList.has(id.uid)) {
                 const streamer = this.streamerList.get(id.uid);
-                if (options.pause === 1) {
-                    this.infoMsg(id.nm.name + " is paused.");
-                    streamer.paused = true;
-                    this.haltCapture(id.uid);
-                } else if (options.pause === 2) {
+                if (streamer.paused) {
                     this.infoMsg(id.nm.name + " is unpaused.");
                     streamer.paused = false;
                     this.refresh(streamer, options);
+                } else {
+                    this.infoMsg(id.nm.name + " is paused.");
+                    streamer.paused = true;
+                    this.haltCapture(id.uid);
                 }
                 this.render(true);
             }
@@ -175,10 +176,11 @@ class Site {
         return dirty && !options.isTemp;
     }
 
-    pause(state) {
-        for (const streamer of this.streamerList.values) {
-            streamer.paused = state;
-            if (state) {
+    pause() {
+        this.paused = !this.paused;
+        for (const [, streamer] of this.streamerList) {
+            streamer.paused = this.paused;
+            if (this.paused) {
                 this.haltCapture(streamer.uid);
             } else if (streamer.state !== "Offline") {
                 this.refresh(streamer);

@@ -18,6 +18,7 @@ class Tui {
     createTui() {
         this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
         this.screen.title = "streamdvr";
+        this.listSelect = null;
 
         this.list = blessed.listtable({
             top: 0,
@@ -109,7 +110,7 @@ class Tui {
             top: 8,
             left: 18,
             width: 16,
-            height: 7,
+            height: 6,
             padding: {
                 left: 3,
                 right: 3,
@@ -167,9 +168,15 @@ class Tui {
             this.dvr.exit()
         ));
 
-        // this.list.on("select", (item, index) => {
+        this.list.on("selectrow", (item, index) => {
+            if (index < this.list.rows.length) {
+                this.listSelect = this.list.rows[index];
+            } else {
+                this.listSelect = null;
+            }
+        });
+
         this.list.on("select", () => {
-            this.list.interactive = false;
             this.listmenu.show();
             this.listmenu.focus();
             this.render();
@@ -187,8 +194,20 @@ class Tui {
             }
         });
 
-        // this.listmenu.on("select", (item, index) => {
-        this.listmenu.on("select", () => {
+        // this.listmenu.on("select", () => {
+        this.listmenu.on("select", (item, index) => {
+            if (this.listSelect && this.listSelect.length >= 2) {
+                const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                const name = blessed.helpers.stripTags(this.listSelect[0]);
+                switch (index) {
+                case 0: // pause
+                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
+                    break;
+                case 1: // remove
+                    this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
+                    break;
+                }
+            }
             this.listmenu.hide();
             this.list.interactive = true;
             this.list.focus();
@@ -220,9 +239,9 @@ class Tui {
         this.screen.append(this.listmenu);
         this.logbody.focus();
 
+        this.list.selected = 1;
         this.listmenu.pushItem("pause");
         this.listmenu.pushItem("remove");
-        this.listmenu.pushItem("browse");
         this.listmenu.setScrollPerc(100);
 
         // CLI
@@ -238,7 +257,7 @@ class Tui {
             }
 
             const temp  = tokens[0] === "addtemp";
-            const pause = tokens[0] === "pause" ? 1 : tokens[0] === "unpause" ? 2 : 0;
+            const pause = tokens[0] === "pause" || tokens[0] === "unpause";
             const add   = tokens[0] === "add" || tokens[0] === "addtemp";
 
             switch (tokens[0]) {
@@ -303,19 +322,12 @@ class Tui {
 
     rebuildList() {
         const table = [];
-        let first = true;
         this.longestName = 7; // Sets a minimum size
+        table.push(["", "", "", ""]);
         for (const site of this.SITES.values()) {
             let sortedKeys = [];
             const streamerList = site.streamerList;
             if (streamerList.size > 0) {
-                if (!first) {
-                    table.push(["", ""]);
-                } else {
-                    first = false;
-                }
-                table.push([site.siteName, "", ""]);
-
                 // Map keys are UID, but want to sort list by name.
                 sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
                     if (streamerList.get(a).nm < streamerList.get(b).nm) {
@@ -343,7 +355,7 @@ class Tui {
                 }
                 state += "{/}";
                 const temp = value.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
-                table.push([name, temp, state]);
+                table.push([name, temp, site.siteName, state]);
                 if (value.nm.length > this.longestName) {
                     this.longestName = value.nm.length;
                 }
@@ -369,7 +381,7 @@ class Tui {
     }
 
     calcLogLeft() {
-        return 55;
+        return 62;
     }
 
     // Runtime UI adjustments
@@ -421,10 +433,8 @@ class Tui {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
-                    // Site operations
-                    switch (options.pause) {
-                    case 1: site.pause(true);  break;
-                    case 2: site.pause(false); break;
+                    if (options.pause) {
+                        site.pause();
                     }
                 } else {
                     const dirty = await site.updateList(nm, options) && !options.isTemp;
