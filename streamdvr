@@ -23,14 +23,14 @@ class Streamdvr extends Dvr {
         const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
 
         for (let i = 0; i < ymlfiles.length; i++) {
-            const siteConfig = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
-            if (typeof siteConfig.plugin !== "undefined" && siteConfig.enable) {
+            const config = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
+            if (typeof config.plugin !== "undefined" && config.enable) {
                 this.plugins.push({
-                    code:    require(siteConfig.plugin),
-                    name:    siteConfig.name,
-                    file:    siteConfig.plugin,
-                    urlback: siteConfig.urlback,
-                    enable:  siteConfig.enable,
+                    code:    require(config.plugin),
+                    name:    config.name,
+                    file:    config.plugin,
+                    urlback: config.urlback,
+                    enable:  config.enable,
                     handle:  null
                 });
             }

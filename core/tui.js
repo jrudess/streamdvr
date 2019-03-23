@@ -7,7 +7,6 @@ class Tui {
 
         this.config = config;
         this.dvr = dvr;
-        this.colors = dvr.colors;
         this.SITES = [];
         this.logHidden = false;
         this.listHidden = true;
@@ -85,9 +84,9 @@ class Tui {
             }
         });
         if (this.config.tui.allowUnicode) {
-            this.prompt.content = this.colors.prompt("❯ ");
+            this.prompt.content = "❯ ".prompt;
         } else {
-            this.prompt.content = this.colors.prompt("> ");
+            this.prompt.content = "> ".prompt;
         }
         this.prompt.hide();
 
@@ -104,6 +103,7 @@ class Tui {
                 bg: "none"
             }
         });
+        this.inputBar.hide();
 
         this.listmenu = blessed.list({
             top: 8,
@@ -155,6 +155,7 @@ class Tui {
             if (this.screen.focused === this.logbody) {
                 this.list.interactive = false;
                 this.prompt.show();
+                this.inputBar.show();
                 this.render();
                 this.inputBar.focus();
             }
@@ -204,6 +205,7 @@ class Tui {
         this.inputBar.on("cancel", () => {
             this.prompt.hide();
             this.inputBar.clearValue();
+            this.inputBar.hide();
             this.render();
         });
 
@@ -227,6 +229,7 @@ class Tui {
         this.inputBar.on("submit", (text) => {
             this.prompt.hide();
             this.inputBar.clearValue();
+            this.inputBar.hide();
 
             const tokens = text.split(" ");
             if (tokens.length === 0) {
@@ -298,7 +301,7 @@ class Tui {
         }
     }
 
-    rebuildStreamerList() {
+    rebuildList() {
         const table = [];
         let first = true;
         this.longestName = 7; // Sets a minimum size
@@ -326,20 +329,20 @@ class Tui {
             }
             for (let j = 0; j < sortedKeys.length; j++) {
                 const value = streamerList.get(sortedKeys[j]);
-                const name  = "{" + this.dvr.config.colors.name + "-fg}" + value.nm + "{/}";
+                const name  = "{" + this.config.colors.name + "-fg}" + value.nm + "{/}";
                 let state;
                 if (value.filename === "") {
                     if (value.state === "Offline") {
-                        state = "{" + this.dvr.config.colors.offline + "-fg}";
+                        state = "{" + this.config.colors.offline + "-fg}";
                     } else {
-                        state = "{" + this.dvr.config.colors.state + "-fg}";
+                        state = "{" + this.config.colors.state + "-fg}";
                     }
                     state += value.state + (value.paused ? " [paused]" : "");
                 } else {
-                    state = "{" + this.dvr.config.colors.file + "-fg}" + value.filename;
+                    state = "{" + this.config.colors.file + "-fg}" + value.filename;
                 }
                 state += "{/}";
-                const temp = value.isTemp ? ("{" + this.dvr.config.colors.state + "-fg}[temp]{/}") : "";
+                const temp = value.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
                 table.push([name, temp, state]);
                 if (value.nm.length > this.longestName) {
                     this.longestName = value.nm.length;
@@ -350,15 +353,15 @@ class Tui {
         this.logbody.left = this.calcLogLeft();
     }
 
-    render(listDamaged, site) {
+    render(redrawList, site) {
         if (!this.config.tui.enable || typeof this.screen === "undefined") {
             return;
         }
 
-        if (!this.listHidden && listDamaged) {
-            this.rebuildStreamerList();
+        if (!this.listHidden && redrawList) {
+            this.rebuildList();
             if (site) {
-                site.streamerListDamaged = false;
+                site.redrawList = false;
             }
         }
 
@@ -377,7 +380,7 @@ class Tui {
             case "show":
                 this.logbody.left = this.calcLogLeft();
                 this.listHidden   = false;
-                this.rebuildStreamerList();
+                this.rebuildList();
                 this.list.show();
                 break;
             case "hide":

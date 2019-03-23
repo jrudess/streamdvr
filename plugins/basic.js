@@ -14,18 +14,18 @@ class Basic extends Site {
 
         this.urlback = urlback;
 
-        for (const nm of this.siteConfig.streamers.values()) {
+        for (const nm of this.config.streamers.values()) {
             this.streamerList.set(nm, {
-                uid:            nm,
-                nm:             nm,
-                site:           this.padName,
-                state:          "Offline",
-                filename:       "",
-                captureProcess: null,
-                postProcess:    0
+                uid:         nm,
+                nm:          nm,
+                site:        this.padName,
+                state:       "Offline",
+                filename:    "",
+                capture:     null,
+                postProcess: 0
             });
         }
-        this.streamerListDamaged = true;
+        this.redrawList = true;
     }
 
     updateList(nm, options) {
@@ -36,14 +36,14 @@ class Basic extends Site {
         // arg0 = url
         // arg1 = proxy enable
         // arg2 = proxy server
-        const streamerUrl = this.siteConfig.siteUrl + nm + this.urlback;
+        const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const proxy       = (this.dvr.config.proxy.enable ? "1 " : "0 ") + this.dvr.config.proxy.server;
-        const script      = this.dvr.calcPath(this.siteConfig.m3u8fetch);
-        const username    = this.siteConfig.username ? "--" + this.listName + "-username=" + this.siteConfig.username : "";
-        const password    = this.siteConfig.password ? "--" + this.listName + "-password=" + this.siteConfig.password : "";
-        const auth        = (this.siteConfig.username ? " 1 " : " 0 ") + username + " " + password;
+        const script      = this.dvr.calcPath(this.config.m3u8fetch);
+        const username    = this.config.username ? "--" + this.listName + "-username=" + this.config.username : "";
+        const password    = this.config.password ? "--" + this.listName + "-password=" + this.config.password : "";
+        const auth        = (this.config.username ? " 1 " : " 0 ") + username + " " + password;
         const cmd         = script + " " + streamerUrl + " " + proxy + auth;
-        this.dbgMsg(this.colors.name(nm) + " running: " + this.colors.cmd(cmd));
+        this.dbgMsg(nm.name + " running: " + cmd.cmd);
         try {
             // m3u8 url in stdout
             const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
@@ -68,7 +68,7 @@ class Basic extends Site {
         const prevState = streamer.state;
         const stream    = await this.m3u8Script(nm);
 
-        let msg = this.colors.name(nm);
+        let msg = nm.name;
         if (stream.status) {
             msg += " is streaming.";
             streamer.state = "Streaming";
@@ -81,13 +81,11 @@ class Basic extends Site {
 
         if (stream.status) {
             if (streamer.paused) {
-                this.dbgMsg(this.colors.name(streamer.nm) + " is paused, recording not started.");
+                this.dbgMsg(streamer.nm.name + " is paused, recording not started.");
             } else if (!options || !options.init) {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }
         }
-
-        return true;
     }
 
     async checkBatch(batch, options) {
@@ -114,8 +112,8 @@ class Basic extends Site {
         const serRuns = [];
         let count = 0;
         let batchSize = 5;
-        if (typeof this.siteConfig.batchSize !== "undefined") {
-            batchSize = this.siteConfig.batchSize === 0 ? nms.length : this.siteConfig.batchSize;
+        if (typeof this.config.batchSize !== "undefined") {
+            batchSize = this.config.batchSize === 0 ? nms.length : this.config.batchSize;
         }
 
         while (count < nms.length) {
@@ -162,7 +160,7 @@ class Basic extends Site {
         }
 
         const filename  = this.getFileName(streamer.nm);
-        const newurl    = this.siteConfig.recorder === "scripts/record_streamlink.sh" ? this.siteConfig.siteUrl + streamer.nm : url;
+        const newurl    = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
         const spawnArgs = this.getCaptureArguments(newurl, filename);
         return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
     }

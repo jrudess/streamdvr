@@ -7,6 +7,7 @@ const yaml    = require("js-yaml");
 const path    = require("path");
 const {spawn} = require("child_process");
 const {Tui}   = require("./tui");
+const colors  = require("colors");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -15,7 +16,6 @@ function sleep(time) {
 class Dvr {
 
     constructor(dir) {
-        this.colors = require("colors/safe");
         this.path = dir;
         this.tryingToExit = false;
 
@@ -93,7 +93,7 @@ class Dvr {
             process.exit(1);
         }
 
-        this.colors.setTheme({
+        colors.setTheme({
             name:    this.config.colors.name,
             state:   this.config.colors.state,
             offline: this.config.colors.offline,
@@ -155,25 +155,25 @@ class Dvr {
             throw new Error("post process queue is empty -- this should not happen");
         }
 
-        // peek into queue, and pop in next()
+        // peek into queue, and pop in nextConvert()
         const capInfo     = this.postProcessQ[0];
         const site        = capInfo.site === null ? this : capInfo.site;
         const streamer    = capInfo.streamer;
-        const origname    = capInfo.filename + ".ts";
+        const capName     = capInfo.filename + ".ts";
         const finalName   = capInfo.filename + "." + this.config.recording.autoConvertType;
         const completeDir = await this.getCompleteDir(site, streamer);
-        const nameprint   = streamer === null ? "" : this.colors.name(streamer.nm) + " ";
+        const namePrint   = streamer === null ? "" : streamer.nm.name + " ";
 
         if (this.config.recording.autoConvertType !== "mp4" && this.config.recording.autoConvertType !== "mkv") {
-            site.dbgMsg(nameprint + "recording moved (" + this.config.recording.captureDirectory + "/" +
-                origname + " to " + completeDir + "/" + origname);
-            mv(this.config.recording.captureDirectory + "/" + origname, completeDir + "/" + origname, (err) => {
+            site.dbgMsg(namePrint + "recording moved (" + this.config.recording.captureDirectory + "/" +
+                capName + " to " + completeDir + "/" + capName);
+            mv(this.config.recording.captureDirectory + "/" + capName, completeDir + "/" + capName, (err) => {
                 if (err) {
-                    this.errMsg(this.colors.site(capInfo.filename) + ": " + err.toString());
+                    this.errMsg(capInfo.filename.site + ": " + err.toString());
                 }
             });
 
-            this.postScript(site, streamer, origname);
+            this.postScript(site, streamer, capName);
             return;
         }
 
@@ -182,33 +182,28 @@ class Dvr {
         }
 
         const args = [
-            this.config.recording.captureDirectory + "/" + origname,
+            this.config.recording.captureDirectory + "/" + capName,
             completeDir + "/" + finalName,
             this.config.recording.autoConvertType
         ];
 
         // If the output file already exists, make filename unique
-        let unique = false;
         let count = 0;
-        while (!unique) {
-            if (fs.existsSync(args[1])) {
-                this.errMsg(args[1] + " already exists");
-                args[1] = completeDir + "/" + capInfo.filename + " (" + count + ")." +
-                    this.config.recording.autoConvertType;
-                count++;
-            } else {
-                unique = true;
-            }
+        while (fs.existsSync(args[1])) {
+            this.errMsg(args[1] + " already exists");
+            args[1] = completeDir + "/" + capInfo.filename + " (" + count + ")." +
+                this.config.recording.autoConvertType;
+            count++;
         }
 
         const script = this.calcPath(this.config.recording.postprocess);
 
-        site.infoMsg(nameprint + "converting to " + this.config.recording.autoConvertType + ": " +
-            this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+        const cmd = script + " " + args.toString().replace(/,/g, " ");
+        site.infoMsg(namePrint + "converting to " + this.config.recording.autoConvertType + ": " + cmd.cmd);
 
         const myCompleteProcess = spawn(script, args);
         if (site !== this) {
-            site.storeCapInfo(streamer, finalName);
+            site.storeCapInfo(streamer, finalName, null);
         }
 
         myCompleteProcess.on("close", () => {
@@ -216,7 +211,7 @@ class Dvr {
                 fs.unlinkSync(args[0]);
             }
 
-            site.infoMsg(nameprint + "done converting " + finalName);
+            site.infoMsg(namePrint + "done converting " + finalName);
             this.postScript(site, streamer, finalName);
         });
 
@@ -229,28 +224,28 @@ class Dvr {
         if (this.config.postprocess) {
             const script    = this.calcPath(this.config.postprocess);
             const args      = [this.config.recording.completeDirectory, finalName];
-            const nameprint = streamer === null ? "" : this.colors.name(streamer.nm) + " ";
+            const namePrint = streamer === null ? "" : streamer.nm.name + " ";
+            const cmd       = script + " " + args.toString().replace(/,/g, " ");
 
-            site.infoMsg(nameprint + "running global postprocess script: " +
-                this.colors.cmd(script + " " + args.toString().replace(/,/g, " ")));
+            site.infoMsg(namePrint + "running global postprocess script: " + cmd.cmd);
             const userPostProcess = spawn(script, args);
 
             userPostProcess.on("close", () => {
-                site.infoMsg(nameprint + "done post-processing " + this.colors.file(finalName));
-                this.next(site, streamer);
+                site.infoMsg(namePrint + "done post-processing " + finalName.file);
+                this.nextConvert(site, streamer);
             });
         } else {
-            this.next(site, streamer);
+            this.nextConvert(site, streamer);
         }
     }
 
-    next(site, streamer) {
+    nextConvert(site, streamer) {
 
         if (site !== this) {
             site.clearProcessing(streamer);
         }
 
-        // Pop current job, and start next post-process job (if any)
+        // Pop current job, and start next conversion job (if any)
         this.postProcessQ.shift();
         if (this.postProcessQ.length > 0) {
             this.postProcess();
@@ -273,10 +268,10 @@ class Dvr {
             } catch (err) {
                 site.errMsg(err.toString());
             }
-            if (site.siteConfig.scanInterval) {
-                await sleep(site.siteConfig.scanInterval * 1000);
+            if (site.config.scanInterval) {
+                await sleep(site.config.scanInterval * 1000);
             } else {
-                site.errMsg("Missing scanInterval option in " + site.cfgName + ". Using 300s instead");
+                site.errMsg("Missing scanInterval option in " + site.cfgFile + ". Using 300s instead");
                 await sleep(300 * 1000);
             }
         }
@@ -311,22 +306,26 @@ class Dvr {
         }
     }
 
-    msg(msg, options) {
-        const name = "DVR";
-        this.log(this.colors.time("[" + this.getDateTime() + "] ") + this.colors.site(name.padEnd(9, " ")) + msg, options);
+    msg(msg, site, options) {
+        const time = "[" + this.getDateTime() + "] ";
+        if (site) {
+            this.log(time.time + site.padName.site + msg, options);
+        } else {
+            this.log(time.time + "DVR".padEnd(9, " ").site + msg, options);
+        }
     }
 
-    infoMsg(msg) {
-        this.msg("[INFO]  " + msg);
+    infoMsg(msg, site) {
+        this.msg("[INFO]  " + msg, site);
     }
 
-    errMsg(msg) {
-        this.msg(this.colors.error("[ERROR] ") + msg, {trace: true});
+    errMsg(msg, site) {
+        this.msg("[ERROR] ".error + msg, site, {trace: true});
     }
 
-    dbgMsg(msg) {
+    dbgMsg(msg, site) {
         if (this.config.debug.log) {
-            this.msg(this.colors.debug("[DEBUG] ") + msg);
+            this.msg("[DEBUG] ".debug + msg, site);
         }
     }
 

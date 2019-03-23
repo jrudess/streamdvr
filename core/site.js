@@ -7,31 +7,26 @@ const {spawn} = require("child_process");
 
 class Site {
     constructor(siteName, dvr, tui) {
-        this.siteName   = siteName;
-        this.dvr        = dvr;
-        this.tui        = tui;
-        this.padName    = siteName.padEnd(9, " ");
-        this.listName   = siteName.toLowerCase();
-        this.cfgName    = dvr.configdir + this.listName + ".yml";
-        this.updateName = dvr.configdir + this.listName + "_updates.yml";
-        this.colors     = dvr.colors;
-
-        // <plugin>.yml
-        this.siteConfig = yaml.safeLoad(fs.readFileSync(this.cfgName, "utf8"));
-
-        this.siteDir = "_" + this.listName; // Directory suffix
-        this.tempList = [];                 // temp record list (session only)
-        this.streamerList = new Map();      // Refer to addStreamer() for JSON entries
-        this.streamerListDamaged = false;
+        this.siteName     = siteName;
+        this.dvr          = dvr;
+        this.tui          = tui;
+        this.padName      = siteName.padEnd(9, " ");
+        this.listName     = siteName.toLowerCase();
+        this.cfgFile      = dvr.configdir + this.listName + ".yml";
+        this.updateName   = dvr.configdir + this.listName + "_updates.yml";
+        this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
+        this.tempList     = []; // temp record list (session only)
+        this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
+        this.redrawList   = false;
 
         if (dvr.config.tui.enable) {
             tui.addSite(this);
         }
 
-        this.infoMsg(this.siteConfig.streamers.length + " streamer(s) in config");
+        this.infoMsg(this.config.streamers.length + " streamer(s) in config");
 
-        if (typeof this.siteConfig.siteUrl === "undefined") {
-            this.errMsg(this.cfgName + " is missing siteUrl");
+        if (typeof this.config.siteUrl === "undefined") {
+            this.errMsg(this.cfgFile + " is missing siteUrl");
         }
     }
 
@@ -47,28 +42,28 @@ class Site {
     checkFileSize() {
         const maxSize = this.dvr.config.recording.maxSize;
         for (const streamer of this.streamerList.values()) {
-            if (streamer.captureProcess === null || streamer.postProcess) {
+            if (streamer.capture === null || streamer.postProcess) {
                 continue;
             }
 
             const stat = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
             const sizeMB = Math.round(stat.size / 1048576);
-            this.dbgMsg(this.colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
+            this.dbgMsg(streamer.filename.file + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamer.filesize) {
-                this.infoMsg(this.colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
+                this.infoMsg(streamer.nm.name + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
                 streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
             if (streamer.stuckcounter >= 2) {
-                this.infoMsg(this.colors.name(streamer.nm) + " terminating stuck recording");
+                this.infoMsg(streamer.nm.name + " terminating stuck recording");
                 this.haltCapture(streamer.uid);
                 streamer.stuckcounter = 0;
-                this.streamerListDamaged = true;
+                this.redrawList = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.infoMsg(this.colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
+                this.infoMsg(streamer.nm.name + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 this.haltCapture(streamer.uid);
-                this.streamerListDamaged = true;
+                this.redrawList = true;
             }
         }
     }
@@ -88,9 +83,9 @@ class Site {
             this.dvr.config.proxy.enable ? "1" : "0",
             this.dvr.config.proxy.server,
             this.dvr.config.debug.recorder ? "1" : "0",
-            this.siteConfig.username ? "1" : "0",
-            this.siteConfig.username ? "--" + this.listName + "-username=" + this.siteConfig.username : "",
-            this.siteConfig.password ? "--" + this.listName + "-password=" + this.siteConfig.password : ""
+            this.config.username ? "1" : "0",
+            this.config.username ? "--" + this.listName + "-username=" + this.config.username : "",
+            this.config.password ? "--" + this.listName + "-password=" + this.config.password : ""
         ];
 
         if (options && options.params) {
@@ -143,16 +138,16 @@ class Site {
 
     updateList(id, options) {
         let dirty = false;
-        let list = options.isTemp ? this.tempList : this.siteConfig.streamers;
+        let list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause > 0) {
             if (this.streamerList.has(id.uid)) {
                 const streamer = this.streamerList.get(id.uid);
                 if (options.pause === 1) {
-                    this.infoMsg(this.colors.name(id.nm) + " is paused.");
+                    this.infoMsg(id.nm.name + " is paused.");
                     streamer.paused = true;
                     this.haltCapture(id.uid);
                 } else if (options.pause === 2) {
-                    this.infoMsg(this.colors.name(id.nm) + " is unpaused.");
+                    this.infoMsg(id.nm.name + " is unpaused.");
                     streamer.paused = false;
                     this.refresh(streamer, options);
                 }
@@ -165,7 +160,7 @@ class Site {
                 dirty = true;
             }
         } else if (this.removeStreamer(id, list)) {
-            if (this.siteConfig.streamers.indexOf(id.uid) !== -1) {
+            if (this.config.streamers.indexOf(id.uid) !== -1) {
                 list = _.without(list, id.uid);
                 dirty = true;
             }
@@ -174,7 +169,7 @@ class Site {
             if (options.isTemp) {
                 this.tempList = list;
             } else {
-                this.siteConfig.streamers = list;
+                this.config.streamers = list;
             }
         }
         return dirty && !options.isTemp;
@@ -206,10 +201,10 @@ class Site {
         let added = false;
 
         if (list.indexOf(id.uid) === -1) {
-            this.infoMsg(this.colors.name(id.nm) + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
+            this.infoMsg(id.nm.name + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
             added = true;
         } else {
-            this.errMsg(this.colors.name(id.nm) + " is already in the capture list");
+            this.errMsg(id.nm.name + " is already in the capture list");
         }
 
         if (!this.streamerList.has(id.uid)) {
@@ -219,7 +214,7 @@ class Site {
                 site: this.padName,
                 state: "Offline",
                 filename: "",
-                captureProcess: null,
+                capture: null,
                 postProcess: 0,
                 filesize: 0,
                 stuckcounter: 0,
@@ -236,26 +231,27 @@ class Site {
 
     removeStreamer(id) {
         if (this.streamerList.has(id.uid)) {
-            this.infoMsg(this.colors.name(id.nm) + " removed from capture list.");
+            this.infoMsg(id.nm.name + " removed from capture list.");
             this.haltCapture(id.uid);
             this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
             this.render(true);
             return true;
         }
-        this.errMsg(this.colors.name(id.nm) + " not in capture list.");
+        this.errMsg(id.nm.name + " not in capture list.");
         return false;
     }
 
     checkStreamerState(streamer, msg, isStreaming, prevState) {
         if (streamer.state !== prevState) {
             this.infoMsg(msg);
-            this.streamerListDamaged = true;
+            this.redrawList = true;
         }
-        if (streamer.postProcess === 0 && streamer.captureProcess !== null && !isStreaming) {
+        if (streamer.postProcess === 0 && streamer.capture !== null && !isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(this.colors.name(streamer.nm) + " is no longer broadcasting, terminating capture process (pid=" + streamer.captureProcess.pid + ")");
+            this.dbgMsg(streamer.nm.name + " is no longer broadcasting, terminating capture process (pid=" + streamer.capture.pid + ")");
             this.haltCapture(streamer.uid);
+            this.redrawList = true;
         }
         this.render(false);
     }
@@ -269,9 +265,9 @@ class Site {
         return true;
     }
 
-    storeCapInfo(streamer, filename, captureProcess) {
+    storeCapInfo(streamer, filename, capture) {
         streamer.filename = filename;
-        streamer.captureProcess = captureProcess;
+        streamer.capture = capture;
         this.render(true);
     }
 
@@ -279,7 +275,7 @@ class Site {
         let count = 0;
 
         for (const streamer of this.streamerList.values()) {
-            count += streamer.captureProcess !== null;
+            count += streamer.capture !== null;
         }
 
         return count;
@@ -288,8 +284,8 @@ class Site {
     haltAllCaptures() {
         for (const streamer of this.streamerList.values()) {
             // Don't kill post-process jobs, or recording can get lost.
-            if (streamer.captureProcess !== null && streamer.postProcess === 0) {
-                streamer.captureProcess.kill("SIGINT");
+            if (streamer.capture !== null && streamer.postProcess === 0) {
+                streamer.capture.kill("SIGINT");
             }
         }
     }
@@ -297,8 +293,8 @@ class Site {
     haltCapture(uid) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
-            if (streamer.captureProcess !== null && streamer.postProcess === 0) {
-                streamer.captureProcess.kill("SIGINT");
+            if (streamer.capture !== null && streamer.postProcess === 0) {
+                streamer.capture.kill("SIGINT");
             }
         }
     }
@@ -306,14 +302,14 @@ class Site {
     async writeConfig() {
         let filehandle;
         try {
-            filehandle = await fs.promises.open(this.cfgName, "w");
-            await filehandle.writeFile(yaml.safeDump(this.siteConfig));
+            filehandle = await fs.promises.open(this.cfgFile, "w");
+            await filehandle.writeFile(yaml.safeDump(this.config));
         } finally {
             if (filehandle) {
-                this.dbgMsg("Rewriting " + this.cfgName);
+                this.dbgMsg("Rewriting " + this.cfgFile);
                 await filehandle.close();
             } else {
-                this.errMsg("Could not write " + this.cfgName);
+                this.errMsg("Could not write " + this.cfgFile);
             }
         }
     }
@@ -321,8 +317,8 @@ class Site {
     setupCapture(uid) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
-            if (streamer.captureProcess !== null) {
-                this.dbgMsg(this.colors.name(streamer.nm) + " is already capturing");
+            if (streamer.capture !== null) {
+                this.dbgMsg(streamer.nm.name + " is already capturing");
                 return false;
             }
             return true;
@@ -339,7 +335,7 @@ class Site {
         if (this.dvr.config.recording.streamerSubdir) {
             completeDir += "/" + streamer.nm;
             if (this.dvr.config.recording.includeSiteInDir) {
-                completeDir += this.siteDir;
+                completeDir += "_" + this.listName;
             }
             try {
                 await fs.promises.mkdir(completeDir, {recursive: true});
@@ -365,95 +361,88 @@ class Site {
         }
 
         const streamer = capInfo.streamer;
-        const fullname = capInfo.filename + ".ts";
-        const script   = this.dvr.calcPath(this.siteConfig.recorder);
+        const script   = this.dvr.calcPath(this.config.recorder);
+        const capture  = spawn(script, capInfo.spawnArgs);
 
-        let cmd = script + " ";
-        for (const arg of capInfo.spawnArgs.values()) {
-            cmd += arg + " ";
-        }
-        this.dbgMsg("Starting recording: " + this.colors.cmd(cmd));
-
-        const captureProcess = spawn(script, capInfo.spawnArgs);
+        this.dbgMsg("Starting recording: " + script + " " + capInfo.spawnArgs.join(" "));
 
         if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
-            captureProcess.stdout.pipe(logStream);
-            captureProcess.stderr.pipe(logStream);
+            capture.stdout.pipe(logStream);
+            capture.stderr.pipe(logStream);
         }
 
-        if (captureProcess.pid) {
-            this.infoMsg(this.colors.name(streamer.nm) + " recording started: " + this.colors.file(capInfo.filename + ".ts"));
-            this.storeCapInfo(streamer, fullname, captureProcess);
+        if (capture.pid) {
+            const filename = capInfo.filename + ".ts";
+            this.infoMsg(streamer.nm.name + " recording started: " + filename.file);
+            this.storeCapInfo(streamer, filename, capture);
         }
 
-        captureProcess.on("close", () => {
+        capture.on("close", () => {
+            this.endCapture(streamer, capInfo);
+        });
 
-            fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
-                if (err) {
-                    if (err.code === "ENOENT") {
-                        this.errMsg(this.colors.name(streamer.nm) + ", " + this.colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
-                    } else {
-                        this.errMsg(this.colors.name(streamer.nm) + ": " + err.toString());
-                    }
+    }
+
+    endCapture(streamer, capInfo) {
+        const fullname = capInfo.filename + ".ts";
+        fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err, stats) => {
+            if (err) {
+                if (err.code === "ENOENT") {
+                    this.errMsg(streamer.nm.name + ", " + capInfo.filename.file + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
+                } else {
+                    this.errMsg(streamer.nm.name + ": " + err.toString());
+                }
+                this.storeCapInfo(streamer, "", null);
+            } else {
+                const sizeMB = stats.size / 1048576;
+                if (sizeMB < this.dvr.config.recording.minSize) {
+                    this.infoMsg(streamer.nm.name + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
+                    fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                     this.storeCapInfo(streamer, "", null);
                 } else {
-                    const sizeMB = stats.size / 1048576;
-                    if (sizeMB < this.dvr.config.recording.minSize) {
-                        this.infoMsg(this.colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
-                        fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
-                        this.storeCapInfo(streamer, "", null);
-                    } else {
-                        this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
-                        if (this.dvr.postProcessQ.length === 1) {
-                            this.dvr.postProcess();
-                        }
+                    this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
+                    if (this.dvr.postProcessQ.length === 1) {
+                        this.dvr.postProcess();
                     }
                 }
-            });
-
-            this.refresh(streamer);
+            }
         });
+        this.refresh(streamer);
     }
 
     setProcessing(streamer) {
         // Need to remember post-processing is happening, so that
         // the offline check does not kill postprocess jobs.
         streamer.postProcess = 1;
-        this.streamerListDamaged = true;
+        this.redrawList = true;
     }
 
     clearProcessing(streamer) {
         // Note: setting postProcess to null releases program to exit
         this.storeCapInfo(streamer, "", null);
-        this.streamerListDamaged = true;
+        this.redrawList = true;
 
         streamer.postProcess = 0;
         this.refresh(streamer);
     }
 
-    render(listDamaged) {
+    render(redrawList) {
         if (this.dvr.config.tui.enable) {
-            this.tui.render(listDamaged || this.streamerListDamaged, this);
+            this.tui.render(redrawList || this.redrawList, this);
         }
-    }
-
-    msg(msg, options) {
-        this.dvr.log(this.colors.time("[" + this.dvr.getDateTime() + "] ") + this.colors.site(this.padName) + msg, options);
     }
 
     infoMsg(msg) {
-        this.msg("[INFO]  " + msg);
+        this.dvr.msg(msg, this);
     }
 
     errMsg(msg) {
-        this.msg(this.colors.error("[ERROR] ") + msg, {trace: true});
+        this.dvr.errMsg(msg, this);
     }
 
     dbgMsg(msg) {
-        if (this.dvr.config.debug.log) {
-            this.msg(this.colors.debug("[DEBUG] ") + msg);
-        }
+        this.dvr.dbgMsg(msg, this);
     }
 }
 

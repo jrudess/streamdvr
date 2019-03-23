@@ -11,7 +11,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/jrudess/streamdvr.node.git"
+        "url": "git://github.com/jrudess/streamdvr.git"
     },
     "author": "jrudess",
     "license": "GPL-3.0",
