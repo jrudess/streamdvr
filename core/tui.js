@@ -19,6 +19,7 @@ class Tui {
         this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
         this.screen.title = "streamdvr";
         this.listSelect = null;
+        this.sitelistSelect = null;
 
         this.list = blessed.listtable({
             top: 0,
@@ -28,7 +29,38 @@ class Tui {
             // some very large value.
             // shrink: "true",
             width: this.calcLogLeft(),
-            height: "100%-1",
+            height: "100%-11",
+            align: "left",
+            interactive: false,
+            keys: true,
+            mouse: false,
+            noCellBorders: true,
+            tags: true,
+            alwaysScroll: true,
+            scrollable: true,
+            scrollbar: {
+                ch: " ",
+                bg: "blue"
+            },
+            border: {
+                type: "line"
+            },
+            style: {
+                border: {
+                    fg: "blue"
+                }
+            }
+        });
+
+        this.sitelist = blessed.listtable({
+            top: "100%-11",
+            left: 0,
+            // TODO: Listtable behaves screwy when shrink is set, and also need
+            // to align log to right side of list as well, but list.width is
+            // some very large value.
+            // shrink: "true",
+            width: this.calcLogLeft(),
+            height: 10,
             align: "left",
             interactive: false,
             keys: true,
@@ -136,9 +168,49 @@ class Tui {
         });
         this.listmenu.hide();
 
+        this.sitemenu = blessed.list({
+            top: "100%-9",
+            left: 18,
+            width: 16,
+            height: 6,
+            padding: {
+                left: 3,
+                right: 3,
+                top: 1,
+                bottom: 1
+            },
+            interactive: true,
+            keys: true,
+            mouse: false,
+            tags: true,
+            border: {
+                type: "bg",
+                ch: "░"
+            },
+            style: {
+                border: {
+                    bg: "blue",
+                    fg: "blue"
+                },
+                bg: "black",
+                fg: "white"
+            }
+        });
+        this.sitemenu.hide();
+
         this.screen.key("1", () => {
+            this.sitemenu.hide();
+            this.sitelist.interactive = false;
             this.list.interactive = true;
             this.list.focus();
+            this.render();
+        });
+
+        this.screen.key("2", () => {
+            this.listmenu.hide();
+            this.list.interactive = false;
+            this.sitelist.interactive = true;
+            this.sitelist.focus();
             this.render();
         });
 
@@ -194,7 +266,26 @@ class Tui {
             }
         });
 
-        // this.listmenu.on("select", () => {
+        this.sitelist.on("selectrow", (item, index) => {
+            if (index < this.sitelist.rows.length) {
+                this.sitelistSelect = this.sitelist.rows[index];
+            } else {
+                this.sitelistSelect = null;
+            }
+        });
+
+        this.sitelist.on("select", () => {
+            this.sitemenu.show();
+            this.sitemenu.focus();
+            this.render();
+        });
+
+        this.sitelist.on("cancel", () => {
+            this.sitelist.interactive = false;
+            this.logbody.focus();
+            this.render();
+        });
+
         this.listmenu.on("select", (item, index) => {
             if (this.listSelect && this.listSelect.length >= 2) {
                 const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
@@ -221,6 +312,33 @@ class Tui {
             this.render();
         });
 
+        this.sitemenu.on("select", (item, index) => {
+            if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
+                const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                switch (index) {
+                case 0: // pause
+                    this.updateList(site, "", {add: 0, pause: 1, isTemp: false, init: false});
+                    this.sitelist.focus();
+                    this.sitemenu.hide();
+                    this.render();
+                    break;
+                case 1: // add
+                    this.prompt.show();
+                    this.inputBar.show();
+                    this.render();
+                    this.inputBar.focus();
+                    break;
+                }
+            }
+        });
+
+        this.sitemenu.on("cancel", () => {
+            this.sitemenu.hide();
+            this.sitelist.interactive = true;
+            this.sitelist.focus();
+            this.render();
+        });
+
         this.inputBar.on("cancel", () => {
             this.prompt.hide();
             this.inputBar.clearValue();
@@ -233,22 +351,39 @@ class Tui {
         ));
 
         this.screen.append(this.list);
+        this.screen.append(this.sitelist);
         this.screen.append(this.logbody);
         this.screen.append(this.prompt);
         this.screen.append(this.inputBar);
         this.screen.append(this.listmenu);
+        this.screen.append(this.sitemenu);
         this.logbody.focus();
 
-        this.list.selected = 1;
         this.listmenu.pushItem("pause");
         this.listmenu.pushItem("remove");
         this.listmenu.setScrollPerc(100);
+
+        this.sitemenu.pushItem("pause");
+        this.sitemenu.pushItem("add");
+        this.sitemenu.setScrollPerc(100);
+
+        this.list.selected = 1;
+        this.sitelist.selected = 1;
 
         // CLI
         this.inputBar.on("submit", (text) => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
+
+            if (this.sitelist.interactive) {
+                if (this.sitelistSelect) {
+                    this.updateList(blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase(), text, {add: 1, pause: 0, isTemp: 0, init: false});
+                }
+                this.sitemenu.focus();
+                this.render();
+                return;
+            }
 
             const tokens = text.split(" ");
             if (tokens.length === 0) {
@@ -305,6 +440,13 @@ class Tui {
 
     addSite(site) {
         this.SITES.push(site);
+
+        const sitetable = [];
+        sitetable.push(["", ""]);
+        for (let i = 0; i < this.SITES.length; i++) {
+            sitetable.push(["{" + this.config.colors.state + "-fg}" + this.SITES[i].siteName + "{/}", ""]);
+        }
+        this.sitelist.setData(sitetable);
     }
 
     start() {
