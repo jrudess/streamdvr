@@ -11,6 +11,7 @@ class Tui {
         this.logHidden = false;
         this.listHidden = true;
         this.longestName = 7;
+        this.hideOffline = false;
 
         this.createTui();
     }
@@ -141,8 +142,8 @@ class Tui {
         this.listmenu = blessed.list({
             top: 8,
             left: 18,
-            width: 16,
-            height: 6,
+            width: 23,
+            height: 7,
             padding: {
                 left: 3,
                 right: 3,
@@ -297,6 +298,10 @@ class Tui {
                 case 1: // remove
                     this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
                     break;
+                case 2: // toggle offline
+                    this.hideOffline = !this.hideOffline;
+                    this.render(true);
+                    break;
                 }
             }
             this.listmenu.hide();
@@ -361,6 +366,7 @@ class Tui {
 
         this.listmenu.pushItem("pause");
         this.listmenu.pushItem("remove");
+        this.listmenu.pushItem("toggle offline");
         this.listmenu.setScrollPerc(100);
 
         this.sitemenu.pushItem("pause");
@@ -487,6 +493,9 @@ class Tui {
                 let state;
                 if (value.filename === "") {
                     if (value.state === "Offline") {
+                        if (this.hideOffline) {
+                            continue;
+                        }
                         state = "{" + this.config.colors.offline + "-fg}";
                     } else {
                         state = "{" + this.config.colors.state + "-fg}";

@@ -221,7 +221,7 @@ class Site {
                 filesize: 0,
                 stuckcounter: 0,
                 isTemp: options.isTemp,
-                paused: false
+                paused: this.paused
             });
             this.render(true);
             if (!options || !options.init) {
