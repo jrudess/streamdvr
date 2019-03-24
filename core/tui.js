@@ -143,7 +143,7 @@ class Tui {
             top: 8,
             left: 18,
             width: 23,
-            height: 7,
+            height: 8,
             padding: {
                 left: 3,
                 right: 3,
@@ -294,20 +294,30 @@ class Tui {
                 switch (index) {
                 case 0: // pause
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
+                    this.listmenu.hide();
+                    this.list.focus();
+                    this.render();
                     break;
-                case 1: // remove
+                case 1: // pause timer
+                    this.prompt.show();
+                    this.inputBar.show();
+                    this.render();
+                    this.inputBar.focus();
+                    break;
+                case 2: // remove
                     this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
+                    this.listmenu.hide();
+                    this.list.focus();
+                    this.render();
                     break;
-                case 2: // toggle offline
+                case 3: // toggle offline
                     this.hideOffline = !this.hideOffline;
+                    this.listmenu.hide();
+                    this.list.focus();
                     this.render(true);
                     break;
                 }
             }
-            this.listmenu.hide();
-            this.list.interactive = true;
-            this.list.focus();
-            this.render();
         });
 
         this.listmenu.on("cancel", () => {
@@ -365,6 +375,7 @@ class Tui {
         this.logbody.focus();
 
         this.listmenu.pushItem("pause");
+        this.listmenu.pushItem("pause timer");
         this.listmenu.pushItem("remove");
         this.listmenu.pushItem("toggle offline");
         this.listmenu.setScrollPerc(100);
@@ -382,7 +393,18 @@ class Tui {
             this.inputBar.clearValue();
             this.inputBar.hide();
 
-            if (this.sitelist.interactive) {
+            if (this.list.interactive) {
+                if (this.listSelect) {
+                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name = blessed.helpers.stripTags(this.listSelect[0]).toLowerCase();
+                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
+                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false, pausetimer: text});
+                }
+                this.listmenu.hide();
+                this.list.focus();
+                this.render();
+                return;
+            } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     this.updateList(blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase(), text, {add: 1, pause: 0, isTemp: 0, init: false});
                 }
@@ -409,6 +431,9 @@ class Tui {
             case "unpause":
                 if (tokens.length >= 3) {
                     this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
+                    if (pause && tokens.length >= 4) {
+                        this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false, pausetimer: tokens[3]});
+                    }
                 } else if (tokens.length === 2) {
                     this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
                 }

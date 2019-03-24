@@ -60,8 +60,7 @@ Refer to `config/config.yml` for all configuration options.
 ```
     add     [site] [streamer]
     addtemp [site] [streamer]
-    pause   [site] <streamer>
-    unpause [site] <streamer>
+    pause   [site] <streamer> <time in seconds>
     remove  [site] [streamer]
     reload
     hide [log|list]

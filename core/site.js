@@ -5,6 +5,10 @@ const fs      = require("fs");
 const _       = require("underscore");
 const {spawn} = require("child_process");
 
+function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 class Site {
     constructor(siteName, dvr, tui) {
         this.siteName     = siteName;
@@ -137,20 +141,29 @@ class Site {
         }
     }
 
-    updateList(id, options) {
+    async updateList(id, options) {
         let dirty = false;
         let list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
             if (this.streamerList.has(id.uid)) {
-                const streamer = this.streamerList.get(id.uid);
-                if (streamer.paused) {
-                    this.infoMsg(id.nm.name + " is unpaused.");
-                    streamer.paused = false;
-                    this.refresh(streamer, options);
-                } else {
-                    this.infoMsg(id.nm.name + " is paused.");
-                    streamer.paused = true;
-                    this.haltCapture(id.uid);
+                let streamer = this.streamerList.get(id.uid);
+                if (options.pausetimer && options.pausetimer > 0) {
+                    const print = streamer.paused ? " pausing for " : " unpausing for ";
+                    this.infoMsg(id.nm.name + print + options.pausetimer + " seconds");
+                    await sleep(options.pausetimer * 1000);
+                    this.infoMsg(id.nm.name + " pause-timer expired");
+                    streamer = this.streamerList.get(id.uid);
+                }
+                if (streamer) {
+                    if (streamer.paused) {
+                        this.infoMsg(id.nm.name + " is unpaused.");
+                        streamer.paused = false;
+                        this.refresh(streamer, options);
+                    } else {
+                        this.infoMsg(id.nm.name + " is paused.");
+                        streamer.paused = true;
+                        this.haltCapture(id.uid);
+                    }
                 }
                 this.render(true);
             }

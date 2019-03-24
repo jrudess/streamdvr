@@ -316,7 +316,7 @@ class Dvr {
     }
 
     infoMsg(msg, site) {
-        this.msg("[INFO]  " + msg, site);
+        this.msg(msg, site);
     }
 
     errMsg(msg, site) {
