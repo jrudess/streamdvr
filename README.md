@@ -52,6 +52,7 @@ Refer to `config/config.yml` for all configuration options.
 
 * TUI navigation:
     * `1` to focus the streamer list, `Esc` to unfocus
+    * `2` to focus the site list, `Esc` to unfocus
     * `enter` to focus the input bar for CLI
     * `Up/Down/PgUp/PgDn` to scroll the active focus
 
