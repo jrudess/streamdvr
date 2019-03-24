@@ -288,35 +288,44 @@ class Tui {
         });
 
         this.listmenu.on("select", (item, index) => {
-            if (this.listSelect && this.listSelect.length >= 2) {
-                const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                const name = blessed.helpers.stripTags(this.listSelect[0]);
-                switch (index) {
-                case 0: // pause
+            switch (index) {
+            case 0: // pause
+                if (this.listSelect && this.listSelect.length >= 2) {
+                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name = blessed.helpers.stripTags(this.listSelect[0]);
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
                     this.render();
-                    break;
-                case 1: // pause timer
-                    this.prompt.show();
-                    this.inputBar.show();
-                    this.render();
-                    this.inputBar.focus();
-                    break;
-                case 2: // remove
+                }
+                break;
+            case 1: // pause timer
+                this.prompt.show();
+                this.inputBar.show();
+                this.render();
+                this.inputBar.focus();
+                break;
+            case 2: // remove
+                if (this.listSelect && this.listSelect.length >= 2) {
+                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name = blessed.helpers.stripTags(this.listSelect[0]);
                     this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
                     this.render();
-                    break;
-                case 3: // toggle offline
-                    this.hideOffline = !this.hideOffline;
-                    this.listmenu.hide();
-                    this.list.focus();
-                    this.render(true);
-                    break;
                 }
+                break;
+            case 3: // toggle offline
+                this.hideOffline = !this.hideOffline;
+                this.listmenu.hide();
+                this.list.focus();
+                this.render(true);
+                if (this.list.rows.length <= 1) {
+                    this.listSelect = null;
+                } else {
+                    this.listSelect = this.list.rows[1];
+                }
+                break;
             }
         });
 
@@ -394,7 +403,7 @@ class Tui {
             this.inputBar.hide();
 
             if (this.list.interactive) {
-                if (this.listSelect) {
+                if (this.listSelect && this.listSelect.size >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]).toLowerCase();
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
