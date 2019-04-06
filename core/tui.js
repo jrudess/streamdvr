@@ -428,54 +428,59 @@ class Tui {
                 return;
             }
 
-            const temp  = tokens[0] === "addtemp";
-            const pause = tokens[0] === "pause" || tokens[0] === "unpause";
-            const add   = tokens[0] === "add" || tokens[0] === "addtemp";
+            this.parseCli(tokens);
 
-            switch (tokens[0]) {
-            case "add":
-            case "addtemp":
-            case "remove":
-            case "pause":
-            case "unpause":
-                if (tokens.length >= 3) {
-                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
-                    if (pause && tokens.length >= 4) {
-                        this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false, pausetimer: tokens[3]});
-                    }
-                } else if (tokens.length === 2) {
-                    this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
-                }
-                break;
-
-            case "reload":
-                this.dvr.loadConfig();
-                this.config = this.dvr.config;
-                break;
-
-            case "show":
-            case "hide":
-                if (tokens.length >= 2) {
-                    this.display(tokens[0], tokens[1]);
-                }
-                break;
-
-            case "help":
-                this.logbody.pushLine("Commands:");
-                this.logbody.pushLine("add     [site] [streamer]");
-                this.logbody.pushLine("addtemp [site] [streamer]");
-                this.logbody.pushLine("pause   [site] <streamer>");
-                this.logbody.pushLine("unpause [site] <streamer>");
-                this.logbody.pushLine("remove  [site] [streamer]");
-                this.logbody.pushLine("reload");
-                this.logbody.pushLine("show    [log|list]");
-                this.logbody.pushLine("hide    [log|list]");
-                this.logbody.setScrollPerc(100);
-                break;
-            }
             this.logbody.focus();
             this.render();
         });
+    }
+
+    parseCli(tokens) {
+        const temp  = tokens[0] === "addtemp";
+        const pause = tokens[0] === "pause" || tokens[0] === "unpause";
+        const add   = tokens[0] === "add" || tokens[0] === "addtemp";
+
+        switch (tokens[0]) {
+        case "add":
+        case "addtemp":
+        case "remove":
+        case "pause":
+        case "unpause":
+            if (tokens.length >= 3) {
+                this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
+                if (pause && tokens.length >= 4) {
+                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false, pausetimer: tokens[3]});
+                }
+            } else if (tokens.length === 2) {
+                this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
+            }
+            break;
+
+        case "reload":
+            this.dvr.loadConfig();
+            this.config = this.dvr.config;
+            break;
+
+        case "show":
+        case "hide":
+            if (tokens.length >= 2) {
+                this.display(tokens[0], tokens[1]);
+            }
+            break;
+
+        case "help":
+            this.logbody.pushLine("Commands:");
+            this.logbody.pushLine("add     [site] [streamer]");
+            this.logbody.pushLine("addtemp [site] [streamer]");
+            this.logbody.pushLine("pause   [site] <streamer>");
+            this.logbody.pushLine("unpause [site] <streamer>");
+            this.logbody.pushLine("remove  [site] [streamer]");
+            this.logbody.pushLine("reload");
+            this.logbody.pushLine("show    [log|list]");
+            this.logbody.pushLine("hide    [log|list]");
+            this.logbody.setScrollPerc(100);
+            break;
+        }
     }
 
     addSite(site) {
@@ -502,49 +507,56 @@ class Tui {
         }
     }
 
+    buildListEntry(site, streamer) {
+        const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
+        let state = "{";
+        if (streamer.filename === "") {
+            if (streamer.state === "Offline") {
+                state += this.config.colors.offline + "-fg}";
+            } else {
+                state += this.config.colors.state + "-fg}";
+            }
+            state += streamer.state + (streamer.paused ? " [paused]" : "");
+        } else {
+            state += this.config.colors.file + "-fg}" + streamer.filename;
+        }
+        state += "{/}";
+        const temp = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
+        return [name, temp, site.siteName, state];
+    }
+
+    populateTable(site, table) {
+        let sortedKeys = [];
+        const streamerList = site.streamerList;
+        if (streamerList.size > 0) {
+            // Map keys are UID, but want to sort list by name.
+            sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
+                if (streamerList.get(a).nm < streamerList.get(b).nm) {
+                    return -1;
+                }
+                if (streamerList.get(a).nm > streamerList.get(b).nm) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+        for (let j = 0; j < sortedKeys.length; j++) {
+            const streamer = streamerList.get(sortedKeys[j]);
+            if (streamer.state === "Offline" && this.hideOffline) {
+                continue;
+            }
+            table.push(this.buildListEntry(site, streamer));
+            if (streamer.nm.length > this.longestName) {
+                this.longestName = streamer.nm.length;
+            }
+        }
+    }
+
     rebuildList() {
         const table = [];
-        this.longestName = 7; // Sets a minimum size
         table.push(["", "", "", ""]);
         for (const site of this.SITES.values()) {
-            let sortedKeys = [];
-            const streamerList = site.streamerList;
-            if (streamerList.size > 0) {
-                // Map keys are UID, but want to sort list by name.
-                sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
-                    if (streamerList.get(a).nm < streamerList.get(b).nm) {
-                        return -1;
-                    }
-                    if (streamerList.get(a).nm > streamerList.get(b).nm) {
-                        return 1;
-                    }
-                    return 0;
-                });
-            }
-            for (let j = 0; j < sortedKeys.length; j++) {
-                const value = streamerList.get(sortedKeys[j]);
-                const name  = "{" + this.config.colors.name + "-fg}" + value.nm + "{/}";
-                let state;
-                if (value.filename === "") {
-                    if (value.state === "Offline") {
-                        if (this.hideOffline) {
-                            continue;
-                        }
-                        state = "{" + this.config.colors.offline + "-fg}";
-                    } else {
-                        state = "{" + this.config.colors.state + "-fg}";
-                    }
-                    state += value.state + (value.paused ? " [paused]" : "");
-                } else {
-                    state = "{" + this.config.colors.file + "-fg}" + value.filename;
-                }
-                state += "{/}";
-                const temp = value.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
-                table.push([name, temp, site.siteName, state]);
-                if (value.nm.length > this.longestName) {
-                    this.longestName = value.nm.length;
-                }
-            }
+            this.populateTable(site, table);
         }
         this.list.setData(table);
         this.logbody.left = this.calcLogLeft();
