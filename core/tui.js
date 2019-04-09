@@ -8,8 +8,6 @@ class Tui {
         this.config = config;
         this.dvr = dvr;
         this.SITES = [];
-        this.logHidden = false;
-        this.listHidden = true;
         this.longestName = 7;
         this.hideOffline = false;
 
@@ -86,6 +84,7 @@ class Tui {
 
         this.logbody = blessed.box({
             top: 0,
+            left: this.calcLogLeft(),
             height: "100%-1",
             grow: true,
             keys: true,
@@ -516,10 +515,8 @@ class Tui {
 
     log(text) {
         this.logbody.pushLine(text);
-        if (!this.logHidden) {
-            this.logbody.setScrollPerc(100);
-            this.render();
-        }
+        this.logbody.setScrollPerc(100);
+        this.render();
     }
 
     buildListEntry(site, streamer) {
@@ -578,7 +575,7 @@ class Tui {
     }
 
     render(redrawList, site) {
-        if (!this.listHidden && redrawList) {
+        if (redrawList) {
             this.rebuildList();
             if (site) {
                 site.redrawList = false;
