@@ -241,12 +241,32 @@ class Tui {
             this.dvr.exit()
         ));
 
+        this.logbody.key(["j"], () => {
+            this.logbody.scroll(1);
+            this.render();
+        });
+
+        this.logbody.key(["k"], () => {
+            this.logbody.scroll(-1);
+            this.render();
+        });
+
         this.list.on("selectrow", (item, index) => {
             if (index < this.list.rows.length) {
                 this.listSelect = this.list.rows[index];
             } else {
                 this.listSelect = null;
             }
+        });
+
+        this.list.key(["j"], () => {
+            this.list.down(1);
+            this.render();
+        });
+
+        this.list.key(["k"], () => {
+            this.list.up(1);
+            this.render();
         });
 
         this.list.on("select", () => {
@@ -273,6 +293,16 @@ class Tui {
             } else {
                 this.sitelistSelect = null;
             }
+        });
+
+        this.sitelist.key(["j"], () => {
+            this.sitelist.down(1);
+            this.render();
+        });
+
+        this.sitelist.key(["k"], () => {
+            this.sitelist.up(1);
+            this.render();
         });
 
         this.sitelist.on("select", () => {
