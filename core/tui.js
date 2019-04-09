@@ -3,10 +3,10 @@
 const blessed = require("neo-blessed");
 
 class Tui {
-    constructor(config, dvr) {
+    constructor(dvr) {
 
-        this.config = config;
         this.dvr = dvr;
+        this.config = dvr.config;
         this.SITES = [];
         this.hideOffline = false;
 
@@ -469,12 +469,9 @@ class Tui {
             }
 
             const tokens = text.split(" ");
-            if (tokens.length === 0) {
-                this.render();
-                return;
+            if (tokens.length !== 0) {
+                this.parseCli(tokens);
             }
-
-            this.parseCli(tokens);
 
             this.logbody.focus();
             this.render();

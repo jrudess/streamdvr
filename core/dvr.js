@@ -34,7 +34,7 @@ class Dvr {
         }
 
         if (this.config.tui.enable) {
-            this.tui = new Tui(this.config, this);
+            this.tui = new Tui(this);
         }
 
         this.postProcessQ = [];
