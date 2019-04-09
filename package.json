@@ -21,7 +21,7 @@
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
         "colors": "^1.3.3",
-        "js-yaml": "^3.13.0",
+        "js-yaml": "^3.13.1",
         "moment": "^2.24.0",
         "mv": "^2.1.1",
         "neo-blessed": "github:embark-framework/neo-blessed",
