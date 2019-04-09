@@ -8,7 +8,6 @@ class Tui {
         this.config = config;
         this.dvr = dvr;
         this.SITES = [];
-        this.longestName = 7;
         this.hideOffline = false;
 
         this.createTui();
@@ -23,11 +22,7 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            // TODO: Listtable behaves screwy when shrink is set, and also need
-            // to align log to right side of list as well, but list.width is
-            // some very large value.
-            // shrink: "true",
-            width: this.calcLogLeft(),
+            width: 62,
             height: "100%-11",
             align: "left",
             interactive: false,
@@ -35,6 +30,9 @@ class Tui {
             mouse: false,
             noCellBorders: true,
             tags: true,
+            padding: {
+                left: 1
+            },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
@@ -54,11 +52,7 @@ class Tui {
         this.sitelist = blessed.listtable({
             top: "100%-11",
             left: 0,
-            // TODO: Listtable behaves screwy when shrink is set, and also need
-            // to align log to right side of list as well, but list.width is
-            // some very large value.
-            // shrink: "true",
-            width: this.calcLogLeft(),
+            width: 62,
             height: 10,
             align: "left",
             interactive: false,
@@ -66,6 +60,9 @@ class Tui {
             mouse: false,
             noCellBorders: true,
             tags: true,
+            padding: {
+                left: 1
+            },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
@@ -84,7 +81,7 @@ class Tui {
 
         this.logbody = blessed.box({
             top: 0,
-            left: this.calcLogLeft(),
+            left: 62,
             height: "100%-1",
             grow: true,
             keys: true,
@@ -315,6 +312,16 @@ class Tui {
             this.render();
         });
 
+        this.listmenu.key(["j"], () => {
+            this.listmenu.down(1);
+            this.render();
+        });
+
+        this.listmenu.key(["k"], () => {
+            this.listmenu.up(1);
+            this.render();
+        });
+
         this.listmenu.on("select", (item, index) => {
             switch (index) {
             case 0: // pause
@@ -384,6 +391,16 @@ class Tui {
             }
         });
 
+        this.sitemenu.key(["j"], () => {
+            this.sitemenu.down(1);
+            this.render();
+        });
+
+        this.sitemenu.key(["k"], () => {
+            this.sitemenu.up(1);
+            this.render();
+        });
+
         this.sitemenu.on("cancel", () => {
             this.sitemenu.hide();
             this.sitelist.interactive = true;
@@ -443,7 +460,8 @@ class Tui {
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
-                    this.updateList(blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase(), text, {add: 1, pause: 0, isTemp: 0, init: false});
+                    const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                    this.updateList(site, text, {add: 1, pause: 0, isTemp: 0, init: false});
                 }
                 this.sitemenu.focus();
                 this.render();
@@ -558,9 +576,6 @@ class Tui {
                 continue;
             }
             table.push(this.buildListEntry(site, streamer));
-            if (streamer.nm.length > this.longestName) {
-                this.longestName = streamer.nm.length;
-            }
         }
     }
 
@@ -571,7 +586,6 @@ class Tui {
             this.populateTable(site, table);
         }
         this.list.setData(table);
-        this.logbody.left = this.calcLogLeft();
     }
 
     render(redrawList, site) {
@@ -583,10 +597,6 @@ class Tui {
         }
 
         this.screen.render();
-    }
-
-    calcLogLeft() {
-        return 62;
     }
 
     // Add and remove streamers
