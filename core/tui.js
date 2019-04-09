@@ -225,21 +225,20 @@ class Tui {
             this.render();
         });
 
-        this.screen.key("enter", () => {
-            if (this.screen.focused === this.logbody) {
-                this.list.interactive = false;
-                this.prompt.show();
-                this.inputBar.show();
-                this.render();
-                this.inputBar.focus();
-            }
-        });
-
         // Close on q, or ctrl+c
         // Note: tui.screen intercepts ctrl+c and it does not pass down to ffmpeg
         this.screen.key(["q", "C-c"], () => (
             this.dvr.exit()
         ));
+
+        this.logbody.key(["i", "enter"], () => {
+            if (this.screen.focused === this.logbody) {
+                this.prompt.show();
+                this.inputBar.show();
+                this.inputBar.focus();
+                this.render();
+            }
+        });
 
         this.logbody.key(["j"], () => {
             this.logbody.scroll(1);
