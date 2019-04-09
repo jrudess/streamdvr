@@ -490,13 +490,6 @@ class Tui {
             this.config = this.dvr.config;
             break;
 
-        case "show":
-        case "hide":
-            if (tokens.length >= 2) {
-                this.display(tokens[0], tokens[1]);
-            }
-            break;
-
         case "help":
             this.logbody.pushLine("Commands:");
             this.logbody.pushLine("add     [site] [streamer]");
@@ -505,8 +498,6 @@ class Tui {
             this.logbody.pushLine("unpause [site] <streamer>");
             this.logbody.pushLine("remove  [site] [streamer]");
             this.logbody.pushLine("reload");
-            this.logbody.pushLine("show    [log|list]");
-            this.logbody.pushLine("hide    [log|list]");
             this.logbody.setScrollPerc(100);
             break;
         }
@@ -521,11 +512,6 @@ class Tui {
             sitetable.push(["{" + this.config.colors.state + "-fg}" + this.SITES[i].siteName + "{/}", ""]);
         }
         this.sitelist.setData(sitetable);
-    }
-
-    start() {
-        this.display(this.config.tui.listshown ? "show" : "hide", "list");
-        this.display(this.config.tui.logshown  ? "show" : "hide", "log");
     }
 
     log(text) {
@@ -592,10 +578,6 @@ class Tui {
     }
 
     render(redrawList, site) {
-        if (!this.config.tui.enable || typeof this.screen === "undefined") {
-            return;
-        }
-
         if (!this.listHidden && redrawList) {
             this.rebuildList();
             if (site) {
@@ -608,50 +590,6 @@ class Tui {
 
     calcLogLeft() {
         return 62;
-    }
-
-    // Runtime UI adjustments
-    display(cmd, window) {
-        switch (window) {
-        case "list":
-            switch (cmd) {
-            case "show":
-                this.logbody.left = this.calcLogLeft();
-                this.listHidden   = false;
-                this.rebuildList();
-                this.list.show();
-                break;
-            case "hide":
-                this.logbody.left = 0;
-                this.listHidden   = true;
-                this.list.hide();
-                break;
-            }
-            break;
-        case "log":
-            switch (cmd) {
-            case "show":
-                this.logbody.setScrollPerc(100);
-                this.logHidden = false;
-                this.logbody.show();
-                break;
-            case "hide":
-                this.logHidden = true;
-                this.logbody.hide();
-                break;
-            }
-            break;
-        }
-
-        if (this.listHidden || this.logHidden) {
-            this.list.border.type = "bg";
-            this.logbody.border.type = "bg";
-        } else {
-            this.list.border.type = "line";
-            this.logbody.border.type = "line";
-        }
-
-        this.render();
     }
 
     // Add and remove streamers

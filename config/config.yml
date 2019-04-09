@@ -19,8 +19,6 @@ log:
   append: true
 tui:
   enable: false
-  logshown: true
-  listshown: true
   allowUnicode: false
 colors:
   name: magenta

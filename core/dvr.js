@@ -109,7 +109,7 @@ class Dvr {
         this.config.recording.captureDirectory  = this.mkdir(this.config.recording.captureDirectory);
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
 
-        if (this.config.tui.enable && this.tui && this.tui.list) {
+        if (this.config.tui.enable && this.tui) {
             this.tui.display(this.config.tui.listshown ? "show" : "hide", "list");
             this.tui.display(this.config.tui.logshown  ? "show" : "hide", "log");
             this.tui.render();
@@ -268,19 +268,12 @@ class Dvr {
             } catch (err) {
                 site.errMsg(err.toString());
             }
-            if (site.config.scanInterval) {
-                await sleep(site.config.scanInterval * 1000);
-            } else {
-                site.errMsg("Missing scanInterval option in " + site.cfgFile + ". Using 300s instead");
-                await sleep(300 * 1000);
-            }
+            const interval = site.config.scanInterval ? site.config.scanInterval : 300;
+            await sleep(interval * 1000);
         }
     }
 
     start() {
-        if (this.config.tui.enable) {
-            this.tui.start();
-        }
     }
 
     exit() {
@@ -294,7 +287,7 @@ class Dvr {
     }
 
     log(text, options) {
-        if (this.config.tui.enable) {
+        if (this.config.tui.enable && this.tui) {
             this.tui.log(text);
         } else if (options && options.trace && this.config.debug.errortrace) {
             console.trace(text);
