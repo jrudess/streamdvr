@@ -2,7 +2,7 @@ name: PIXIV
 plugin: ./plugins/basic
 siteUrl: https://sketch.pixiv.net/@
 urlback: ""
-enable: true
+enable: false
 m3u8fetch: scripts/m3u8_streamlink.sh
 recorder: scripts/record_streamlink.sh
 username: ""
