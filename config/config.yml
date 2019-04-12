@@ -1,22 +1,22 @@
 enable:
   daemon: false
 recording:
-  autoConvertType: mp4
+  autoConvertType: ts
   captureDirectory: capturing
   completeDirectory: captured
   postprocess: "scripts/postprocess_ffmpeg.sh"
   dateFormat: YYYYMMDD_HHmmss
   includeSiteInFile: false
   includeSiteInDir: false
-  streamerSubdir: true
-  siteSubdir: true
+  streamerSubdir: false
+  siteSubdir: false
   keepTsFile: false
   minSize: 0
   maxSize: 0
 postprocess: ""
 log:
-  enable: true
-  append: true
+  enable: false
+  append: false
 tui:
   enable: false
   allowUnicode: false
