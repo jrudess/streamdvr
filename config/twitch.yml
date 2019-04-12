@@ -2,10 +2,9 @@ name: TWITCH
 plugin: ./plugins/basic
 siteUrl: https://www.twitch.tv/
 urlback: ""
-enable: true
+enable: false
 m3u8fetch: scripts/m3u8_youtubedl.sh
 recorder: scripts/record_ffmpeg.sh
 scanInterval: 300
 batchSize: 5
 streamers:
-  - peyzki
