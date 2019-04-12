@@ -1,0 +1,67 @@
+name: MFC
+plugin: /home/nvclgo/streamdvr/plugins/mfc
+siteUrl: 'https://www.myfreecams.com/'
+urlback: ''
+enable: true
+recorder: scripts/record_streamlink.sh
+scanInterval: 300
+mfcWebSocket: true
+modernLogin: true
+mfcautolog: false
+streamers:
+  - 3085724 
+#OliviaP
+  - 3174243
+#jenna
+  - 3325917
+#tattg
+  - 3828850
+#StacyD
+  - 8185629
+#tattr
+  - 12527537
+#Bleu
+  - 13283832
+#bridg
+  - 13329731
+#Brittany
+  - 16082625
+#emmy
+  - 17720028
+#oreo
+  - 18668889
+#Riley
+  - 18719368
+#zoey
+  - 19102250
+#Harli
+  - 27174713
+#Rebecca
+  - 17929721
+#SabrinaM
+#  - 3039678
+#NikkyL
+#  - 8880764
+#Dani
+#  - 9070203
+#DOWNL
+#  - 11745862
+#
+#  - 15120204
+#Aubree
+#  - 16197283
+#Bailey
+#  - 18696242
+#Sp
+#  - 19319071
+#Ora
+#  - 21146523
+#Alicex
+  - 22346279
+#smkit
+#  - 22648349
+#KittyC
+#  - 22859765
+#Kimmy
+#  - 25043594
+#Georgie
