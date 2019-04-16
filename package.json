@@ -2,7 +2,7 @@
     "name": "streamdvr",
     "version": "0.11.8",
     "description": "DVR for streaming entertainment",
-    "main": "streamdvr.js",
+    "main": "streamdvr",
     "engines": {
         "node": ">=10.13.0"
     },
