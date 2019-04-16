@@ -337,8 +337,8 @@ class Tui {
             case 1: // pause timer
                 this.prompt.show();
                 this.inputBar.show();
-                this.render();
                 this.inputBar.focus();
+                this.render();
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
@@ -448,9 +448,9 @@ class Tui {
             this.inputBar.hide();
 
             if (this.list.interactive) {
-                if (this.listSelect && this.listSelect.size >= 2) {
+                if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]).toLowerCase();
+                    const name = blessed.helpers.stripTags(this.listSelect[0]);
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false, pausetimer: text});
                 }
