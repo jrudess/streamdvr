@@ -36,16 +36,22 @@ class Basic extends Site {
     }
 
     async m3u8Script(nm) {
-        // arg0 = url
-        // arg1 = proxy enable
-        // arg2 = proxy server
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
-        const proxy       = (this.dvr.config.proxy.enable ? "1 " : "0 ") + this.dvr.config.proxy.server;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
-        const username    = this.config.username ? "--" + this.listName + "-username=" + this.config.username : "";
-        const password    = this.config.password ? "--" + this.listName + "-password=" + this.config.password : "";
-        const auth        = (this.config.username ? " 1 " : " 0 ") + username + " " + password;
-        const cmd         = script + " " + streamerUrl + " " + proxy + auth;
+        let cmd           = script + " -s " + streamerUrl;
+
+        if (this.dvr.config.proxy.enable) {
+            cmd = cmd + " -p " + this.dvr.config.proxy.server;
+        }
+
+        if (this.config.username) {
+            cmd = cmd + " -u --" + this.listName + "-username=" + this.config.username;
+        }
+
+        if (this.config.password) {
+            cmd = cmd + " -u --" + this.listName + "-password=" + this.config.password;
+        }
+
         this.dbgMsg(nm.name + " running: " + cmd.cmd);
         try {
             // m3u8 url in stdout

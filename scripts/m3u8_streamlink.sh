@@ -5,22 +5,14 @@
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-args=("$@")
-url=${args[0]}
-proxyen=${args[1]}
-proxyserver=""
-if [ "$proxyen" -eq 1 ]; then
-    $proxyserver="--https-proxy ${args[2]}"
-fi
-loginen=${args[3]}
-username=""
-password=""
-if [ "$loginen" -eq 1 ]; then
-    username=${args[4]}
-    password=${args[5]}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source $DIR/record_setup.sh
+
+if [ ! -z "$proxyserver" ]; then
+    proxyserver="--https-proxy $proxyserver"
 fi
 
-streamlink --stream-url $proxyserver $username $password $url best > $tmp/stdout 2> $tmp/stderr
+streamlink --stream-url $proxyserver $username $password $site best > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -eq 0 ]; then
     # Streamer is online, print the m3u8 URL

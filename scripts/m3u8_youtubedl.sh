@@ -5,15 +5,14 @@
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-args=("$@")
-url=${args[0]}
-proxyen=${args[1]}
-proxyserver=""
-if [ "$proxyen" -eq 1 ]; then
-    $proxyserver="--proxy ${args[2]}"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source $DIR/record_setup.sh
+
+if [ ! -z "$proxyserver" ]; then
+    proxyserver="--proxy $proxyserver"
 fi
 
-youtube-dl -g $url $proxyserver > $tmp/stdout 2> $tmp/stderr
+youtube-dl -g $site $proxyserver > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -eq 0 ]; then
     # Streamer is online

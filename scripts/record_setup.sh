@@ -1,27 +1,48 @@
 #!/bin/bash
 
-cnt=$#
-args=("$@")
-output="${args[0]}"
-url="${args[1]}"
-proxyen="${args[2]}"
-proxyserver="${args[3]}"
-debug="${args[4]}"
-
-loginen=${args[5]}
+debug=0
+extraargs=""
 username=""
 password=""
-if [ "$loginen" -eq 1 ]; then
-    username=${args[6]}
-    password=${args[7]}
-    counter=8
-else
-    counter=6
-fi
 
-extraargs=" "
-while [ $counter -lt $cnt ]; do
-    extraargs+="${args[$counter]} "
-    let counter=counter+1
+while (( "$#" )); do
+    case "$1" in
+        -d|--debug)
+            debug=1
+            shift
+            ;;
+        -o|--output)
+            output=$2
+            shift 2
+            ;;
+        -s|--site)
+            site=$2
+            shift 2
+            ;;
+        -u|--user)
+            username=$2
+            shift 2
+            ;;
+        -p|--password)
+            password=$2
+            shift 2
+            ;;
+        -P|--proxy)
+            proxyserver=$2
+            shift 2
+            ;;
+        --) # end argument parsing
+            shift
+            break
+            ;;
+        -*|--*=) # unsupported flags
+            echo "Error: Unsupported flag $1" >&2
+            exit 1
+            ;;
+        *) # preserve other arguments
+            extraargs="$PARAMS $1"
+            shift
+            ;;
+    esac
 done
 

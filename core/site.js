@@ -83,15 +83,28 @@ class Site {
 
     getCaptureArguments(url, filename, options) {
         let args = [
+            "-o",
             this.dvr.config.recording.captureDirectory + "/" + filename + ".ts",
-            url,
-            this.dvr.config.proxy.enable ? "1" : "0",
-            this.dvr.config.proxy.server,
-            this.dvr.config.debug.recorder ? "1" : "0",
-            this.config.username ? "1" : "0",
-            this.config.username ? "--" + this.listName + "-username=" + this.config.username : "",
-            this.config.password ? "--" + this.listName + "-password=" + this.config.password : ""
+            "-s",
+            url
         ];
+
+        if (this.dvr.config.proxy.enable) {
+            args.push("-P");
+            args.push(this.dvr.config.proxy.server);
+        }
+
+        if (this.dvr.config.debug.recorder) {
+            args.push("-d");
+        }
+
+        if (this.config.username) {
+            args.push("--" + this.listName + "-username=" + this.config.username);
+        }
+
+        if (this.config.password) {
+            args.push("--" + this.listName + "-password=" + this.config.password);
+        }
 
         if (options && options.params) {
             args = args.concat(options.params);

@@ -2,10 +2,17 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source $DIR/record_setup.sh
 
-debugargs=$([ "$debug" = 1 ] && echo "-ldebug" || echo "-Q")
-proxyserver=$([ "$proxyen" = 1 ] && echo "-https-proxy ${args[3]}" || echo "")
+if [ "$debug" -eq "0" ]; then
+    debugargs="-ldebug"
+else
+    debugargs="-Q"
+fi
 
-streamlink --stream-sorting-excludes live -o "$output" $proxyserver $username $password $extraargs $debugargs $url best,best-unfiltered &
+if [ ! -z "$proxyserver" ]; then
+    proxyserver="-https-proxy $proxyserver"
+fi
+
+streamlink --stream-sorting-excludes live -o "$output" $proxyserver $username $password $extraargs $debugargs "$site" best,best-unfiltered &
 record_pid=$!
 
 killarg="" # Note: Streamlink does not respond to SIGINT
