@@ -22,7 +22,7 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            width: 62,
+            width: 64,
             height: "100%-11",
             align: "left",
             interactive: false,
@@ -52,7 +52,7 @@ class Tui {
         this.sitelist = blessed.listtable({
             top: "100%-11",
             left: 0,
-            width: 62,
+            width: 64,
             height: 10,
             align: "left",
             interactive: false,
@@ -81,7 +81,7 @@ class Tui {
 
         this.logbody = blessed.box({
             top: 0,
-            left: 62,
+            left: 64,
             height: "100%-1",
             grow: true,
             keys: true,
