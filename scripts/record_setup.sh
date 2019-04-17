@@ -40,7 +40,7 @@ while (( "$#" )); do
             exit 1
             ;;
         *) # preserve other arguments
-            extraargs="$PARAMS $1"
+            extraargs="$extraargs $1"
             shift
             ;;
     esac
