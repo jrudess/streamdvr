@@ -35,10 +35,6 @@ while (( "$#" )); do
             shift
             break
             ;;
-        -*|--*=) # unsupported flags
-            echo "Error: Unsupported flag $1" >&2
-            exit 1
-            ;;
         *) # preserve other arguments
             extraargs="$extraargs $1"
             shift
