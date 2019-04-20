@@ -51,9 +51,9 @@ Refer to `config/config.yml` for all configuration options.
 * To suppress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
 
 * Filename formatting:
-  %s - Site Name
-  %n - Streamer Name
-  %d - Date and Time
+  * %s - Site Name
+  * %n - Streamer Name
+  * %d - Date and Time
 
 * TUI navigation:
   * `1` to focus the streamer list, `Esc` to unfocus
