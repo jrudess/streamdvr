@@ -1,6 +1,6 @@
 {
     "name": "streamdvr",
-    "version": "0.11.8",
+    "version": "0.12.1",
     "description": "DVR for streaming entertainment",
     "main": "streamdvr",
     "engines": {
