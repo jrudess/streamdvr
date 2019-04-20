@@ -50,11 +50,16 @@ Refer to `config/config.yml` for all configuration options.
 * To run: `streamdvr`
 * To suppress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
 
+* Filename formatting:
+  %s - Site Name
+  %n - Streamer Name
+  %d - Date and Time
+
 * TUI navigation:
-    * `1` to focus the streamer list, `Esc` to unfocus
-    * `2` to focus the site list, `Esc` to unfocus
-    * `enter` to focus the input bar for CLI
-    * `Up/Down/PgUp/PgDn` to scroll the active focus
+  * `1` to focus the streamer list, `Esc` to unfocus
+  * `2` to focus the site list, `Esc` to unfocus
+  * `enter` to focus the input bar for CLI
+  * `Up/Down/PgUp/PgDn` to scroll the active focus
 
 * CLI:
 ```
