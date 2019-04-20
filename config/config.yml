@@ -5,8 +5,8 @@ recording:
   captureDirectory: capturing
   completeDirectory: captured
   postprocess: "scripts/postprocess_ffmpeg.sh"
-  dateFormat: YYYYMMDD_HHmmss
-  includeSiteInFile: false
+  dateFormat: "YYYYMMDD_HHmmss"
+  fileNameFormat: "%n_%s_%d"
   includeSiteInDir: false
   streamerSubdir: true
   siteSubdir: true

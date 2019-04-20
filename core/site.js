@@ -40,8 +40,11 @@ class Site {
     }
 
     getFileName(nm) {
-        const site = this.dvr.config.recording.includeSiteInFile ? this.listName + "_" : "";
-        return nm + "_" + site + this.dvr.getDateTime();
+        let filename = this.dvr.config.recording.fileNameFormat;
+        filename = filename.replace(/%s/gi, this.listName);
+        filename = filename.replace(/%n/gi, nm);
+        filename = filename.replace(/%d/gi, this.dvr.getDateTime());
+        return filename;
     }
 
     checkFileSize() {
