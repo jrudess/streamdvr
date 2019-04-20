@@ -40,7 +40,7 @@ class Site {
     }
 
     getFileName(nm) {
-        let filename = this.dvr.config.recording.fileNameFormat;
+        let filename = this.dvr.config.recording.fileNameFormat ? this.dvr.config.recording.fileNameFormat : "%n_%s_%d";
         filename = filename.replace(/%s/gi, this.listName);
         filename = filename.replace(/%n/gi, nm);
         filename = filename.replace(/%d/gi, this.dvr.getDateTime());
