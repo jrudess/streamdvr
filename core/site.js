@@ -218,11 +218,11 @@ class Site {
         this.render(true);
     }
 
-    updateStreamers(list, options) {
+    async updateStreamers(list, options) {
         let dirty = false;
 
         for (let i = 0; i < list.length; i++) {
-            dirty |= this.updateList(list[i], {add: options.add, pause: 0, isTemp: false, init: options.init});
+            dirty |= await this.updateList(list[i], {add: options.add, pause: 0, isTemp: false, init: options.init});
         }
 
         return dirty;
