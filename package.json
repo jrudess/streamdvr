@@ -1,6 +1,6 @@
 {
     "name": "streamdvr",
-    "version": "0.12.1",
+    "version": "0.12.2",
     "description": "DVR for streaming entertainment",
     "main": "streamdvr",
     "engines": {
@@ -24,7 +24,6 @@
         "js-yaml": "^3.13.1",
         "moment": "^2.24.0",
         "mv": "^2.1.1",
-        "neo-blessed": "github:embark-framework/neo-blessed",
-        "underscore": "^1.9.1"
+        "neo-blessed": "github:embark-framework/neo-blessed"
     }
 }
