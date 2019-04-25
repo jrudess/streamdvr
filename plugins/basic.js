@@ -49,7 +49,7 @@ class Basic extends Site {
         }
 
         if (this.config.password) {
-            cmd = cmd + " -u --" + this.listName + "-password=" + this.config.password;
+            cmd = cmd + " -p --" + this.listName + "-password=" + this.config.password;
         }
 
         this.dbgMsg(nm.name + " running: " + cmd.cmd);
