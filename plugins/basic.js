@@ -14,7 +14,7 @@ class Basic extends Site {
 
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
-                this.infoMsg("Streamer list is old style format, performing one-time conversion");
+                this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
                 this.convertFormat(this.config.streamers);
             }
         }
