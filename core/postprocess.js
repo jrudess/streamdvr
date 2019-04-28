@@ -1,6 +1,7 @@
 "use strict";
 
 const fs      = require("fs");
+const mv      = require("mv");
 const {spawn} = require("child_process");
 
 class PostProcess {
@@ -33,7 +34,7 @@ class PostProcess {
 
         if (fileType === "ts") {
             site.dbgMsg(namePrint + "recording moved (" +
-                capDir + capFile + " to " + completeDir + completeFile +")");
+                capDir + capFile + " to " + completeDir + completeFile + ")");
             mv(capDir + capFile, completeDir + completeFile, (err) => {
                 if (err) {
                     this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
