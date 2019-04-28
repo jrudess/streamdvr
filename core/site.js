@@ -174,19 +174,12 @@ class Site {
                     streamer = this.streamerList.get(id.uid);
                 }
                 if (streamer) {
-                    if (streamer.paused) {
-                        this.infoMsg(id.nm.name + " is unpaused.");
-                        streamer.paused = false;
-                        this.refresh(streamer, options);
-                    } else {
-                        this.infoMsg(id.nm.name + " is paused.");
-                        streamer.paused = true;
-                        this.haltCapture(id.uid);
+                    if (this.togglePause(streamer, options)) {
+                        dirty = true;
+                        this.render(true);
                     }
                 }
-                this.render(true);
             }
-            return false;
         } else if (options.add) {
             if (this.addStreamer(id, list, options)) {
                 list.push(this.createListItem(id));

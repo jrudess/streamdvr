@@ -61,6 +61,28 @@ class Basic extends Site {
         return listItem;
     }
 
+    togglePause(streamer, index, options) {
+        if (streamer) {
+            for (let i = 0; i < this.config.streamers.length; i++) {
+                if (this.config.streamers[i][0] === streamer.uid) {
+                    if (this.config.streamers[i][1] === "paused") {
+                        this.infoMsg(streamer.nm.name + " is unpaused.");
+                        this.config.streamers[i][1] = "unpaused";
+                        streamer.paused = false;
+                        this.refresh(streamer, options);
+                    } else {
+                        this.infoMsg(streamer.nm.name + " is paused.");
+                        this.config.streamers[i][1] = "paused";
+                        streamer.paused = true;
+                        this.haltCapture(streamer.uid);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     async m3u8Script(nm) {
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
