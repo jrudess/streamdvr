@@ -107,21 +107,19 @@ class PostProcess {
     }
 
     async getCompleteDir(site, streamer) {
-        if (streamer === null) {
-            const dir = this.config.recording.completeDirectory + "/UNKNOWN";
-            this.dvr.mkdir(dir);
+        if (streamer) {
+            const dir = await site.getCompleteDir(streamer);
             return dir;
         }
 
-        const dir = await site.getCompleteDir(streamer);
-        return dir;
+        return this.dvr.mkdir(this.config.recording.completeDirectory + "/UNKNOWN");
     }
 
-    uniqueFileName(completeDir, filename) {
+    uniqueFileName(completeDir, filename, fileType) {
         // If the output file already exists, make filename unique
-        let count = 0;
+        let count = 1;
         let fileinc = filename;
-        let name = completeDir + fileinc;
+        let name = completeDir + fileinc + "." + fileType;
         while (fs.existsSync(name)) {
             this.dvr.errMsg(name + " already exists");
             fileinc = filename + " (" + count + ")";
