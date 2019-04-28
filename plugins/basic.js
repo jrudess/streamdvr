@@ -14,7 +14,17 @@ class Basic extends Site {
 
         this.urlback = urlback;
 
-        for (const nm of this.config.streamers.values()) {
+        if (this.config.streamers.length > 0) {
+            if (this.config.streamers[0].constructor !== Array) {
+                this.infoMsg("Streamer list is old style format, performing one-time conversion");
+                this.convertFormat(this.config.streamers);
+            }
+        }
+
+        for (let i = 0; i < this.config.streamers.length; i++) {
+            // for (const nm of this.config.streamers.values()) {
+            const nm = this.config.streamers[i][0];
+            const paused = this.config.streamers[i][1] === "paused";
             this.streamerList.set(nm, {
                 uid:          nm,
                 nm:           nm,
@@ -25,14 +35,33 @@ class Basic extends Site {
                 postProcess:  0,
                 filsesize:    0,
                 stuckcounter: 0,
-                paused:       false
+                paused:       paused
             });
         }
         this.redrawList = true;
     }
 
+    async convertFormat(streamerList) {
+        const newList = [];
+        for (const streamer of streamerList.values()) {
+            const newItem = [];
+            newItem.push(streamer);   // name
+            newItem.push("unpaused");
+            newList.push(newItem);
+        }
+        this.config.streamers = newList;
+        await this.writeConfig();
+    }
+
     updateList(nm, options) {
         return super.updateList({nm: nm, uid: nm}, options);
+    }
+
+    createListItem(id) {
+        const listItem = [];
+        listItem.push(id.nm);
+        listItem.push("unpaused");
+        return listItem;
     }
 
     async m3u8Script(nm) {

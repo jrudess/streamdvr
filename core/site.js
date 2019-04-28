@@ -2,7 +2,6 @@
 
 const yaml    = require("js-yaml");
 const fs      = require("fs");
-const _       = require("underscore");
 const {spawn} = require("child_process");
 
 function sleep(time) {
@@ -157,9 +156,13 @@ class Site {
         }
     }
 
+    createListItem() {
+        // Virtual
+    }
+
     async updateList(id, options) {
         let dirty = false;
-        let list = options.isTemp ? this.tempList : this.config.streamers;
+        const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
             if (this.streamerList.has(id.uid)) {
                 let streamer = this.streamerList.get(id.uid);
@@ -186,13 +189,16 @@ class Site {
             return false;
         } else if (options.add) {
             if (this.addStreamer(id, list, options)) {
-                list.push(id.uid);
+                list.push(this.createListItem(id));
                 dirty = true;
             }
         } else if (this.removeStreamer(id, list)) {
-            if (this.config.streamers.indexOf(id.uid) !== -1) {
-                list = _.without(list, id.uid);
-                dirty = true;
+            for (let i = 0; i < this.config.streamers.length; i++) {
+                if (this.config.streamers[i][0] === id.uid) {
+                    list.splice(i, 1);
+                    dirty = true;
+                    break;
+                }
             }
         }
         if (dirty) {
@@ -229,13 +235,18 @@ class Site {
     }
 
     addStreamer(id, list, options) {
-        let added = false;
+        let added = true;
 
-        if (list.indexOf(id.uid) === -1) {
+        for (let i = 0; i < list.length; i++) {
+            if (list[i][0] === id.uid) {
+                this.errMsg(id.nm.name + " is already in the capture list");
+                added = false;
+                break;
+            }
+        }
+
+        if (added) {
             this.infoMsg(id.nm.name + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
-            added = true;
-        } else {
-            this.errMsg(id.nm.name + " is already in the capture list");
         }
 
         if (!this.streamerList.has(id.uid)) {
