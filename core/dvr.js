@@ -2,7 +2,6 @@
 
 const fs            = require("fs");
 const moment        = require("moment");
-const mv            = require("mv");
 const yaml          = require("js-yaml");
 const path          = require("path");
 const {Tui}         = require("./tui");
