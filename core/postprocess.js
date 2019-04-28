@@ -33,15 +33,15 @@ class PostProcess {
         const completeFile = uniqueName + "." + fileType;
 
         if (fileType === "ts") {
-            site.dbgMsg(namePrint + "recording moved (" +
-                capDir + capFile + " to " + completeDir + completeFile + ")");
+            site.dbgMsg(namePrint + "recording moved " +
+                capDir + capFile + " to " + completeDir + completeFile);
             mv(capDir + capFile, completeDir + completeFile, (err) => {
                 if (err) {
                     this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
                 }
             });
 
-            this.postScript(site, streamer, capFile);
+            this.postScript(site, streamer, completeDir, completeFile);
             return;
         }
 
@@ -66,7 +66,7 @@ class PostProcess {
             }
 
             site.infoMsg(namePrint + "done converting " + completeFile);
-            this.postScript(site, streamer, completeFile);
+            this.postScript(site, streamer, completeDir, completeFile);
         });
 
         myCompleteProcess.on("error", (err) => {
@@ -74,14 +74,14 @@ class PostProcess {
         });
     }
 
-    postScript(site, streamer, completeFile) {
+    postScript(site, streamer, completeDir, completeFile) {
         if (!this.config.postprocess) {
             this.nextConvert(site, streamer);
             return;
         }
 
         const script    = this.dvr.calcPath(this.config.postprocess);
-        const args      = [this.config.recording.completeDirectory, completeFile];
+        const args      = [completeDir, completeFile];
         const namePrint = streamer === null ? "" : streamer.nm.name + " ";
         const cmd       = script + " " + args.toString().replace(/,/g, " ");
 
