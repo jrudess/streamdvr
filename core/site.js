@@ -296,9 +296,13 @@ class Site {
         return true;
     }
 
-    storeCapInfo(streamer, filename, capture) {
+    storeCapInfo(streamer, filename, capture, isPostProcess) {
         streamer.filename = filename;
         streamer.capture = capture;
+        if (isPostProcess) {
+            streamer.postProcess = 1;
+            this.redrawList = true;
+        }
         this.render(true);
     }
 
@@ -406,7 +410,7 @@ class Site {
         if (capture.pid) {
             const filename = capInfo.filename + ".ts";
             this.infoMsg(streamer.nm.name + " recording started: " + filename.file);
-            this.storeCapInfo(streamer, filename, capture);
+            this.storeCapInfo(streamer, filename, capture, false);
         }
 
         capture.on("close", () => {
@@ -424,34 +428,24 @@ class Site {
                 } else {
                     this.errMsg(streamer.nm.name + ": " + err.toString());
                 }
-                this.storeCapInfo(streamer, "", null);
+                this.storeCapInfo(streamer, "", null, false);
             } else {
                 const sizeMB = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
                     this.infoMsg(streamer.nm.name + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
                     fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
-                    this.storeCapInfo(streamer, "", null);
+                    this.storeCapInfo(streamer, "", null, false);
                 } else {
-                    this.dvr.postProcessQ.push({site: this, streamer: streamer, filename: capInfo.filename});
-                    if (this.dvr.postProcessQ.length === 1) {
-                        this.dvr.postProcess();
-                    }
+                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename});
                 }
             }
         });
         this.refresh(streamer);
     }
 
-    setProcessing(streamer) {
-        // Need to remember post-processing is happening, so that
-        // the offline check does not kill postprocess jobs.
-        streamer.postProcess = 1;
-        this.redrawList = true;
-    }
-
     clearProcessing(streamer) {
         // Note: setting postProcess to null releases program to exit
-        this.storeCapInfo(streamer, "", null);
+        this.storeCapInfo(streamer, "", null, false);
         this.redrawList = true;
 
         streamer.postProcess = 0;

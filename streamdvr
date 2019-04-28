@@ -52,7 +52,6 @@ class Streamdvr extends Dvr {
                 this.run(plugin.handle);
             }
         }
-        super.start();
     }
 
     busy() {
@@ -94,7 +93,7 @@ class Streamdvr extends Dvr {
         }
 
         // Allow this to execute multiple times so that SIGINT
-        // can get passed again to ffmpeg/streamdvr in case some get hung.
+        // can get passed again to ffmpeg/streamlink in case some get hung.
         for (const plugin of this.plugins.values()) {
             if (plugin.enable) {
                 plugin.handle.haltAllCaptures();
@@ -106,4 +105,3 @@ class Streamdvr extends Dvr {
 
 const dvr = new Streamdvr();
 dvr.start();
-

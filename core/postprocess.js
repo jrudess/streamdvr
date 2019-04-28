@@ -1,0 +1,136 @@
+"use strict";
+
+const fs      = require("fs");
+const {spawn} = require("child_process");
+
+class PostProcess {
+
+    constructor(dvr) {
+        this.dvr = dvr;
+        this.config = dvr.config;
+        this.postProcessQ = [];
+    }
+
+    add(capInfo) {
+        this.postProcessQ.push(capInfo);
+        if (this.postProcessQ.length === 1) {
+            this.convert();
+        }
+    }
+
+    async convert() {
+
+        const capInfo      = this.postProcessQ[0];
+        const site         = capInfo.site === null ? this.dvr : capInfo.site;
+        const streamer     = capInfo.streamer;
+        const namePrint    = streamer === null ? "" : streamer.nm.name + " ";
+        const capDir       = this.config.recording.captureDirectory + "/";
+        const capFile      = capInfo.filename + ".ts";
+        const fileType     = this.config.recording.autoConvertType;
+        const completeDir  = await this.getCompleteDir(site, streamer) + "/";
+        const uniqueName   = this.uniqueFileName(completeDir, capInfo.filename, fileType);
+        const completeFile = uniqueName + "." + fileType;
+
+        if (fileType === "ts") {
+            site.dbgMsg(namePrint + "recording moved (" +
+                capDir + capFile + " to " + completeDir + completeFile +")");
+            mv(capDir + capFile, completeDir + completeFile, (err) => {
+                if (err) {
+                    this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
+                }
+            });
+
+            this.postScript(site, streamer, capFile);
+            return;
+        }
+
+        const script = this.dvr.calcPath(this.config.recording.postprocess);
+        const args = [
+            capDir + capFile,
+            completeDir + completeFile,
+            fileType
+        ];
+
+        const cmd = script + " " + args.toString().replace(/,/g, " ");
+        site.infoMsg(namePrint + "converting to " + fileType + ": " + cmd.cmd);
+
+        if (site !== this.dvr) {
+            site.storeCapInfo(streamer, uniqueName, null, true);
+        }
+        const myCompleteProcess = spawn(script, args);
+
+        myCompleteProcess.on("close", () => {
+            if (!this.config.recording.keepTsFile) {
+                fs.unlinkSync(args[0]);
+            }
+
+            site.infoMsg(namePrint + "done converting " + completeFile);
+            this.postScript(site, streamer, completeFile);
+        });
+
+        myCompleteProcess.on("error", (err) => {
+            this.dvr.errMsg(err.toString());
+        });
+    }
+
+    postScript(site, streamer, completeFile) {
+        if (!this.config.postprocess) {
+            this.nextConvert(site, streamer);
+            return;
+        }
+
+        const script    = this.dvr.calcPath(this.config.postprocess);
+        const args      = [this.config.recording.completeDirectory, completeFile];
+        const namePrint = streamer === null ? "" : streamer.nm.name + " ";
+        const cmd       = script + " " + args.toString().replace(/,/g, " ");
+
+        site.infoMsg(namePrint + "running global postprocess script: " + cmd.cmd);
+        const userPostProcess = spawn(script, args);
+
+        userPostProcess.on("close", () => {
+            site.infoMsg(namePrint + "done post-processing " + completeFile.file);
+            this.nextConvert(site, streamer);
+        });
+    }
+
+    nextConvert(site, streamer) {
+
+        if (site !== this.dvr) {
+            site.clearProcessing(streamer);
+        }
+
+        // Pop current job, and start next conversion job (if any)
+        this.postProcessQ.shift();
+        if (this.postProcessQ.length > 0) {
+            this.convert();
+        }
+    }
+
+    async getCompleteDir(site, streamer) {
+        if (streamer === null) {
+            const dir = this.config.recording.completeDirectory + "/UNKNOWN";
+            this.dvr.mkdir(dir);
+            return dir;
+        }
+
+        const dir = await site.getCompleteDir(streamer);
+        return dir;
+    }
+
+    uniqueFileName(completeDir, filename) {
+        // If the output file already exists, make filename unique
+        let count = 0;
+        let fileinc = filename;
+        let name = completeDir + fileinc;
+        while (fs.existsSync(name)) {
+            this.dvr.errMsg(name + " already exists");
+            fileinc = filename + " (" + count + ")";
+            name = completeDir + fileinc + "." + fileType;
+            count++;
+        }
+        return fileinc;
+    }
+
+}
+
+exports.PostProcess = PostProcess;
