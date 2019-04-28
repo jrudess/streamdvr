@@ -52,8 +52,8 @@ class PostProcess {
             fileType
         ];
 
-        const cmd = script + " " + args.toString().replace(/,/g, " ");
-        site.infoMsg(namePrint + "converting to " + fileType + ": " + cmd.cmd);
+        site.infoMsg(namePrint + "converting to " + fileType + ": " +
+            script.cmd + " " + args.join(" ").cmd);
 
         if (site !== this.dvr) {
             site.storeCapInfo(streamer, uniqueName, null, true);
@@ -83,9 +83,9 @@ class PostProcess {
         const script    = this.dvr.calcPath(this.config.postprocess);
         const args      = [completeDir, completeFile];
         const namePrint = streamer === null ? "" : streamer.nm.name + " ";
-        const cmd       = script + " " + args.toString().replace(/,/g, " ");
 
-        site.infoMsg(namePrint + "running global postprocess script: " + cmd.cmd);
+        site.infoMsg(namePrint + "running global postprocess script: " +
+            script.cmd + " " + args.join(" ").cmd);
         const userPostProcess = spawn(script, args);
 
         userPostProcess.on("close", () => {

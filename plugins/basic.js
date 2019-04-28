@@ -4,10 +4,8 @@ const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("../core/site");
 
-// A basic-site is one in which external scripts are used to check if a
-// streamer is online and also record the streams.  These scripts currently
-// wrap youtube-dl, streamlink, and ffmpeg functionality.  This allows for
-// easier support of new programs by adding new shell script wrappers.
+// Basic-site uses external scripts/programs to find m3u8 URLs and to record
+// streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
 class Basic extends Site {
     constructor(siteName, dvr, tui, urlback) {
         super(siteName, dvr, tui);
@@ -22,7 +20,6 @@ class Basic extends Site {
         }
 
         for (let i = 0; i < this.config.streamers.length; i++) {
-            // for (const nm of this.config.streamers.values()) {
             const nm = this.config.streamers[i][0];
             const paused = this.config.streamers[i][1] === "paused";
             this.streamerList.set(nm, {

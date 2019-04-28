@@ -410,7 +410,8 @@ class Site {
         const script   = this.dvr.calcPath(this.config.recorder);
         const capture  = spawn(script, capInfo.spawnArgs);
 
-        this.dbgMsg("Starting recording: " + script.cmd + " " + capInfo.spawnArgs.join(" ").cmd);
+        this.dbgMsg("Starting recording: " +
+            script.cmd + " " + capInfo.spawnArgs.join(" ").cmd);
 
         if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
