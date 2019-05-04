@@ -61,7 +61,7 @@ class Basic extends Site {
         return listItem;
     }
 
-    togglePause(streamer, index, options) {
+    togglePause(streamer, options) {
         if (streamer) {
             for (let i = 0; i < this.config.streamers.length; i++) {
                 if (this.config.streamers[i][0] === streamer.uid) {
