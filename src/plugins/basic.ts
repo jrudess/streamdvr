@@ -3,11 +3,12 @@
 const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("../core/site");
+const colors      = require("colors");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
 class Basic extends Site {
-    constructor(siteName, dvr, tui, urlback) {
+    constructor(siteName : string, dvr : any, tui : any, urlback : string) {
         super(siteName, dvr, tui);
 
         this.urlback = urlback;
@@ -38,7 +39,7 @@ class Basic extends Site {
         this.redrawList = true;
     }
 
-    async convertFormat(streamerList) {
+    async convertFormat(streamerList : Array<any>) {
         const newList = [];
         for (const streamer of streamerList.values()) {
             const newItem = [];
@@ -50,18 +51,18 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    updateList(nm, options) {
+    updateList(nm : string, options : any) {
         return super.updateList({nm: nm, uid: nm}, options);
     }
 
-    createListItem(id) {
+    createListItem(id : any) {
         const listItem = [];
         listItem.push(id.nm);
         listItem.push("unpaused");
         return listItem;
     }
 
-    togglePause(streamer, index, options) {
+    togglePause(streamer : any, options : any) {
         if (streamer) {
             for (let i = 0; i < this.config.streamers.length; i++) {
                 if (this.config.streamers[i][0] === streamer.uid) {
@@ -83,7 +84,7 @@ class Basic extends Site {
         return false;
     }
 
-    async m3u8Script(nm) {
+    async m3u8Script(nm : string) {
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
         let cmd           = script + " -s " + streamerUrl;
@@ -100,7 +101,7 @@ class Basic extends Site {
             cmd = cmd + " -p --" + this.listName + "-password=" + this.config.password;
         }
 
-        this.dbgMsg(nm.name + " running: " + cmd.cmd);
+        this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
         try {
             // m3u8 url in stdout
             const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
@@ -119,13 +120,12 @@ class Basic extends Site {
         }
     }
 
-    async checkStreamerState(nm, options) {
+    async checkStreamerState(streamer : any, options : any) {
         // Detect if streamer is online or actively streaming
-        const streamer  = this.streamerList.get(nm);
         const prevState = streamer.state;
-        const stream    = await this.m3u8Script(nm);
+        const stream    = await this.m3u8Script(streamer.nm);
 
-        let msg = nm.name;
+        let msg = colors.name(streamer.nm);
         if (stream.status) {
             msg += " is streaming.";
             streamer.state = "Streaming";
@@ -134,7 +134,14 @@ class Basic extends Site {
             streamer.state = "Offline";
         }
 
-        super.checkStreamerState(streamer, msg, stream.status, prevState);
+        let newoptions : any = {};
+        if (options) {
+            newoptions = options;
+        }
+        newoptions.msg = msg;
+        newoptions.isStreaming = stream.status;
+        newoptions.prevState = prevState;
+        super.checkStreamerState(streamer, newoptions);
 
         if (stream.status) {
             if (streamer.paused) {
@@ -145,11 +152,12 @@ class Basic extends Site {
         }
     }
 
-    async checkBatch(batch, options) {
+    async checkBatch(batch : any, options : any) {
         const queries = [];
 
         for (let i = 0; i < batch.length; i++) {
-            queries.push(this.checkStreamerState(batch[i], options));
+            const streamer : any = this.streamerList.get(batch[i]);
+            queries.push(this.checkStreamerState(streamer, options));
         }
 
         try {
@@ -161,7 +169,7 @@ class Basic extends Site {
         }
     }
 
-    serialize(nms) {
+    serialize(nms : any) {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
@@ -186,7 +194,7 @@ class Basic extends Site {
         return serRuns;
     }
 
-    async getStreamers(options) {
+    async getStreamers(options : any) {
         if (!super.getStreamers()) {
             return [];
         }
@@ -199,7 +207,7 @@ class Basic extends Site {
         const serRuns = this.serialize(nms);
 
         try {
-            let streamers = [];
+            let streamers : Array<any> = [];
             for (let i = 0; i < serRuns.length; i++) {
                 const batch = await this.checkBatch(serRuns[i], options);
                 streamers = streamers.concat(batch);
@@ -211,7 +219,7 @@ class Basic extends Site {
         }
     }
 
-    setupCapture(streamer, url) {
+    setupCapture(streamer : any, url : any) {
         if (!super.setupCapture(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }

@@ -1,5 +1,5 @@
 name: PIXIV
-plugin: ./plugins/basic
+plugin: ./lib/plugins/basic
 siteUrl: https://sketch.pixiv.net/@
 urlback: ""
 enable: true

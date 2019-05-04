@@ -1,5 +1,5 @@
 name: TWITCH
-plugin: ./plugins/basic
+plugin: ./lib/plugins/basic
 siteUrl: https://www.twitch.tv/
 urlback: ""
 enable: true

@@ -1,7 +1,7 @@
 name: SMASH
-plugin: ./plugins/basic
-siteUrl: 'https://www.smashcast.tv/'
-urlback: ''
+plugin: ./lib/plugins/basic
+siteUrl: https://www.smashcast.tv/
+urlback: ""
 enable: true
 m3u8fetch: scripts/m3u8_streamlink.sh
 recorder: scripts/record_streamlink.sh

@@ -1,18 +1,26 @@
 "use strict";
 
+export {};
+declare var require: any
+
 const fs      = require("fs");
 const mv      = require("mv");
 const {spawn} = require("child_process");
+const colors  = require("colors");
 
 class PostProcess {
 
-    constructor(dvr) {
+    dvr: any;
+    config: any;
+    postProcessQ: Array<any>;
+
+    constructor(dvr : any) {
         this.dvr = dvr;
         this.config = dvr.config;
         this.postProcessQ = [];
     }
 
-    add(capInfo) {
+    add(capInfo : any) {
         this.postProcessQ.push(capInfo);
         if (this.postProcessQ.length === 1) {
             this.convert();
@@ -35,7 +43,7 @@ class PostProcess {
         if (fileType === "ts") {
             site.dbgMsg(namePrint + "recording moved " +
                 capDir + capFile + " to " + completeDir + completeFile);
-            mv(capDir + capFile, completeDir + completeFile, (err) => {
+            mv(capDir + capFile, completeDir + completeFile, (err : any) => {
                 if (err) {
                     this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
                 }
@@ -53,7 +61,7 @@ class PostProcess {
         ];
 
         site.infoMsg(namePrint + "converting to " + fileType + ": " +
-            script.cmd + " " + args.join(" ").cmd);
+            script.cmd + " " + colors.cmd(args.join(" ")));
 
         if (site !== this.dvr) {
             site.storeCapInfo(streamer, uniqueName, null, true);
@@ -69,12 +77,12 @@ class PostProcess {
             this.postScript(site, streamer, completeDir, completeFile);
         });
 
-        myCompleteProcess.on("error", (err) => {
+        myCompleteProcess.on("error", (err : any) => {
             this.dvr.errMsg(err.toString());
         });
     }
 
-    postScript(site, streamer, completeDir, completeFile) {
+    postScript(site : any, streamer : any, completeDir : string, completeFile : string) {
         if (!this.config.postprocess) {
             this.nextConvert(site, streamer);
             return;
@@ -85,16 +93,16 @@ class PostProcess {
         const namePrint = streamer === null ? "" : streamer.nm.name + " ";
 
         site.infoMsg(namePrint + "running global postprocess script: " +
-            script.cmd + " " + args.join(" ").cmd);
+            script.cmd + " " + colors.cmd(args.join(" ")));
         const userPostProcess = spawn(script, args);
 
         userPostProcess.on("close", () => {
-            site.infoMsg(namePrint + "done post-processing " + completeFile.file);
+            site.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
             this.nextConvert(site, streamer);
         });
     }
 
-    nextConvert(site, streamer) {
+    nextConvert(site : any, streamer : any) {
 
         if (site !== this.dvr) {
             site.clearProcessing(streamer);
@@ -107,7 +115,7 @@ class PostProcess {
         }
     }
 
-    async getCompleteDir(site, streamer) {
+    async getCompleteDir(site : any, streamer : any) {
         if (streamer) {
             const dir = await site.getCompleteDir(streamer);
             return dir;
@@ -116,7 +124,7 @@ class PostProcess {
         return this.dvr.mkdir(this.config.recording.completeDirectory + "/UNKNOWN");
     }
 
-    uniqueFileName(completeDir, filename, fileType) {
+    uniqueFileName(completeDir : string, filename : string, fileType : string) {
         // If the output file already exists, make filename unique
         let count = 1;
         let fileinc = filename;

@@ -1,9 +1,29 @@
 "use strict";
 
+export {};
+declare var require: any
+
 const blessed = require("neo-blessed");
+const colors  = require("colors");
 
 class Tui {
-    constructor(dvr) {
+
+    dvr :  any;
+    config : any;
+    SITES : Array<any>;
+    hideOffline : boolean;
+    listSelect : any;
+    sitelistSelect : any;
+    screen : any;
+    list : any;
+    sitelist : any;
+    prompt : any;
+    inputBar : any;
+    listmenu : any;
+    sitemenu: any;
+    logbody: any;
+
+    constructor(dvr : any) {
 
         this.dvr = dvr;
         this.config = dvr.config;
@@ -114,9 +134,9 @@ class Tui {
             }
         });
         if (this.config.tui.allowUnicode) {
-            this.prompt.content = "❯ ".prompt;
+            this.prompt.content = colors.prompt("❯ ");
         } else {
-            this.prompt.content = "> ".prompt;
+            this.prompt.content = colors.prompt("> ");
         }
         this.prompt.hide();
 
@@ -200,7 +220,7 @@ class Tui {
             this.sitelist.interactive = false;
             this.list.interactive = true;
             this.list.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.screen.key("2", () => {
@@ -208,17 +228,17 @@ class Tui {
             this.list.interactive = false;
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.screen.key("pageup", () => {
             this.screen.focused.scroll(-this.screen.focused.height || -1);
-            this.render();
+            this.render(false, null);
         });
 
         this.screen.key("pagedown", () => {
             this.screen.focused.scroll(this.screen.focused.height || 1);
-            this.render();
+            this.render(false, null);
         });
 
         // Close on q, or ctrl+c
@@ -232,21 +252,21 @@ class Tui {
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render();
+                this.render(false, null);
             }
         });
 
         this.logbody.key(["j"], () => {
             this.logbody.scroll(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.logbody.key(["k"], () => {
             this.logbody.scroll(-1);
-            this.render();
+            this.render(false, null);
         });
 
-        this.list.on("selectrow", (item, index) => {
+        this.list.on("selectrow", (item : any, index : number) => {
             if (index < this.list.rows.length) {
                 this.listSelect = this.list.rows[index];
             } else {
@@ -256,24 +276,24 @@ class Tui {
 
         this.list.key(["j"], () => {
             this.list.down(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.list.key(["k"], () => {
             this.list.up(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.list.on("select", () => {
             this.listmenu.show();
             this.listmenu.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.list.on("cancel", () => {
             this.list.interactive = false;
             this.logbody.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.list.key("r", () => {
@@ -282,7 +302,7 @@ class Tui {
             }
         });
 
-        this.sitelist.on("selectrow", (item, index) => {
+        this.sitelist.on("selectrow", (item : any, index : number) => {
             if (index < this.sitelist.rows.length) {
                 this.sitelistSelect = this.sitelist.rows[index];
             } else {
@@ -292,37 +312,37 @@ class Tui {
 
         this.sitelist.key(["j"], () => {
             this.sitelist.down(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.sitelist.key(["k"], () => {
             this.sitelist.up(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.sitelist.on("select", () => {
             this.sitemenu.show();
             this.sitemenu.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.sitelist.on("cancel", () => {
             this.sitelist.interactive = false;
             this.logbody.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.listmenu.key(["j"], () => {
             this.listmenu.down(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.listmenu.key(["k"], () => {
             this.listmenu.up(1);
-            this.render();
+            this.render(false, null);
         });
 
-        this.listmenu.on("select", (item, index) => {
+        this.listmenu.on("select", (item : any, index : number) => {
             switch (index) {
             case 0: // pause
                 if (this.listSelect && this.listSelect.length >= 2) {
@@ -331,14 +351,14 @@ class Tui {
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render();
+                    this.render(false, null);
                 }
                 break;
             case 1: // pause timer
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render();
+                this.render(false, null);
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
@@ -347,14 +367,14 @@ class Tui {
                     this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render();
+                    this.render(false, null);
                 }
                 break;
             case 3: // toggle offline
                 this.hideOffline = !this.hideOffline;
                 this.listmenu.hide();
                 this.list.focus();
-                this.render(true);
+                this.render(true, null);
                 if (this.list.rows.length <= 1) {
                     this.listSelect = null;
                 } else {
@@ -368,10 +388,10 @@ class Tui {
             this.listmenu.hide();
             this.list.interactive = true;
             this.list.focus();
-            this.render();
+            this.render(false, null);
         });
 
-        this.sitemenu.on("select", (item, index) => {
+        this.sitemenu.on("select", (item : any, index : number) => {
             if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
                 const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
@@ -379,12 +399,12 @@ class Tui {
                     this.updateList(site, "", {add: 0, pause: 1, isTemp: false, init: false});
                     this.sitelist.focus();
                     this.sitemenu.hide();
-                    this.render();
+                    this.render(false, null);
                     break;
                 case 1: // add
                     this.prompt.show();
                     this.inputBar.show();
-                    this.render();
+                    this.render(false, null);
                     this.inputBar.focus();
                     break;
                 }
@@ -393,26 +413,26 @@ class Tui {
 
         this.sitemenu.key(["j"], () => {
             this.sitemenu.down(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.sitemenu.key(["k"], () => {
             this.sitemenu.up(1);
-            this.render();
+            this.render(false, null);
         });
 
         this.sitemenu.on("cancel", () => {
             this.sitemenu.hide();
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render();
+            this.render(false, null);
         });
 
         this.inputBar.on("cancel", () => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
-            this.render();
+            this.render(false, null);
         });
 
         this.inputBar.key(["C-c"], () => (
@@ -442,7 +462,7 @@ class Tui {
         this.sitelist.selected = 1;
 
         // CLI
-        this.inputBar.on("submit", (text) => {
+        this.inputBar.on("submit", (text : string) => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
@@ -456,7 +476,7 @@ class Tui {
                 }
                 this.listmenu.hide();
                 this.list.focus();
-                this.render();
+                this.render(false, null);
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
@@ -464,7 +484,7 @@ class Tui {
                     this.updateList(site, text, {add: 1, pause: 0, isTemp: 0, init: false});
                 }
                 this.sitemenu.focus();
-                this.render();
+                this.render(false, null);
                 return;
             }
 
@@ -474,11 +494,11 @@ class Tui {
             }
 
             this.logbody.focus();
-            this.render();
+            this.render(false, null);
         });
     }
 
-    parseCli(tokens) {
+    parseCli(tokens : any) {
         const temp  = tokens[0] === "addtemp";
         const pause = tokens[0] === "pause" || tokens[0] === "unpause";
         const add   = tokens[0] === "add" || tokens[0] === "addtemp";
@@ -517,7 +537,7 @@ class Tui {
         }
     }
 
-    addSite(site) {
+    addSite(site : any) {
         this.SITES.push(site);
 
         const sitetable = [];
@@ -528,13 +548,13 @@ class Tui {
         this.sitelist.setData(sitetable);
     }
 
-    log(text) {
+    log(text : string) {
         this.logbody.pushLine(text);
         this.logbody.setScrollPerc(100);
-        this.render();
+        this.render(false, null);
     }
 
-    buildListEntry(site, streamer) {
+    buildListEntry(site : any, streamer : any) {
         const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
         let state = "{";
         if (streamer.filename === "") {
@@ -552,8 +572,8 @@ class Tui {
         return [name, temp, site.siteName, state];
     }
 
-    populateTable(site, table) {
-        let sortedKeys = [];
+    populateTable(site : any, table : any) {
+        let sortedKeys : Array<any> = [];
         const streamerList = site.streamerList;
         if (streamerList.size > 0) {
             // Map keys are UID, but want to sort list by name.
@@ -585,7 +605,7 @@ class Tui {
         this.list.setData(table);
     }
 
-    render(redrawList, site) {
+    render(redrawList : boolean, site : any) {
         if (redrawList) {
             this.rebuildList();
             if (site) {
@@ -597,7 +617,7 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(siteName, nm, options) {
+    async updateList(siteName : string, nm : string, options : any) {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
