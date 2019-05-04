@@ -1,11 +1,9 @@
 "use strict";
 
-export {};
-
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
-class Tui {
+export default class Tui {
 
     protected dvr:  any;
     protected config: any;
@@ -628,4 +626,3 @@ class Tui {
     }
 }
 
-exports.Tui = Tui;

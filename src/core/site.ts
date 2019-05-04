@@ -1,17 +1,15 @@
 "use strict";
 
-export {};
-
-const yaml    = require("js-yaml");
-const fs      = require("fs");
-const {spawn} = require("child_process");
-const colors  = require("colors");
+import {spawn} from "child_process";
+import * as fs from "fs";
+const colors = require("colors");
+const yaml = require("js-yaml");
 
 async function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-abstract class Site {
+export default abstract class Site {
 
     protected siteName: string;
     protected padName: string;
@@ -104,7 +102,7 @@ abstract class Site {
         // optional virtual method
     }
 
-    protected getCaptureArguments(url: string, filename: string, options: any) {
+    protected getCaptureArguments(url: string, filename: string, options?: any) {
         let args = [
             "-o",
             this.dvr.config.recording.captureDirectory + "/" + filename + ".ts",
@@ -310,7 +308,9 @@ abstract class Site {
         this.render(false);
     }
 
-    public getStreamers() {
+    // public abstract async getStreamers(options?: any): Promise<Array<any>>;
+
+    public async getStreamers(options?: any) {
         if (this.dvr.tryingToExit) {
             this.dbgMsg("Skipping lookup while exit in progress...");
             return false;
@@ -374,7 +374,9 @@ abstract class Site {
         }
     }
 
-    protected setupCapture(uid: any) {
+    protected abstract setupCapture(streamer: any, url: any): any;
+
+    protected canStartCap(uid: any): boolean {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
             if (streamer.capture !== null) {

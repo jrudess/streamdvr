@@ -1,20 +1,20 @@
 "use strict";
 
-export {};
+import * as fs     from "fs";
+import * as moment from "moment";
+import * as path   from "path";
 
-const colors        = require("colors");
-const fs            = require("fs");
-const moment        = require("moment");
-const path          = require("path");
-const yaml          = require("js-yaml");
-const {Tui}         = require("./tui");
-const {PostProcess} = require("./postprocess");
+import Tui         from "./tui";
+import PostProcess from "./postprocess";
+
+const colors = require("colors");
+const yaml   = require("js-yaml");
 
 async function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-class Dvr {
+export default class Dvr {
 
     public config: any;
     public logger: any;
@@ -123,12 +123,7 @@ class Dvr {
 
     public mkdir(dir: string) {
         const fulldir = path.resolve(dir);
-        fs.mkdirSync(fulldir, {recursive: true}, (err: any) => {
-            if (err) {
-                this.errMsg(err.toString(), null);
-                process.exit(1);
-            }
-        });
+        fs.mkdirSync(fulldir, {recursive: true});
         return fulldir;
     }
 

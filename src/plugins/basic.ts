@@ -1,13 +1,17 @@
 "use strict";
 
-const colors      = require("colors");
-const {promisify} = require("util");
-const exec        = promisify(require("child_process").exec);
-const {Site}      = require("../core/site");
+import {promisify} from "util";
+import Site from "../core/site";
+
+const colors = require("colors");
+const exec   = promisify(require("child_process").exec);
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
 class Basic extends Site {
+
+    urlback: string;
+
     constructor(siteName: string, dvr: any, tui: any, urlback: string) {
         super(siteName, dvr, tui);
 
@@ -194,9 +198,9 @@ class Basic extends Site {
         return serRuns;
     }
 
-    protected async getStreamers(options: any) {
+    public async getStreamers(options?: any) {
         if (!super.getStreamers()) {
-            return [];
+            return false;
         }
 
         const nms = [];
@@ -207,20 +211,18 @@ class Basic extends Site {
         const serRuns = this.serialize(nms);
 
         try {
-            let streamers: Array<any> = [];
             for (const item of serRuns) {
-                const batch = await this.checkBatch(item, options);
-                streamers = streamers.concat(batch);
+                await this.checkBatch(item, options);
             }
-            return streamers;
+            return true;
         } catch (err) {
             this.errMsg(err.toString());
-            return [];
+            return false
         }
     }
 
     protected setupCapture(streamer: any, url: any) {
-        if (!super.setupCapture(streamer.uid)) {
+        if (!this.canStartCap(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
 

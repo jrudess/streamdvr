@@ -1,13 +1,12 @@
 "use strict";
 
-export {};
+import * as fs from "fs";
+import {spawn} from "child_process";
 
-const fs      = require("fs");
 const mv      = require("mv");
-const {spawn} = require("child_process");
 const colors  = require("colors");
 
-class PostProcess {
+export default class PostProcess {
 
     protected dvr: any;
     protected config: any;
@@ -139,4 +138,3 @@ class PostProcess {
 
 }
 
-exports.PostProcess = PostProcess;
