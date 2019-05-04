@@ -1,14 +1,14 @@
 "use strict";
 
+const colors      = require("colors");
 const {promisify} = require("util");
 const exec        = promisify(require("child_process").exec);
 const {Site}      = require("../core/site");
-const colors      = require("colors");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
 class Basic extends Site {
-    constructor(siteName : string, dvr : any, tui : any, urlback : string) {
+    constructor(siteName: string, dvr: any, tui: any, urlback: string) {
         super(siteName, dvr, tui);
 
         this.urlback = urlback;
@@ -20,9 +20,9 @@ class Basic extends Site {
             }
         }
 
-        for (let i = 0; i < this.config.streamers.length; i++) {
-            const nm = this.config.streamers[i][0];
-            const paused = this.config.streamers[i][1] === "paused";
+        for (const streamer of this.config.streamers) {
+            const nm = streamer[0];
+            const paused = streamer[1] === "paused";
             this.streamerList.set(nm, {
                 uid:          nm,
                 nm:           nm,
@@ -33,13 +33,13 @@ class Basic extends Site {
                 postProcess:  0,
                 filsesize:    0,
                 stuckcounter: 0,
-                paused:       paused
+                paused:       paused,
             });
         }
         this.redrawList = true;
     }
 
-    async convertFormat(streamerList : Array<any>) {
+    protected async convertFormat(streamerList: Array<any>) {
         const newList = [];
         for (const streamer of streamerList.values()) {
             const newItem = [];
@@ -51,29 +51,29 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    updateList(nm : string, options : any) {
+    protected updateList(nm: string, options: any) {
         return super.updateList({nm: nm, uid: nm}, options);
     }
 
-    createListItem(id : any) {
+    protected createListItem(id: any) {
         const listItem = [];
         listItem.push(id.nm);
         listItem.push("unpaused");
         return listItem;
     }
 
-    togglePause(streamer : any, options : any) {
+    public togglePause(streamer: any, options: any) {
         if (streamer) {
-            for (let i = 0; i < this.config.streamers.length; i++) {
-                if (this.config.streamers[i][0] === streamer.uid) {
-                    if (this.config.streamers[i][1] === "paused") {
+            for (const item of this.config.streamers) {
+                if (item[0] === streamer.uid) {
+                    if (item[1] === "paused") {
                         this.infoMsg(streamer.nm.name + " is unpaused.");
-                        this.config.streamers[i][1] = "unpaused";
+                        item[1] = "unpaused";
                         streamer.paused = false;
                         this.refresh(streamer, options);
                     } else {
                         this.infoMsg(streamer.nm.name + " is paused.");
-                        this.config.streamers[i][1] = "paused";
+                        item[1] = "paused";
                         streamer.paused = true;
                         this.haltCapture(streamer.uid);
                     }
@@ -84,7 +84,7 @@ class Basic extends Site {
         return false;
     }
 
-    async m3u8Script(nm : string) {
+    protected async m3u8Script(nm: string) {
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
         let cmd           = script + " -s " + streamerUrl;
@@ -104,7 +104,7 @@ class Basic extends Site {
         this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
         try {
             // m3u8 url in stdout
-            const stdio = await exec(cmd, {stdio : ["pipe", "pipe", "ignore"]});
+            const stdio = await exec(cmd, {stdio: ["pipe", "pipe", "ignore"]});
             let url = stdio.stdout.toString();
             url = url.replace(/\r?\n|\r/g, "");
 
@@ -120,7 +120,7 @@ class Basic extends Site {
         }
     }
 
-    async checkStreamerState(streamer : any, options : any) {
+    protected async checkStreamerState(streamer: any, options: any) {
         // Detect if streamer is online or actively streaming
         const prevState = streamer.state;
         const stream    = await this.m3u8Script(streamer.nm);
@@ -134,7 +134,7 @@ class Basic extends Site {
             streamer.state = "Offline";
         }
 
-        let newoptions : any = {};
+        let newoptions: any = {};
         if (options) {
             newoptions = options;
         }
@@ -152,11 +152,11 @@ class Basic extends Site {
         }
     }
 
-    async checkBatch(batch : any, options : any) {
+    protected async checkBatch(batch: any, options: any) {
         const queries = [];
 
-        for (let i = 0; i < batch.length; i++) {
-            const streamer : any = this.streamerList.get(batch[i]);
+        for (const item of batch) {
+            const streamer: any = this.streamerList.get(item);
             queries.push(this.checkStreamerState(streamer, options));
         }
 
@@ -169,7 +169,7 @@ class Basic extends Site {
         }
     }
 
-    serialize(nms : any) {
+    protected serialize(nms: any) {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
@@ -194,7 +194,7 @@ class Basic extends Site {
         return serRuns;
     }
 
-    async getStreamers(options : any) {
+    protected async getStreamers(options: any) {
         if (!super.getStreamers()) {
             return [];
         }
@@ -207,9 +207,9 @@ class Basic extends Site {
         const serRuns = this.serialize(nms);
 
         try {
-            let streamers : Array<any> = [];
-            for (let i = 0; i < serRuns.length; i++) {
-                const batch = await this.checkBatch(serRuns[i], options);
+            let streamers: Array<any> = [];
+            for (const item of serRuns) {
+                const batch = await this.checkBatch(item, options);
                 streamers = streamers.concat(batch);
             }
             return streamers;
@@ -219,7 +219,7 @@ class Basic extends Site {
         }
     }
 
-    setupCapture(streamer : any, url : any) {
+    protected setupCapture(streamer: any, url: any) {
         if (!super.setupCapture(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }
@@ -232,4 +232,3 @@ class Basic extends Site {
 }
 
 exports.Plugin = Basic;
-

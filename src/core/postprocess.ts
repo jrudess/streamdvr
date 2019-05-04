@@ -1,7 +1,6 @@
 "use strict";
 
 export {};
-declare var require: any
 
 const fs      = require("fs");
 const mv      = require("mv");
@@ -10,24 +9,24 @@ const colors  = require("colors");
 
 class PostProcess {
 
-    dvr: any;
-    config: any;
-    postProcessQ: Array<any>;
+    protected dvr: any;
+    protected config: any;
+    protected postProcessQ: Array<any>;
 
-    constructor(dvr : any) {
+    constructor(dvr: any) {
         this.dvr = dvr;
         this.config = dvr.config;
         this.postProcessQ = [];
     }
 
-    add(capInfo : any) {
+    public async add(capInfo: any) {
         this.postProcessQ.push(capInfo);
         if (this.postProcessQ.length === 1) {
-            this.convert();
+            await this.convert();
         }
     }
 
-    async convert() {
+    protected async convert() {
 
         const capInfo      = this.postProcessQ[0];
         const site         = capInfo.site === null ? this.dvr : capInfo.site;
@@ -43,13 +42,13 @@ class PostProcess {
         if (fileType === "ts") {
             site.dbgMsg(namePrint + "recording moved " +
                 capDir + capFile + " to " + completeDir + completeFile);
-            mv(capDir + capFile, completeDir + completeFile, (err : any) => {
+            mv(capDir + capFile, completeDir + completeFile, (err: any) => {
                 if (err) {
                     this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
                 }
             });
 
-            this.postScript(site, streamer, completeDir, completeFile);
+            await this.postScript(site, streamer, completeDir, completeFile);
             return;
         }
 
@@ -57,7 +56,7 @@ class PostProcess {
         const args = [
             capDir + capFile,
             completeDir + completeFile,
-            fileType
+            fileType,
         ];
 
         site.infoMsg(namePrint + "converting to " + fileType + ": " +
@@ -77,14 +76,14 @@ class PostProcess {
             this.postScript(site, streamer, completeDir, completeFile);
         });
 
-        myCompleteProcess.on("error", (err : any) => {
+        myCompleteProcess.on("error", (err: any) => {
             this.dvr.errMsg(err.toString());
         });
     }
 
-    postScript(site : any, streamer : any, completeDir : string, completeFile : string) {
+    protected async postScript(site: any, streamer: any, completeDir: string, completeFile: string) {
         if (!this.config.postprocess) {
-            this.nextConvert(site, streamer);
+            await this.nextConvert(site, streamer);
             return;
         }
 
@@ -102,7 +101,7 @@ class PostProcess {
         });
     }
 
-    nextConvert(site : any, streamer : any) {
+    protected async nextConvert(site: any, streamer: any) {
 
         if (site !== this.dvr) {
             site.clearProcessing(streamer);
@@ -111,11 +110,11 @@ class PostProcess {
         // Pop current job, and start next conversion job (if any)
         this.postProcessQ.shift();
         if (this.postProcessQ.length > 0) {
-            this.convert();
+            await this.convert();
         }
     }
 
-    async getCompleteDir(site : any, streamer : any) {
+    protected async getCompleteDir(site: any, streamer: any) {
         if (streamer) {
             const dir = await site.getCompleteDir(streamer);
             return dir;
@@ -124,7 +123,7 @@ class PostProcess {
         return this.dvr.mkdir(this.config.recording.completeDirectory + "/UNKNOWN");
     }
 
-    uniqueFileName(completeDir : string, filename : string, fileType : string) {
+    protected uniqueFileName(completeDir: string, filename: string, fileType: string) {
         // If the output file already exists, make filename unique
         let count = 1;
         let fileinc = filename;

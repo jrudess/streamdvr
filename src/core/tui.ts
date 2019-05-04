@@ -1,29 +1,28 @@
 "use strict";
 
 export {};
-declare var require: any
 
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
 class Tui {
 
-    dvr :  any;
-    config : any;
-    SITES : Array<any>;
-    hideOffline : boolean;
-    listSelect : any;
-    sitelistSelect : any;
-    screen : any;
-    list : any;
-    sitelist : any;
-    prompt : any;
-    inputBar : any;
-    listmenu : any;
-    sitemenu: any;
-    logbody: any;
+    protected dvr:  any;
+    protected config: any;
+    protected SITES: Array<any>;
+    protected hideOffline: boolean;
+    protected listSelect: any;
+    protected sitelistSelect: any;
+    protected screen: any;
+    protected list: any;
+    protected sitelist: any;
+    protected prompt: any;
+    protected inputBar: any;
+    protected listmenu: any;
+    protected sitemenu: any;
+    protected logbody: any;
 
-    constructor(dvr : any) {
+    constructor(dvr: any) {
 
         this.dvr = dvr;
         this.config = dvr.config;
@@ -33,7 +32,7 @@ class Tui {
         this.createTui();
     }
 
-    createTui() {
+    protected createTui() {
         this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
         this.screen.title = "streamdvr";
         this.listSelect = null;
@@ -42,7 +41,7 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            width: 64,
+            width: 67,
             height: "100%-11",
             align: "left",
             interactive: false,
@@ -51,28 +50,28 @@ class Tui {
             noCellBorders: true,
             tags: true,
             padding: {
-                left: 1
+                left: 1,
             },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.sitelist = blessed.listtable({
             top: "100%-11",
             left: 0,
-            width: 64,
+            width: 67,
             height: 10,
             align: "left",
             interactive: false,
@@ -81,27 +80,27 @@ class Tui {
             noCellBorders: true,
             tags: true,
             padding: {
-                left: 1
+                left: 1,
             },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.logbody = blessed.box({
             top: 0,
-            left: 64,
+            left: 67,
             height: "100%-1",
             grow: true,
             keys: true,
@@ -110,16 +109,16 @@ class Tui {
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.prompt = blessed.text({
@@ -130,14 +129,13 @@ class Tui {
             mouse: false,
             style: {
                 fg: "white",
-                bg: "none"
-            }
+                bg: "none",
+            },
         });
-        if (this.config.tui.allowUnicode) {
-            this.prompt.content = colors.prompt("❯ ");
-        } else {
-            this.prompt.content = colors.prompt("> ");
-        }
+        this.prompt.content = this.config.tui.allowUnicode ?
+            colors.prompt("❯ ") :
+            colors.prompt("> ");
+
         this.prompt.hide();
 
         this.inputBar = blessed.textbox({
@@ -150,8 +148,8 @@ class Tui {
             inputOnFocus: true,
             style: {
                 fg: "white",
-                bg: "none"
-            }
+                bg: "none",
+            },
         });
         this.inputBar.hide();
 
@@ -172,16 +170,16 @@ class Tui {
             tags: true,
             border: {
                 type: "bg",
-                ch: "░"
+                ch: "░",
             },
             style: {
                 border: {
                     bg: "blue",
-                    fg: "blue"
+                    fg: "blue",
                 },
                 bg: "black",
-                fg: "white"
-            }
+                fg: "white",
+            },
         });
         this.listmenu.hide();
 
@@ -194,7 +192,7 @@ class Tui {
                 left: 3,
                 right: 3,
                 top: 1,
-                bottom: 1
+                bottom: 1,
             },
             interactive: true,
             keys: true,
@@ -202,16 +200,16 @@ class Tui {
             tags: true,
             border: {
                 type: "bg",
-                ch: "░"
+                ch: "░",
             },
             style: {
                 border: {
                     bg: "blue",
-                    fg: "blue"
+                    fg: "blue",
                 },
                 bg: "black",
-                fg: "white"
-            }
+                fg: "white",
+            },
         });
         this.sitemenu.hide();
 
@@ -266,12 +264,10 @@ class Tui {
             this.render(false, null);
         });
 
-        this.list.on("selectrow", (item : any, index : number) => {
-            if (index < this.list.rows.length) {
-                this.listSelect = this.list.rows[index];
-            } else {
-                this.listSelect = null;
-            }
+        this.list.on("selectrow", (item: any, index: number) => {
+            this.listSelect = index < this.list.rows.length ?
+                this.list.rows[index] :
+                null;
         });
 
         this.list.key(["j"], () => {
@@ -297,17 +293,15 @@ class Tui {
         });
 
         this.list.key("r", () => {
-            for (let i = 0; i < this.SITES.length; i++) {
-                this.SITES[i].getStreamers();
+            for (const site of this.SITES) {
+                site.getStreamers();
             }
         });
 
-        this.sitelist.on("selectrow", (item : any, index : number) => {
-            if (index < this.sitelist.rows.length) {
-                this.sitelistSelect = this.sitelist.rows[index];
-            } else {
-                this.sitelistSelect = null;
-            }
+        this.sitelist.on("selectrow", (item: any, index: number) => {
+            this.sitelistSelect = index < this.sitelist.rows.length ?
+                this.sitelist.rows[index] :
+                null;
         });
 
         this.sitelist.key(["j"], () => {
@@ -342,7 +336,7 @@ class Tui {
             this.render(false, null);
         });
 
-        this.listmenu.on("select", (item : any, index : number) => {
+        this.listmenu.on("select", (item: any, index: number) => {
             switch (index) {
             case 0: // pause
                 if (this.listSelect && this.listSelect.length >= 2) {
@@ -375,11 +369,9 @@ class Tui {
                 this.listmenu.hide();
                 this.list.focus();
                 this.render(true, null);
-                if (this.list.rows.length <= 1) {
-                    this.listSelect = null;
-                } else {
-                    this.listSelect = this.list.rows[1];
-                }
+                this.listSelect = this.list.rows.length <= 1 ?
+                    null :
+                    this.list.rows[1];
                 break;
             }
         });
@@ -391,7 +383,7 @@ class Tui {
             this.render(false, null);
         });
 
-        this.sitemenu.on("select", (item : any, index : number) => {
+        this.sitemenu.on("select", (item: any, index: number) => {
             if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
                 const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
@@ -462,7 +454,7 @@ class Tui {
         this.sitelist.selected = 1;
 
         // CLI
-        this.inputBar.on("submit", (text : string) => {
+        this.inputBar.on("submit", (text: string) => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
@@ -498,7 +490,7 @@ class Tui {
         });
     }
 
-    parseCli(tokens : any) {
+    protected parseCli(tokens: any) {
         const temp  = tokens[0] === "addtemp";
         const pause = tokens[0] === "pause" || tokens[0] === "unpause";
         const add   = tokens[0] === "add" || tokens[0] === "addtemp";
@@ -537,24 +529,24 @@ class Tui {
         }
     }
 
-    addSite(site : any) {
+    public addSite(site: any) {
         this.SITES.push(site);
 
         const sitetable = [];
         sitetable.push(["", ""]);
-        for (let i = 0; i < this.SITES.length; i++) {
-            sitetable.push(["{" + this.config.colors.state + "-fg}" + this.SITES[i].siteName + "{/}", ""]);
+        for (const site of this.SITES) {
+            sitetable.push(["{" + this.config.colors.state + "-fg}" + site.siteName + "{/}", ""]);
         }
         this.sitelist.setData(sitetable);
     }
 
-    log(text : string) {
+    public log(text: string) {
         this.logbody.pushLine(text);
         this.logbody.setScrollPerc(100);
         this.render(false, null);
     }
 
-    buildListEntry(site : any, streamer : any) {
+    protected buildListEntry(site: any, streamer: any) {
         const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
         let state = "{";
         if (streamer.filename === "") {
@@ -572,8 +564,8 @@ class Tui {
         return [name, temp, site.siteName, state];
     }
 
-    populateTable(site : any, table : any) {
-        let sortedKeys : Array<any> = [];
+    protected populateTable(site: any, table: any) {
+        let sortedKeys: Array<any> = [];
         const streamerList = site.streamerList;
         if (streamerList.size > 0) {
             // Map keys are UID, but want to sort list by name.
@@ -587,8 +579,8 @@ class Tui {
                 return 0;
             });
         }
-        for (let j = 0; j < sortedKeys.length; j++) {
-            const streamer = streamerList.get(sortedKeys[j]);
+        for (const key of sortedKeys) {
+            const streamer = streamerList.get(key);
             if (streamer.state === "Offline" && this.hideOffline) {
                 continue;
             }
@@ -596,7 +588,7 @@ class Tui {
         }
     }
 
-    rebuildList() {
+    protected rebuildList() {
         const table = [];
         table.push(["", "", "", ""]);
         for (const site of this.SITES.values()) {
@@ -605,7 +597,7 @@ class Tui {
         this.list.setData(table);
     }
 
-    render(redrawList : boolean, site : any) {
+    public render(redrawList: boolean, site: any) {
         if (redrawList) {
             this.rebuildList();
             if (site) {
@@ -617,7 +609,7 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(siteName : string, nm : string, options : any) {
+    protected async updateList(siteName: string, nm: string, options: any) {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
@@ -637,4 +629,3 @@ class Tui {
 }
 
 exports.Tui = Tui;
-
