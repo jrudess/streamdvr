@@ -1,7 +1,7 @@
 "use strict";
 
 import {promisify} from "util";
-import Site from "../core/site";
+import {Site, Streamer} from "../core/site";
 
 const colors = require("colors");
 const exec   = promisify(require("child_process").exec);
@@ -56,10 +56,6 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    protected async updateList(nm: string, options: any) {
-        return super.updateList({nm: nm, uid: nm}, options);
-    }
-
     protected createListItem(id: any) {
         const listItem = [];
         listItem.push(id.nm);
@@ -67,17 +63,17 @@ class Basic extends Site {
         return listItem;
     }
 
-    public async togglePause(streamer: any, options: any): Promise<boolean> {
+    public async togglePause(streamer: Streamer | undefined, options: any): Promise<boolean> {
         if (streamer) {
             for (const item of this.config.streamers) {
                 if (item[0] === streamer.uid) {
                     if (streamer.paused) {
-                        this.infoMsg(streamer.nm.name + " is unpaused.");
+                        this.infoMsg(colors.name(streamer.nm) + " is unpaused.");
                         item[1] = "unpaused";
                         streamer.paused = false;
                         await this.refresh(streamer, options);
                     } else {
-                        this.infoMsg(streamer.nm.name + " is paused, streamer.uid = " + streamer.uid);
+                        this.infoMsg(colors.name(streamer.nm) + " is paused");
                         item[1] = "paused";
                         streamer.paused = true;
                         this.haltCapture(streamer.uid);
@@ -125,7 +121,7 @@ class Basic extends Site {
         }
     }
 
-    protected async checkStreamerState(streamer: any, options?: any) {
+    protected async checkStreamerState(streamer: Streamer, options?: any) {
         // Detect if streamer is online or actively streaming
         const prevState = streamer.state;
         const stream    = await this.m3u8Script(streamer.nm);
@@ -150,7 +146,7 @@ class Basic extends Site {
 
         if (stream.status) {
             if (streamer.paused) {
-                this.dbgMsg(streamer.nm.name + " is paused, recording not started.");
+                this.dbgMsg(colors.name(streamer.nm) + " is paused, recording not started.");
             } else if (!options || !options.init) {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }
@@ -161,8 +157,11 @@ class Basic extends Site {
         const queries = [];
 
         for (const item of batch) {
-            const streamer: any = this.streamerList.get(item);
-            queries.push(this.checkStreamerState(streamer, options));
+            const streamer: Streamer | undefined = this.streamerList.get(item);
+            if (streamer) {
+                queries.push(this.checkStreamerState(streamer, options));
+            }
+
         }
 
         try {
@@ -222,7 +221,7 @@ class Basic extends Site {
         }
     }
 
-    protected setupCapture(streamer: any, url: any) {
+    protected setupCapture(streamer: Streamer, url: any) {
         if (!this.canStartCap(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }

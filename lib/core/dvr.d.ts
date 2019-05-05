@@ -1,4 +1,4 @@
-export default class Dvr {
+export declare class Dvr {
     config: any;
     logger: any;
     postProcess: any;
@@ -15,7 +15,7 @@ export default class Dvr {
     run(site: any): Promise<void>;
     getDateTime(): string;
     protected log(text: string, options: any): void;
-    protected msg(msg: string, site: any, options: any): void;
+    protected msg(msg: string, site: any, options?: any): void;
     infoMsg(msg: string, site: any): void;
     errMsg(msg: string, site: any): void;
     dbgMsg(msg: string, site: any): void;

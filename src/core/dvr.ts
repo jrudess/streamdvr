@@ -14,7 +14,7 @@ async function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-export default class Dvr {
+export class Dvr {
 
     public config: any;
     public logger: any;
@@ -173,7 +173,7 @@ export default class Dvr {
         }
     }
 
-    protected msg(msg: string, site: any, options: any) {
+    protected msg(msg: string, site: any, options?: any) {
         const time = "[" + this.getDateTime() + "] ";
         if (site) {
             this.log(colors.time(time) + colors.site(site.padName) + msg, options);
@@ -183,7 +183,7 @@ export default class Dvr {
     }
 
     public infoMsg(msg: string, site: any) {
-        this.msg(msg, site, null);
+        this.msg(msg, site);
     }
 
     public errMsg(msg: string, site: any) {

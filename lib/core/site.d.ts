@@ -1,3 +1,4 @@
+import { Dvr } from "../core/dvr.js";
 export interface Streamer {
     uid: string;
     nm: string;
@@ -11,7 +12,7 @@ export interface Streamer {
     paused: boolean;
     isTemp: boolean;
 }
-export default abstract class Site {
+export declare abstract class Site {
     protected siteName: string;
     protected padName: string;
     protected listName: string;
@@ -21,11 +22,11 @@ export default abstract class Site {
     protected streamerList: Map<string, Streamer>;
     protected redrawList: boolean;
     protected paused: boolean;
-    protected dvr: any;
+    protected dvr: Dvr;
     protected tui: any;
     protected config: any;
-    constructor(siteName: string, dvr: any, tui: any);
-    protected abstract togglePause(streamer: any, options: any): Promise<boolean>;
+    constructor(siteName: string, dvr: Dvr, tui: any);
+    protected abstract togglePause(streamer: Streamer | undefined, options: any): Promise<boolean>;
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
@@ -39,20 +40,20 @@ export default abstract class Site {
     protected updateStreamers(list: Array<any>, options: any): Promise<boolean>;
     protected addStreamer(id: any, list: Array<any>, options: any): Promise<boolean>;
     protected removeStreamer(id: any, list: Array<any>): boolean;
-    protected checkStreamerState(streamer: any, options?: any): Promise<void>;
+    protected checkStreamerState(streamer: Streamer | undefined, options?: any): Promise<void>;
     getStreamers(options?: any): Promise<boolean>;
-    storeCapInfo(streamer: any, filename: string, capture: any, isPostProcess: boolean): void;
+    storeCapInfo(streamer: Streamer, filename: string, capture: any, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;
     haltAllCaptures(): void;
     protected haltCapture(uid: any): void;
     protected writeConfig(): Promise<void>;
-    protected abstract setupCapture(streamer: any, url: any): any;
+    protected abstract setupCapture(streamer: Streamer, url: any): any;
     protected canStartCap(uid: any): boolean;
-    getCompleteDir(streamer: any): Promise<any>;
-    protected refresh(streamer: any, options?: any): Promise<void>;
+    getCompleteDir(streamer: Streamer): Promise<any>;
+    protected refresh(streamer: Streamer | undefined, options?: any): Promise<void>;
     protected startCapture(capInfo: any): void;
-    protected endCapture(streamer: any, capInfo: any): Promise<void>;
-    clearProcessing(streamer: any): Promise<void>;
+    protected endCapture(streamer: Streamer, capInfo: any): Promise<void>;
+    clearProcessing(streamer: Streamer): Promise<void>;
     protected render(redrawList: boolean): void;
     infoMsg(msg: string): void;
     errMsg(msg: string): void;
