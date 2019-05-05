@@ -1,8 +1,9 @@
 "use strict";
 
-import {spawn} from "child_process";
 import * as fs from "fs";
-import {Dvr} from "../core/dvr.js"
+import {spawn} from "child_process";
+import {Dvr} from "../core/dvr.js";
+import {Tui} from "../core/tui.js";
 
 const colors = require("colors");
 const yaml   = require("js-yaml");
@@ -23,12 +24,20 @@ export interface Streamer {
     stuckcounter: number;
     paused:       boolean;
     isTemp:       boolean;
-};
+}
+
+export interface Id {
+    uid: string;
+    nm:  string;
+}
+
 
 export abstract class Site {
 
+    public config: any;
+    public padName: string;
+
     protected siteName: string;
-    protected padName: string;
     protected listName: string;
     protected cfgFile: string;
     protected updateName: string;
@@ -38,10 +47,9 @@ export abstract class Site {
     protected paused: boolean;
 
     protected dvr: Dvr;
-    protected tui: any;
-    protected config: any;
+    protected tui: Tui;
 
-    constructor(siteName: string, dvr: Dvr, tui: any) {
+    constructor(siteName: string, dvr: Dvr, tui: Tui) {
         this.siteName     = siteName;
         this.dvr          = dvr;
         this.tui          = tui;
@@ -191,9 +199,9 @@ export abstract class Site {
         }
     }
 
-    protected abstract createListItem(id: any): void;
+    protected abstract createListItem(id: Id): void;
 
-    protected async updateList(id: any, options: any) {
+    protected async updateList(id: Id, options: any) {
         let dirty = false;
         const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
@@ -213,6 +221,7 @@ export abstract class Site {
                 }
             }
         } else if (options.add) {
+            this.infoMsg("id.nm = " + id.nm);
             const added = await this.addStreamer(id, list, options);
             if (added) {
                 list.push(this.createListItem(id));
@@ -250,20 +259,27 @@ export abstract class Site {
         this.render(true);
     }
 
-    protected async updateStreamers(list: Array<any>, options: any) {
+    protected async updateStreamers(list: Array<string>, options: any) {
         let dirty = false;
 
         for (const entry of list) {
-            dirty = await this.updateList(entry, {add: options.add, pause: 0, isTemp: false, init: options.init}) || dirty;
+            const id: Id = {
+                uid: entry,
+                nm: entry
+            };
+            dirty = await this.updateList(id, {add: options.add, pause: 0, isTemp: false, init: options.init}) || dirty;
         }
 
         return dirty;
     }
 
-    protected async addStreamer(id: any, list: Array<any>, options: any) {
+    protected async addStreamer(id: Id, list: Array<any>, options: any) {
         let added = true;
 
+        this.infoMsg("id.nm = " + id.nm);
+        this.infoMsg("id.nm = " + id.nm);
         for (const entry of list) {
+            this.infoMsg("entry.uid = " + entry[0]);
             if (entry[0] === id.uid) {
                 this.errMsg(colors.name(id.nm) + " is already in the capture list");
                 added = false;
@@ -298,7 +314,7 @@ export abstract class Site {
         return added;
     }
 
-    protected removeStreamer(id: any, list: Array<any>) {
+    protected removeStreamer(id: Id, list: Array<any>) {
         if (this.streamerList.has(id.uid)) {
             this.infoMsg(colors.name(id.nm) + " removed from capture list.");
             this.haltCapture(id.uid);
@@ -324,8 +340,6 @@ export abstract class Site {
         }
         this.render(false);
     }
-
-    // public abstract async getStreamers(options?: any): Promise<Array<any>>;
 
     public async getStreamers(options?: any) {
         if (this.dvr.tryingToExit) {
@@ -367,7 +381,7 @@ export abstract class Site {
         }
     }
 
-    protected haltCapture(uid: any) {
+    protected haltCapture(uid: string) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null && streamer.postProcess === false) {
@@ -377,7 +391,7 @@ export abstract class Site {
     }
 
     protected async writeConfig() {
-        let filehandle: any;
+        let filehandle: fs.promises.FileHandle | undefined;
         try {
             filehandle = await fs.promises.open(this.cfgFile, "w");
             await filehandle.writeFile(yaml.safeDump(this.config));
@@ -391,9 +405,9 @@ export abstract class Site {
         }
     }
 
-    protected abstract setupCapture(streamer: Streamer, url: any): any;
+    protected abstract setupCapture(streamer: Streamer, url: string): any;
 
-    protected canStartCap(uid: any): boolean {
+    protected canStartCap(uid: string): boolean {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null) {

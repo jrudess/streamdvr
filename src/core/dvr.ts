@@ -1,14 +1,15 @@
 "use strict";
 
-import * as fs     from "fs";
-import * as moment from "moment";
-import * as path   from "path";
+import * as fs       from "fs";
+import * as moment   from "moment";
+import * as path     from "path";
+import * as yaml     from "js-yaml";
 
-import Tui         from "./tui";
-import PostProcess from "./postprocess";
+import {PostProcess} from "./postprocess";
+import {Site}        from "./site";
+import {Tui}         from "./tui";
 
 const colors = require("colors");
-const yaml   = require("js-yaml");
 
 async function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -17,16 +18,16 @@ async function sleep(time: number) {
 export class Dvr {
 
     public config: any;
-    public logger: any;
+    public logger: Console | undefined;
 
-    public postProcess: any;
+    public postProcess: PostProcess;
     public path: string;
     public tryingToExit: boolean;
     public configdir: string;
     public configfile: string;
-    public tui: any;
+    public tui: Tui | undefined;
 
-    constructor(dir: any) {
+    constructor(dir: string) {
         this.path = dir;
         this.tryingToExit = false;
 
@@ -36,7 +37,6 @@ export class Dvr {
         this.config = null;
         this.loadConfig();
 
-        this.logger = null;
         if (this.config.log.enable) {
             const {Console} = require("console");
             const attr = this.config.log.append ? "a" : "w";
@@ -115,9 +115,7 @@ export class Dvr {
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
 
         if (this.config.tui.enable && this.tui) {
-            this.tui.display(this.config.tui.listshown ? "show" : "hide", "list");
-            this.tui.display(this.config.tui.logshown  ? "show" : "hide", "log");
-            this.tui.render();
+            this.tui.render(false, null);
         }
     }
 
@@ -135,7 +133,7 @@ export class Dvr {
         return file;
     }
 
-    public async run(site: any ) {
+    public async run(site: Site) {
         let startup = true;
         await site.getStreamers({init: startup});
         while (true) {
@@ -173,7 +171,7 @@ export class Dvr {
         }
     }
 
-    protected msg(msg: string, site: any, options?: any) {
+    protected msg(msg: string, site?: Site, options?: any) {
         const time = "[" + this.getDateTime() + "] ";
         if (site) {
             this.log(colors.time(time) + colors.site(site.padName) + msg, options);
@@ -182,15 +180,15 @@ export class Dvr {
         }
     }
 
-    public infoMsg(msg: string, site: any) {
+    public infoMsg(msg: string, site?: Site) {
         this.msg(msg, site);
     }
 
-    public errMsg(msg: string, site: any) {
+    public errMsg(msg: string, site?: Site) {
         this.msg(colors.error("[ERROR] ") + msg, site, {trace: true});
     }
 
-    public dbgMsg(msg: string, site: any) {
+    public dbgMsg(msg: string, site: Site) {
         if (this.config.debug.log) {
             this.msg(colors.debug("[DEBUG] ") + msg, site, null);
         }

@@ -1,7 +1,7 @@
 "use strict";
 
 import {promisify} from "util";
-import {Site, Streamer} from "../core/site";
+import {Site, Streamer, Id} from "../core/site";
 
 const colors = require("colors");
 const exec   = promisify(require("child_process").exec);
@@ -56,7 +56,7 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    protected createListItem(id: any) {
+    protected createListItem(id: Id) {
         const listItem = [];
         listItem.push(id.nm);
         listItem.push("unpaused");
@@ -221,7 +221,7 @@ class Basic extends Site {
         }
     }
 
-    protected setupCapture(streamer: Streamer, url: any) {
+    protected setupCapture(streamer: Streamer, url: string): any {
         if (!this.canStartCap(streamer.uid)) {
             return {spawnArgs: "", filename: "", streamer: ""};
         }

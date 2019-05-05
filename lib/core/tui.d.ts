@@ -1,4 +1,4 @@
-export default class Tui {
+export declare class Tui {
     protected dvr: any;
     protected config: any;
     protected SITES: Array<any>;
