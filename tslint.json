@@ -69,7 +69,7 @@
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": true,
     "no-console": [
-      true,
+      false,
       "debug",
       "info",
       "time",

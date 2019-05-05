@@ -10,7 +10,7 @@ const exec   = promisify(require("child_process").exec);
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
 class Basic extends Site {
 
-    urlback: string;
+    protected urlback: string;
 
     constructor(siteName: string, dvr: any, tui: any, urlback: string) {
         super(siteName, dvr, tui);
@@ -34,10 +34,11 @@ class Basic extends Site {
                 state:        "Offline",
                 filename:     "",
                 capture:      null,
-                postProcess:  0,
-                filsesize:    0,
+                postProcess:  false,
+                filesize:     0,
                 stuckcounter: 0,
                 paused:       paused,
+                isTemp:       false,
             });
         }
         this.redrawList = true;
@@ -55,7 +56,7 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    protected updateList(nm: string, options: any) {
+    protected async updateList(nm: string, options: any) {
         return super.updateList({nm: nm, uid: nm}, options);
     }
 
@@ -66,17 +67,17 @@ class Basic extends Site {
         return listItem;
     }
 
-    public togglePause(streamer: any, options: any) {
+    public async togglePause(streamer: any, options: any): Promise<boolean> {
         if (streamer) {
             for (const item of this.config.streamers) {
                 if (item[0] === streamer.uid) {
-                    if (item[1] === "paused") {
+                    if (streamer.paused) {
                         this.infoMsg(streamer.nm.name + " is unpaused.");
                         item[1] = "unpaused";
                         streamer.paused = false;
-                        this.refresh(streamer, options);
+                        await this.refresh(streamer, options);
                     } else {
-                        this.infoMsg(streamer.nm.name + " is paused.");
+                        this.infoMsg(streamer.nm.name + " is paused, streamer.uid = " + streamer.uid);
                         item[1] = "paused";
                         streamer.paused = true;
                         this.haltCapture(streamer.uid);
@@ -124,7 +125,7 @@ class Basic extends Site {
         }
     }
 
-    protected async checkStreamerState(streamer: any, options: any) {
+    protected async checkStreamerState(streamer: any, options?: any) {
         // Detect if streamer is online or actively streaming
         const prevState = streamer.state;
         const stream    = await this.m3u8Script(streamer.nm);
@@ -145,7 +146,7 @@ class Basic extends Site {
         newoptions.msg = msg;
         newoptions.isStreaming = stream.status;
         newoptions.prevState = prevState;
-        super.checkStreamerState(streamer, newoptions);
+        await super.checkStreamerState(streamer, newoptions);
 
         if (stream.status) {
             if (streamer.paused) {
@@ -217,7 +218,7 @@ class Basic extends Site {
             return true;
         } catch (err) {
             this.errMsg(err.toString());
-            return false
+            return false;
         }
     }
 

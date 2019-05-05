@@ -160,7 +160,7 @@ export default class Tui {
                 left: 3,
                 right: 3,
                 top: 1,
-                bottom: 1
+                bottom: 1,
             },
             interactive: true,
             keys: true,
@@ -625,4 +625,3 @@ export default class Tui {
         }
     }
 }
-

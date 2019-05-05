@@ -1,3 +1,16 @@
+export interface Streamer {
+    uid: string;
+    nm: string;
+    site: string;
+    state: string;
+    filename: string;
+    capture: any;
+    postProcess: boolean;
+    filesize: number;
+    stuckcounter: number;
+    paused: boolean;
+    isTemp: boolean;
+}
 export default abstract class Site {
     protected siteName: string;
     protected padName: string;
@@ -5,15 +18,15 @@ export default abstract class Site {
     protected cfgFile: string;
     protected updateName: string;
     protected tempList: Array<any>;
-    protected streamerList: Map<any, any>;
+    protected streamerList: Map<string, Streamer>;
     protected redrawList: boolean;
     protected paused: boolean;
     protected dvr: any;
     protected tui: any;
     protected config: any;
     constructor(siteName: string, dvr: any, tui: any);
-    protected abstract togglePause(streamer: any, options: any): boolean;
-    getStreamerList(): any[];
+    protected abstract togglePause(streamer: any, options: any): Promise<boolean>;
+    getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
     connect(): void;
@@ -22,11 +35,11 @@ export default abstract class Site {
     processUpdates(options: any): Promise<void>;
     protected abstract createListItem(id: any): void;
     protected updateList(id: any, options: any): Promise<boolean>;
-    pause(): void;
+    pause(): Promise<void>;
     protected updateStreamers(list: Array<any>, options: any): Promise<boolean>;
-    protected addStreamer(id: any, list: Array<any>, options: any): boolean;
+    protected addStreamer(id: any, list: Array<any>, options: any): Promise<boolean>;
     protected removeStreamer(id: any, list: Array<any>): boolean;
-    protected checkStreamerState(streamer: any, options: any): Promise<void>;
+    protected checkStreamerState(streamer: any, options?: any): Promise<void>;
     getStreamers(options?: any): Promise<boolean>;
     storeCapInfo(streamer: any, filename: string, capture: any, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;
@@ -36,10 +49,10 @@ export default abstract class Site {
     protected abstract setupCapture(streamer: any, url: any): any;
     protected canStartCap(uid: any): boolean;
     getCompleteDir(streamer: any): Promise<any>;
-    protected refresh(streamer: any, options: any): Promise<void>;
+    protected refresh(streamer: any, options?: any): Promise<void>;
     protected startCapture(capInfo: any): void;
-    protected endCapture(streamer: any, capInfo: any): void;
-    clearProcessing(streamer: any): void;
+    protected endCapture(streamer: any, capInfo: any): Promise<void>;
+    clearProcessing(streamer: any): Promise<void>;
     protected render(redrawList: boolean): void;
     infoMsg(msg: string): void;
     errMsg(msg: string): void;

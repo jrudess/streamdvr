@@ -103,7 +103,7 @@ export default class PostProcess {
     protected async nextConvert(site: any, streamer: any) {
 
         if (site !== this.dvr) {
-            site.clearProcessing(streamer);
+            await site.clearProcessing(streamer);
         }
 
         // Pop current job, and start next conversion job (if any)
@@ -137,4 +137,3 @@ export default class PostProcess {
     }
 
 }
-

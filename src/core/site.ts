@@ -2,12 +2,27 @@
 
 import {spawn} from "child_process";
 import * as fs from "fs";
+
 const colors = require("colors");
-const yaml = require("js-yaml");
+const yaml   = require("js-yaml");
 
 async function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
+
+export interface Streamer {
+    uid:          string;
+    nm:           string;
+    site:         string;
+    state:        string;
+    filename:     string;
+    capture:      any;
+    postProcess:  boolean;
+    filesize:     number;
+    stuckcounter: number;
+    paused:       boolean;
+    isTemp:       boolean;
+};
 
 export default abstract class Site {
 
@@ -17,7 +32,7 @@ export default abstract class Site {
     protected cfgFile: string;
     protected updateName: string;
     protected tempList: Array<any>;
-    protected streamerList: Map<any, any>;
+    protected streamerList: Map<string, Streamer>;
     protected redrawList: boolean;
     protected paused: boolean;
 
@@ -51,7 +66,7 @@ export default abstract class Site {
 
     }
 
-    protected abstract togglePause(streamer: any, options: any): boolean;
+    protected abstract async togglePause(streamer: any, options: any): Promise<boolean>;
 
     public getStreamerList() {
         return Array.from(this.streamerList.values());
@@ -74,20 +89,20 @@ export default abstract class Site {
 
             const stat = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
             const sizeMB = Math.round(stat.size / 1048576);
-            this.dbgMsg(streamer.filename.file + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
+            this.dbgMsg(colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
             if (sizeMB === streamer.filesize) {
-                this.infoMsg(streamer.nm.name + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
+                this.infoMsg(colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
                 streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
             if (streamer.stuckcounter >= 2) {
-                this.infoMsg(streamer.nm.name + " terminating stuck recording");
+                this.infoMsg(colors.name(streamer.nm) + " terminating stuck recording");
                 this.haltCapture(streamer.uid);
                 streamer.stuckcounter = 0;
                 this.redrawList = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.infoMsg(streamer.nm.name + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
+                this.infoMsg(colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
                 this.haltCapture(streamer.uid);
                 this.redrawList = true;
             }
@@ -183,22 +198,22 @@ export default abstract class Site {
         if (options.pause) {
             if (this.streamerList.has(id.uid)) {
                 let streamer = this.streamerList.get(id.uid);
-                if (options.pausetimer && options.pausetimer > 0) {
+                if (streamer && options.pausetimer && options.pausetimer > 0) {
                     const print = streamer.paused ? " pausing for " : " unpausing for ";
                     this.infoMsg(id.nm.name + print + options.pausetimer + " seconds");
                     await sleep(options.pausetimer * 1000);
                     this.infoMsg(id.nm.name + " pause-timer expired");
                     streamer = this.streamerList.get(id.uid);
                 }
-                if (streamer) {
-                    if (this.togglePause(streamer, options)) {
-                        dirty = true;
-                        this.render(true);
-                    }
+                const toggle = await this.togglePause(streamer, options);
+                if (toggle) {
+                    dirty = true;
+                    this.render(true);
                 }
             }
         } else if (options.add) {
-            if (this.addStreamer(id, list, options)) {
+            const added = await this.addStreamer(id, list, options);
+            if (added) {
                 list.push(this.createListItem(id));
                 dirty = true;
             }
@@ -221,14 +236,14 @@ export default abstract class Site {
         return dirty && !options.isTemp;
     }
 
-    public pause() {
+    public async pause() {
         this.paused = !this.paused;
         for (const [, streamer] of this.streamerList) {
             streamer.paused = this.paused;
             if (this.paused) {
                 this.haltCapture(streamer.uid);
             } else if (streamer.state !== "Offline") {
-                this.refresh(streamer, null);
+                await this.refresh(streamer);
             }
         }
         this.render(true);
@@ -244,7 +259,7 @@ export default abstract class Site {
         return dirty;
     }
 
-    protected addStreamer(id: any, list: Array<any>, options: any) {
+    protected async addStreamer(id: any, list: Array<any>, options: any) {
         let added = true;
 
         for (const entry of list) {
@@ -267,7 +282,7 @@ export default abstract class Site {
                 state: "Offline",
                 filename: "",
                 capture: null,
-                postProcess: 0,
+                postProcess: false,
                 filesize: 0,
                 stuckcounter: 0,
                 isTemp: options.isTemp,
@@ -275,7 +290,7 @@ export default abstract class Site {
             });
             this.render(true);
             if (!options || !options.init) {
-                this.refresh(this.streamerList.get(id.uid), options);
+                await this.refresh(this.streamerList.get(id.uid), options);
             }
         }
         return added;
@@ -293,7 +308,7 @@ export default abstract class Site {
         return false;
     }
 
-    protected async checkStreamerState(streamer: any, options: any) {
+    protected async checkStreamerState(streamer: any, options?: any) {
         if (streamer.state !== options.prevState) {
             this.infoMsg(options.msg);
             this.redrawList = true;
@@ -323,7 +338,7 @@ export default abstract class Site {
         streamer.filename = filename;
         streamer.capture = capture;
         if (isPostProcess) {
-            streamer.postProcess = 1;
+            streamer.postProcess = true;
             this.redrawList = true;
         }
         this.render(true);
@@ -344,7 +359,7 @@ export default abstract class Site {
     public haltAllCaptures() {
         for (const streamer of this.streamerList.values()) {
             // Don't kill post-process jobs, or recording can get lost.
-            if (streamer.capture !== null && streamer.postProcess === 0) {
+            if (streamer.capture !== null && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
             }
         }
@@ -353,7 +368,7 @@ export default abstract class Site {
     protected haltCapture(uid: any) {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
-            if (streamer.capture !== null && streamer.postProcess === 0) {
+            if (streamer && streamer.capture !== null && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
             }
         }
@@ -379,8 +394,8 @@ export default abstract class Site {
     protected canStartCap(uid: any): boolean {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
-            if (streamer.capture !== null) {
-                this.dbgMsg(streamer.nm.name + " is already capturing");
+            if (streamer && streamer.capture !== null) {
+                this.dbgMsg(colors.name(streamer.nm) + " is already capturing");
                 return false;
             }
             return true;
@@ -409,10 +424,10 @@ export default abstract class Site {
         return completeDir;
     }
 
-    protected async refresh(streamer: any, options: any) {
+    protected async refresh(streamer: any, options?: any) {
         if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
             if (!options || !options.init) {
-                await this.checkStreamerState(streamer, null);
+                await this.checkStreamerState(streamer);
             }
         }
     }
@@ -447,7 +462,7 @@ export default abstract class Site {
 
     }
 
-    protected endCapture(streamer: any, capInfo: any) {
+    protected async endCapture(streamer: any, capInfo: any) {
         const fullname = capInfo.filename + ".ts";
         fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err: any, stats: any) => {
             if (err) {
@@ -468,16 +483,16 @@ export default abstract class Site {
                 }
             }
         });
-        this.refresh(streamer, null);
+        await this.refresh(streamer);
     }
 
-    public clearProcessing(streamer: any) {
+    public async clearProcessing(streamer: any) {
         // Note: setting postProcess to undefined releases program to exit
         this.storeCapInfo(streamer, "", null, false);
         this.redrawList = true;
 
-        streamer.postProcess = 0;
-        this.refresh(streamer, null);
+        streamer.postProcess = false;
+        await this.refresh(streamer);
     }
 
     protected render(redrawList: boolean) {
