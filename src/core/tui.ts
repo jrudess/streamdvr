@@ -620,9 +620,13 @@ export class Tui {
                         uid: nm,
                         nm: nm,
                     };
-                    const dirty = await site.updateList(id, options) && !options.isTemp;
-                    if (dirty) {
-                        await site.writeConfig();
+                    try {
+                        let dirty: boolean = await site.updateList(id, options) && !options.isTemp;
+                        if (dirty) {
+                            await site.writeConfig();
+                        }
+                    } catch (err) {
+                        this.dvr.errMsg(err.toString());
                     }
                 }
                 return;

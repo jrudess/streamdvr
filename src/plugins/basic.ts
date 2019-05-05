@@ -1,7 +1,7 @@
 "use strict";
 
 import {promisify} from "util";
-import {Site, Streamer, Id} from "../core/site";
+import {Site, Streamer, Id, CapInfo} from "../core/site";
 
 const colors = require("colors");
 const exec   = promisify(require("child_process").exec);
@@ -83,6 +83,14 @@ class Basic extends Site {
             }
         }
         return false;
+    }
+
+    public async connect() {
+        return true;
+    }
+
+    public async disconnect() {
+        return true;
     }
 
     protected async m3u8Script(nm: string) {
@@ -221,15 +229,15 @@ class Basic extends Site {
         }
     }
 
-    protected setupCapture(streamer: Streamer, url: string): any {
+    protected setupCapture(streamer: Streamer, url: string): CapInfo {
         if (!this.canStartCap(streamer.uid)) {
-            return {spawnArgs: "", filename: "", streamer: ""};
+            return {site: this, streamer: null, filename: "", spawnArgs: []};
         }
 
         const filename  = this.getFileName(streamer.nm);
         const newurl    = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
         const spawnArgs = this.getCaptureArguments(newurl, filename);
-        return {spawnArgs: spawnArgs, filename: filename, streamer: streamer};
+        return {site: this, streamer: streamer, filename: filename, spawnArgs: spawnArgs};
     }
 }
 

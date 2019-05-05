@@ -34,7 +34,6 @@ export class Dvr {
         this.configdir = "";
         this.configfile = this.findConfig();
 
-        this.config = null;
         this.loadConfig();
 
         if (this.config.log.enable) {
@@ -49,15 +48,6 @@ export class Dvr {
         }
 
         this.postProcess = new PostProcess(this);
-
-        // Scan capture directory for leftover ts files to convert
-        // in case of a bad shutdown
-        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
-        const tsfiles = allfiles.filter((x: string) => x.match(/.*\.ts/ig));
-
-        for (const ts of tsfiles.values()) {
-            this.postProcess.add({site: null, streamer: null, filename: ts.slice(0, -3)});
-        }
 
     }
 
@@ -134,6 +124,15 @@ export class Dvr {
     }
 
     public async run(site: Site) {
+        // Scan capture directory for leftover ts files to convert
+        // in case of a bad shutdown
+        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
+        const tsfiles = allfiles.filter((x: string) => x.match(/.*\.ts/ig));
+
+        for (const ts of tsfiles.values()) {
+            await this.postProcess.add({site: null, streamer: null, filename: ts.slice(0, -3), spawnArgs: []});
+        }
+
         let startup = true;
         await site.getStreamers({init: startup});
         while (true) {

@@ -2,8 +2,8 @@
 
 import * as fs from "fs";
 import {spawn} from "child_process";
-import {Dvr}   from "../core/dvr.js";
-import {Site}  from "../core/site.js";
+import {Dvr} from "../core/dvr.js";
+import {Site, Streamer, CapInfo} from "../core/site.js";
 
 const mv      = require("mv");
 const colors  = require("colors");
@@ -20,7 +20,7 @@ export class PostProcess {
         this.postProcessQ = [];
     }
 
-    public async add(capInfo: any) {
+    public async add(capInfo: CapInfo) {
         this.postProcessQ.push(capInfo);
         if (this.postProcessQ.length === 1) {
             await this.convert();
@@ -29,16 +29,16 @@ export class PostProcess {
 
     protected async convert() {
 
-        const capInfo              = this.postProcessQ[0];
-        const site: Site           = capInfo.site;
-        const streamer             = capInfo.streamer;
-        const namePrint            = streamer === null ? "" : streamer.nm.name + " ";
-        const capDir: string       = this.config.recording.captureDirectory + "/";
-        const capFile: string      = capInfo.filename + ".ts";
-        const fileType: string     = this.config.recording.autoConvertType;
-        const completeDir: string  = await this.getCompleteDir(site, streamer) + "/";
-        const uniqueName: string   = this.uniqueFileName(completeDir, capInfo.filename, fileType);
-        const completeFile: string = uniqueName + "." + fileType;
+        const capInfo                   = this.postProcessQ[0];
+        const site: Site                = capInfo.site;
+        const streamer: Streamer | null = capInfo.streamer;
+        const namePrint: string         = streamer === null ? "" : colors.name(streamer.nm) + " ";
+        const capDir: string            = this.config.recording.captureDirectory + "/";
+        const capFile: string           = capInfo.filename + ".ts";
+        const fileType: string          = this.config.recording.autoConvertType;
+        const completeDir: string       = await this.getCompleteDir(site, streamer) + "/";
+        const uniqueName: string        = this.uniqueFileName(completeDir, capInfo.filename, fileType);
+        const completeFile: string      = uniqueName + "." + fileType;
 
         if (fileType === "ts") {
             site.dbgMsg(namePrint + "recording moved " +
@@ -50,7 +50,6 @@ export class PostProcess {
             });
 
             await this.postScript(site, streamer, completeDir, completeFile);
-            return;
         }
 
         const script = this.dvr.calcPath(this.config.recording.postprocess);
@@ -60,7 +59,7 @@ export class PostProcess {
             fileType,
         ];
 
-        if (site !== null) {
+        if (site !== null && streamer != null) {
             site.infoMsg(namePrint + "converting to " + fileType + ": " +
                 colors.cmd(script) + " " + colors.cmd(args.join(" ")));
 

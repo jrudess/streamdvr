@@ -31,6 +31,12 @@ export interface Id {
     nm:  string;
 }
 
+export interface CapInfo {
+    site: Site | null;
+    streamer: Streamer | null;
+    filename: string;
+    spawnArgs: Array<string>;
+}
 
 export abstract class Site {
 
@@ -118,13 +124,8 @@ export abstract class Site {
         }
     }
 
-    public connect() {
-        // optional virtual method
-    }
-
-    public disconnect() {
-        // optional virtual method
-    }
+    public abstract async connect(): Promise<boolean>;
+    public abstract async disconnect(): Promise<boolean>;
 
     protected getCaptureArguments(url: string, filename: string, options?: any) {
         let args = [
@@ -206,7 +207,7 @@ export abstract class Site {
         const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
             if (this.streamerList.has(id.uid)) {
-                let streamer = this.streamerList.get(id.uid);
+                let streamer: Streamer | undefined = this.streamerList.get(id.uid);
                 if (streamer && options.pausetimer && options.pausetimer > 0) {
                     const print = streamer.paused ? " pausing for " : " unpausing for ";
                     this.infoMsg(colors.name(id.nm) + print + options.pausetimer + " seconds");
@@ -221,10 +222,14 @@ export abstract class Site {
                 }
             }
         } else if (options.add) {
-            const added = await this.addStreamer(id, list, options);
-            if (added) {
-                list.push(this.createListItem(id));
-                dirty = true;
+            try {
+                const added = await this.addStreamer(id, list, options);
+                if (added) {
+                    list.push(this.createListItem(id));
+                    dirty = true;
+                }
+            } catch (err) {
+                this.errMsg(err.toString());
             }
         } else if (this.removeStreamer(id, list)) {
             for (let i = 0; i < this.config.streamers.length; i++) {
@@ -264,7 +269,7 @@ export abstract class Site {
         for (const entry of list) {
             const id: Id = {
                 uid: entry,
-                nm: entry
+                nm: entry,
             };
             dirty = await this.updateList(id, {add: options.add, pause: 0, isTemp: false, init: options.init}) || dirty;
         }
@@ -444,8 +449,8 @@ export abstract class Site {
         }
     }
 
-    protected startCapture(capInfo: any) {
-        if (capInfo.spawnArgs === "") {
+    protected startCapture(capInfo: CapInfo) {
+        if (!capInfo.streamer || capInfo.spawnArgs.length === 0) {
             return;
         }
 
@@ -476,7 +481,7 @@ export abstract class Site {
 
     }
 
-    protected async endCapture(streamer: Streamer, capInfo: any) {
+    protected async endCapture(streamer: Streamer, capInfo: CapInfo) {
         const fullname = capInfo.filename + ".ts";
         fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err: any, stats: any) => {
             if (err) {
@@ -493,7 +498,7 @@ export abstract class Site {
                     fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                     this.storeCapInfo(streamer, "", null, false);
                 } else {
-                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename});
+                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
                 }
             }
         });

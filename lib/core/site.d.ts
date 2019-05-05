@@ -17,6 +17,12 @@ export interface Id {
     uid: string;
     nm: string;
 }
+export interface CapInfo {
+    site: Site | null;
+    streamer: Streamer | null;
+    filename: string;
+    spawnArgs: Array<string>;
+}
 export declare abstract class Site {
     config: any;
     padName: string;
@@ -35,8 +41,8 @@ export declare abstract class Site {
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
-    connect(): void;
-    disconnect(): void;
+    abstract connect(): Promise<boolean>;
+    abstract disconnect(): Promise<boolean>;
     protected getCaptureArguments(url: string, filename: string, options?: any): string[];
     processUpdates(options: any): Promise<void>;
     protected abstract createListItem(id: Id): void;
@@ -56,8 +62,8 @@ export declare abstract class Site {
     protected canStartCap(uid: string): boolean;
     getCompleteDir(streamer: Streamer): Promise<any>;
     protected refresh(streamer: Streamer | undefined, options?: any): Promise<void>;
-    protected startCapture(capInfo: any): void;
-    protected endCapture(streamer: Streamer, capInfo: any): Promise<void>;
+    protected startCapture(capInfo: CapInfo): void;
+    protected endCapture(streamer: Streamer, capInfo: CapInfo): Promise<void>;
     clearProcessing(streamer: Streamer): Promise<void>;
     protected render(redrawList: boolean): void;
     infoMsg(msg: string): void;
