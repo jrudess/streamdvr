@@ -30,7 +30,7 @@ class Basic extends Site {
                 filename:     "",
                 capture:      null,
                 postProcess:  0,
-                filsesize:    0,
+                filesize:     0,
                 stuckcounter: 0,
                 paused:       paused
             });
