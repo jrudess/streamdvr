@@ -626,4 +626,3 @@ export class Tui {
     }
 }
 
-exports.Tui = Tui;

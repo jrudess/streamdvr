@@ -60,12 +60,16 @@ export class PostProcess {
             fileType,
         ];
 
-        site.infoMsg(namePrint + "converting to " + fileType + ": " +
-            colors.cmd(script) + " " + colors.cmd(args.join(" ")));
-
         if (site !== null) {
+            site.infoMsg(namePrint + "converting to " + fileType + ": " +
+                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
+
             site.storeCapInfo(streamer, uniqueName, null, true);
+        } else {
+            this.dvr.infoMsg(namePrint + "converting to " + fileType + ": " +
+                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
         }
+
         const myCompleteProcess = spawn(script, args);
 
         myCompleteProcess.on("close", () => {
@@ -73,7 +77,11 @@ export class PostProcess {
                 fs.unlinkSync(args[0]);
             }
 
-            site.infoMsg(namePrint + "done converting " + completeFile);
+            if (site !== null) {
+                site.infoMsg(namePrint + "done converting " + completeFile);
+            } else {
+                this.dvr.infoMsg(namePrint + "done converting " + completeFile);
+            }
             this.postScript(site, streamer, completeDir, completeFile);
         });
 
@@ -92,12 +100,21 @@ export class PostProcess {
         const args      = [completeDir, completeFile];
         const namePrint = streamer === null ? "" : streamer.nm.name + " ";
 
-        site.infoMsg(namePrint + "running global postprocess script: " +
-            colors.cmd(script) + " " + colors.cmd(args.join(" ")));
+        if (site !== null) {
+            site.infoMsg(namePrint + "running global postprocess script: " +
+                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
+        } else {
+            this.dvr.infoMsg(namePrint + "running global postprocess script: " +
+                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
+        }
         const userPostProcess = spawn(script, args);
 
         userPostProcess.on("close", () => {
-            site.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
+            if (site !== null) {
+                site.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
+            } else {
+                this.dvr.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
+            }
             this.nextConvert(site, streamer);
         });
     }
@@ -140,4 +157,3 @@ export class PostProcess {
 
 }
 
-exports.PostProcess = PostProcess;

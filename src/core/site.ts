@@ -201,7 +201,7 @@ export abstract class Site {
 
     protected abstract createListItem(id: Id): void;
 
-    protected async updateList(id: Id, options: any) {
+    protected async updateList(id: Id, options: any): Promise<boolean> {
         let dirty = false;
         const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
@@ -276,10 +276,7 @@ export abstract class Site {
     protected async addStreamer(id: Id, list: Array<any>, options: any) {
         let added = true;
 
-        this.infoMsg("id.nm = " + id.nm);
-        this.infoMsg("id.nm = " + id.nm);
         for (const entry of list) {
-            this.infoMsg("entry.uid = " + entry[0]);
             if (entry[0] === id.uid) {
                 this.errMsg(colors.name(id.nm) + " is already in the capture list");
                 added = false;
@@ -470,6 +467,8 @@ export abstract class Site {
             const filename = capInfo.filename + ".ts";
             this.infoMsg(colors.name(streamer.nm) + " recording started: " + colors.file(filename));
             this.storeCapInfo(streamer, filename, capture, false);
+        } else {
+            this.errMsg(colors.name(streamer.nm) + " capture failed to start");
         }
 
         capture.on("close", () => {
@@ -530,4 +529,3 @@ export abstract class Site {
     }
 }
 
-exports.Site = Site;

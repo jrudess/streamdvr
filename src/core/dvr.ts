@@ -196,4 +196,3 @@ export class Dvr {
 
 }
 
-exports.Dvr = Dvr;

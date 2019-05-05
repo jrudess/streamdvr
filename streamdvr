@@ -23,7 +23,6 @@ class Streamdvr extends Dvr {
         const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml$/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
 
         for (let i = 0; i < ymlfiles.length; i++) {
-            console.log(this.configdir + ymlfiles[i]);
             const config = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
             if (config && config.plugin && config.enable) {
                 // TODO: print better error message if config.plugin doesn't exist
