@@ -221,7 +221,6 @@ export abstract class Site {
                 }
             }
         } else if (options.add) {
-            this.infoMsg("id.nm = " + id.nm);
             const added = await this.addStreamer(id, list, options);
             if (added) {
                 list.push(this.createListItem(id));

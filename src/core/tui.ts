@@ -1,5 +1,6 @@
 "use strict";
 
+import {Id} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
@@ -615,7 +616,11 @@ export class Tui {
                         site.pause();
                     }
                 } else {
-                    const dirty = await site.updateList(nm, options) && !options.isTemp;
+                    const id: Id = {
+                        uid: nm,
+                        nm: nm,
+                    };
+                    const dirty = await site.updateList(id, options) && !options.isTemp;
                     if (dirty) {
                         await site.writeConfig();
                     }
