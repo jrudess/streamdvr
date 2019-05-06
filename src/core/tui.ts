@@ -1,6 +1,6 @@
 "use strict";
 
-import {Id} from "./site";
+import {Site, Id} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
@@ -217,7 +217,7 @@ export class Tui {
             this.sitelist.interactive = false;
             this.list.interactive = true;
             this.list.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.screen.key("2", () => {
@@ -225,17 +225,17 @@ export class Tui {
             this.list.interactive = false;
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.screen.key("pageup", () => {
             this.screen.focused.scroll(-this.screen.focused.height || -1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.screen.key("pagedown", () => {
             this.screen.focused.scroll(this.screen.focused.height || 1);
-            this.render(false, null);
+            this.render(false);
         });
 
         // Close on q, or ctrl+c
@@ -249,18 +249,18 @@ export class Tui {
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render(false, null);
+                this.render(false);
             }
         });
 
         this.logbody.key(["j"], () => {
             this.logbody.scroll(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.logbody.key(["k"], () => {
             this.logbody.scroll(-1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.list.on("selectrow", (item: any, index: number) => {
@@ -271,24 +271,24 @@ export class Tui {
 
         this.list.key(["j"], () => {
             this.list.down(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.list.key(["k"], () => {
             this.list.up(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.list.on("select", () => {
             this.listmenu.show();
             this.listmenu.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.list.on("cancel", () => {
             this.list.interactive = false;
             this.logbody.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.list.key("r", () => {
@@ -305,34 +305,34 @@ export class Tui {
 
         this.sitelist.key(["j"], () => {
             this.sitelist.down(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitelist.key(["k"], () => {
             this.sitelist.up(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitelist.on("select", () => {
             this.sitemenu.show();
             this.sitemenu.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitelist.on("cancel", () => {
             this.sitelist.interactive = false;
             this.logbody.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.listmenu.key(["j"], () => {
             this.listmenu.down(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.listmenu.key(["k"], () => {
             this.listmenu.up(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.listmenu.on("select", (item: any, index: number) => {
@@ -344,14 +344,14 @@ export class Tui {
                     this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render(false, null);
+                    this.render(false);
                 }
                 break;
             case 1: // pause timer
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render(false, null);
+                this.render(false);
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
@@ -360,14 +360,14 @@ export class Tui {
                     this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render(false, null);
+                    this.render(false);
                 }
                 break;
             case 3: // toggle offline
                 this.hideOffline = !this.hideOffline;
                 this.listmenu.hide();
                 this.list.focus();
-                this.render(true, null);
+                this.render(true);
                 this.listSelect = this.list.rows.length <= 1 ?
                     null :
                     this.list.rows[1];
@@ -379,7 +379,7 @@ export class Tui {
             this.listmenu.hide();
             this.list.interactive = true;
             this.list.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitemenu.on("select", (item: any, index: number) => {
@@ -390,12 +390,12 @@ export class Tui {
                     this.updateList(site, "", {add: 0, pause: 1, isTemp: false, init: false});
                     this.sitelist.focus();
                     this.sitemenu.hide();
-                    this.render(false, null);
+                    this.render(false);
                     break;
                 case 1: // add
                     this.prompt.show();
                     this.inputBar.show();
-                    this.render(false, null);
+                    this.render(false);
                     this.inputBar.focus();
                     break;
                 }
@@ -404,26 +404,26 @@ export class Tui {
 
         this.sitemenu.key(["j"], () => {
             this.sitemenu.down(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitemenu.key(["k"], () => {
             this.sitemenu.up(1);
-            this.render(false, null);
+            this.render(false);
         });
 
         this.sitemenu.on("cancel", () => {
             this.sitemenu.hide();
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.inputBar.on("cancel", () => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
-            this.render(false, null);
+            this.render(false);
         });
 
         this.inputBar.key(["C-c"], () => (
@@ -467,7 +467,7 @@ export class Tui {
                 }
                 this.listmenu.hide();
                 this.list.focus();
-                this.render(false, null);
+                this.render(false);
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
@@ -475,7 +475,7 @@ export class Tui {
                     this.updateList(site, text, {add: 1, pause: 0, isTemp: 0, init: false});
                 }
                 this.sitemenu.focus();
-                this.render(false, null);
+                this.render(false);
                 return;
             }
 
@@ -485,7 +485,7 @@ export class Tui {
             }
 
             this.logbody.focus();
-            this.render(false, null);
+            this.render(false);
         });
     }
 
@@ -528,7 +528,7 @@ export class Tui {
         }
     }
 
-    public addSite(site: any) {
+    public addSite(site: Site) {
         this.SITES.push(site);
 
         const sitetable = [];
@@ -542,10 +542,10 @@ export class Tui {
     public log(text: string) {
         this.logbody.pushLine(text);
         this.logbody.setScrollPerc(100);
-        this.render(false, null);
+        this.render(false);
     }
 
-    protected buildListEntry(site: any, streamer: any) {
+    protected buildListEntry(site: Site, streamer: any) {
         const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
         let state = "{";
         if (streamer.filename === "") {
@@ -563,23 +563,30 @@ export class Tui {
         return [name, temp, site.siteName, state];
     }
 
-    protected populateTable(site: any, table: any) {
+    protected populateTable(site: Site, table: any) {
         let sortedKeys: Array<any> = [];
         const streamerList = site.streamerList;
         if (streamerList.size > 0) {
             // Map keys are UID, but want to sort list by name.
             sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
-                if (streamerList.get(a).nm < streamerList.get(b).nm) {
-                    return -1;
-                }
-                if (streamerList.get(a).nm > streamerList.get(b).nm) {
-                    return 1;
+                const aStreamer = streamerList.get(a);
+                const bStreamer = streamerList.get(a);
+                if (aStreamer && bStreamer) {
+                    if (aStreamer.nm < bStreamer.nm) {
+                        return -1;
+                    }
+                    if (aStreamer.nm > bStreamer.nm) {
+                        return 1;
+                    }
                 }
                 return 0;
             });
         }
         for (const key of sortedKeys) {
             const streamer = streamerList.get(key);
+            if (!streamer) {
+                continue;
+            }
             if (streamer.state === "Offline" && this.hideOffline) {
                 continue;
             }
@@ -596,7 +603,7 @@ export class Tui {
         this.list.setData(table);
     }
 
-    public render(redrawList: boolean, site: any) {
+    public render(redrawList: boolean, site?: Site) {
         if (redrawList) {
             this.rebuildList();
             if (site) {

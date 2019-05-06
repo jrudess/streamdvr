@@ -1,3 +1,4 @@
+import { Site } from "./site";
 export declare class Tui {
     protected dvr: any;
     protected config: any;
@@ -16,11 +17,11 @@ export declare class Tui {
     constructor(dvr: any);
     protected createTui(): void;
     protected parseCli(tokens: any): void;
-    addSite(site: any): void;
+    addSite(site: Site): void;
     log(text: string): void;
-    protected buildListEntry(site: any, streamer: any): any[];
-    protected populateTable(site: any, table: any): void;
+    protected buildListEntry(site: Site, streamer: any): string[];
+    protected populateTable(site: Site, table: any): void;
     protected rebuildList(): void;
-    render(redrawList: boolean, site: any): void;
+    render(redrawList: boolean, site?: Site): void;
     protected updateList(siteName: string, nm: string, options: any): Promise<void>;
 }

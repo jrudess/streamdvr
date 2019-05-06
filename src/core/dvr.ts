@@ -11,13 +11,77 @@ import {Tui}         from "./tui";
 
 const colors = require("colors");
 
-async function sleep(time: number) {
+async function sleep(time: number): Promise<number> {
     return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+export interface EnableConfig {
+    daemon: boolean;
+}
+
+export interface RecordingConfig {
+    autoConvertType: string;
+    captureDirectory: string;
+    completeDirectory: string;
+    postprocess: string;
+    dateFormat: string;
+    fileNameFormat: string;
+    includeSiteInDir: boolean;
+    streamerSubdir: boolean;
+    siteSubdir: boolean;
+    keepTsFile: boolean;
+    minSize: number;
+    maxSize: number;
+}
+
+export interface LogConfig {
+    enable: boolean;
+    append: boolean;
+}
+
+export interface TuiConfig {
+    enable: boolean;
+    allowUnicode: boolean;
+}
+
+export interface ColorConfig {
+    name:    string;
+    state:   string;
+    offline: string;
+    prompt:  string;
+    file:    string;
+    time:    string;
+    site:    string;
+    cmd:     string;
+    debug:   string;
+    error:   string;
+}
+
+export interface ProxyConfig {
+    enable: boolean;
+    server: string;
+}
+
+export interface DebugConfig {
+    log:        boolean;
+    recorder:   boolean;
+    errortrace: boolean;
+}
+
+export interface Config {
+    enable:      EnableConfig;
+    recording:   RecordingConfig;
+    postprocess: string;
+    log:         LogConfig;
+    tui:         TuiConfig;
+    colors:      ColorConfig;
+    proxy:       ProxyConfig;
+    debug:       DebugConfig;
 }
 
 export class Dvr {
 
-    public config: any;
+    public config: Config;
     public logger: Console | undefined;
 
     public postProcess: PostProcess;
@@ -34,6 +98,8 @@ export class Dvr {
         this.configdir = "";
         this.configfile = this.findConfig();
 
+        const config: string = fs.readFileSync(this.configfile, "utf8");
+        this.config = yaml.safeLoad(config);
         this.loadConfig();
 
         if (this.config.log.enable) {
@@ -63,8 +129,8 @@ export class Dvr {
 
         if (checkHome) {
             this.configdir = process.platform === "win32" ?
-                process.env.APPDATA + "/streamdvr/" :
-                process.env.HOME + "/.config/streamdvr/";
+                `${process.env.APPDATA}` + "/streamdvr/" :
+                `${process.env.HOME}` + "/.config/streamdvr/";
         }
 
         if (!fs.existsSync(this.configdir + "config.yml")) {
@@ -84,7 +150,7 @@ export class Dvr {
         try {
             this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
-            console.log("ERROR: Failed to load config.yml:" + err.toString());
+            console.log("ERROR: Failed to load config.yml:" + `${err.toString()}`);
             process.exit(1);
         }
 
@@ -105,7 +171,7 @@ export class Dvr {
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
 
         if (this.config.tui.enable && this.tui) {
-            this.tui.render(false, null);
+            this.tui.render(false);
         }
     }
 
@@ -127,7 +193,7 @@ export class Dvr {
         // Scan capture directory for leftover ts files to convert
         // in case of a bad shutdown
         const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
-        const tsfiles = allfiles.filter((x: string) => x.match(/.*\.ts/ig));
+        const tsfiles = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
 
         for (const ts of tsfiles.values()) {
             await this.postProcess.add({site: null, streamer: null, filename: ts.slice(0, -3), spawnArgs: []});
@@ -157,7 +223,7 @@ export class Dvr {
         return moment().format(this.config.recording.dateFormat);
     }
 
-    protected log(text: string, options: any) {
+    protected log(text: string, options?: any) {
         if (this.config.tui.enable && this.tui) {
             this.tui.log(text);
         } else if (options && options.trace && this.config.debug.errortrace) {
@@ -170,28 +236,27 @@ export class Dvr {
         }
     }
 
-    protected msg(msg: string, site?: Site, options?: any) {
+    protected msg(msg: string, site?: Site | null, options?: any) {
         const time = "[" + this.getDateTime() + "] ";
         if (site) {
-            this.log(colors.time(time) + colors.site(site.padName) + msg, options);
+            this.log(`${colors.time(time)}` + `${colors.site(site.padName)}` + msg, options);
         } else {
-            this.log(colors.time(time) + colors.site("DVR".padEnd(9, " ")) + msg, options);
+            this.log(`${colors.time(time)}` + `${colors.site("DVR".padEnd(9, " "))}` + msg, options);
         }
     }
 
-    public infoMsg(msg: string, site?: Site) {
+    public infoMsg(msg: string, site?: Site | null) {
         this.msg(msg, site);
     }
 
-    public errMsg(msg: string, site?: Site) {
-        this.msg(colors.error("[ERROR] ") + msg, site, {trace: true});
+    public errMsg(msg: string, site?: Site | null) {
+        this.msg(`${colors.error("[ERROR] ")}` + msg, site, {trace: true});
     }
 
-    public dbgMsg(msg: string, site: Site) {
+    public dbgMsg(msg: string, site?: Site | null) {
         if (this.config.debug.log) {
-            this.msg(colors.debug("[DEBUG] ") + msg, site, null);
+            this.msg(`${colors.debug("[DEBUG] ")}` + msg, site);
         }
     }
 
 }
-

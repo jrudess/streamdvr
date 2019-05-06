@@ -56,8 +56,8 @@ class Basic extends Site {
         await this.writeConfig();
     }
 
-    protected createListItem(id: Id) {
-        const listItem = [];
+    protected createListItem(id: Id): Array<string> {
+        const listItem: Array<string> = [];
         listItem.push(id.nm);
         listItem.push("unpaused");
         return listItem;

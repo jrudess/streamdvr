@@ -2,7 +2,7 @@
 
 import * as fs from "fs";
 import {spawn} from "child_process";
-import {Dvr} from "../core/dvr.js";
+import {Dvr, Config} from "../core/dvr.js";
 import {Site, Streamer, CapInfo} from "../core/site.js";
 
 const mv      = require("mv");
@@ -11,7 +11,7 @@ const colors  = require("colors");
 export class PostProcess {
 
     protected dvr: Dvr;
-    protected config: any;
+    protected config: Config;
     protected postProcessQ: Array<any>;
 
     constructor(dvr: any) {
@@ -29,10 +29,10 @@ export class PostProcess {
 
     protected async convert() {
 
-        const capInfo                   = this.postProcessQ[0];
-        const site: Site                = capInfo.site;
+        const capInfo: CapInfo          = this.postProcessQ[0];
+        const site: Site | null         = capInfo.site;
         const streamer: Streamer | null = capInfo.streamer;
-        const namePrint: string         = streamer === null ? "" : colors.name(streamer.nm) + " ";
+        const namePrint: string         = streamer === null ? "" : `${colors.name(streamer.nm)}` + " ";
         const capDir: string            = this.config.recording.captureDirectory + "/";
         const capFile: string           = capInfo.filename + ".ts";
         const fileType: string          = this.config.recording.autoConvertType;
@@ -41,11 +41,11 @@ export class PostProcess {
         const completeFile: string      = uniqueName + "." + fileType;
 
         if (fileType === "ts") {
-            site.dbgMsg(namePrint + "recording moved " +
+            this.dvr.dbgMsg(namePrint + "recording moved " +
                 capDir + capFile + " to " + completeDir + completeFile);
-            mv(capDir + capFile, completeDir + completeFile, (err: any) => {
+            mv(capDir + capFile, completeDir + completeFile, (err: Error) => {
                 if (err) {
-                    this.dvr.errMsg(capInfo.filename.site + ": " + err.toString());
+                    this.dvr.errMsg(`${colors.site(capInfo.filename)}` + ": " + `${err.toString()}`);
                 }
             });
 
@@ -59,14 +59,10 @@ export class PostProcess {
             fileType,
         ];
 
-        if (site !== null && streamer != null) {
-            site.infoMsg(namePrint + "converting to " + fileType + ": " +
-                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
-
+        this.dvr.infoMsg(namePrint + "converting to " + fileType + ": " +
+            `${colors.cmd(script)}` + " " + `${colors.cmd(args.join(" "))}`, site);
+        if (site && streamer) {
             site.storeCapInfo(streamer, uniqueName, null, true);
-        } else {
-            this.dvr.infoMsg(namePrint + "converting to " + fileType + ": " +
-                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
         }
 
         const myCompleteProcess = spawn(script, args);
@@ -76,20 +72,16 @@ export class PostProcess {
                 fs.unlinkSync(args[0]);
             }
 
-            if (site !== null) {
-                site.infoMsg(namePrint + "done converting " + completeFile);
-            } else {
-                this.dvr.infoMsg(namePrint + "done converting " + completeFile);
-            }
+            this.dvr.infoMsg(namePrint + "done converting " + completeFile, site);
             this.postScript(site, streamer, completeDir, completeFile);
         });
 
-        myCompleteProcess.on("error", (err: any) => {
+        myCompleteProcess.on("error", (err: Error) => {
             this.dvr.errMsg(err.toString());
         });
     }
 
-    protected async postScript(site: Site, streamer: any, completeDir: string, completeFile: string) {
+    protected async postScript(site: Site | null, streamer: any, completeDir: string, completeFile: string) {
         if (!this.config.postprocess) {
             await this.nextConvert(site, streamer);
             return;
@@ -97,30 +89,21 @@ export class PostProcess {
 
         const script    = this.dvr.calcPath(this.config.postprocess);
         const args      = [completeDir, completeFile];
-        const namePrint = streamer === null ? "" : streamer.nm.name + " ";
+        const namePrint = streamer === null ? "" : `${colors.name(streamer.nm)}` + " ";
 
-        if (site !== null) {
-            site.infoMsg(namePrint + "running global postprocess script: " +
-                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
-        } else {
-            this.dvr.infoMsg(namePrint + "running global postprocess script: " +
-                colors.cmd(script) + " " + colors.cmd(args.join(" ")));
-        }
+        this.dvr.infoMsg(namePrint + "running global postprocess script: " + `${colors.cmd(script)}` +
+            " " + `${colors.cmd(args.join(" "))}`, site);
         const userPostProcess = spawn(script, args);
 
         userPostProcess.on("close", () => {
-            if (site !== null) {
-                site.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
-            } else {
-                this.dvr.infoMsg(namePrint + "done post-processing " + colors.file(completeFile));
-            }
+            this.dvr.infoMsg(namePrint + "done post-processing " + `${colors.file(completeFile)}`, site);
             this.nextConvert(site, streamer);
         });
     }
 
-    protected async nextConvert(site: Site, streamer: any) {
+    protected async nextConvert(site: Site | null, streamer: any) {
 
-        if (site !== null) {
+        if (site) {
             await site.clearProcessing(streamer);
         }
 
@@ -131,8 +114,8 @@ export class PostProcess {
         }
     }
 
-    protected async getCompleteDir(site: Site, streamer: any) {
-        if (streamer) {
+    protected async getCompleteDir(site: Site | null, streamer: Streamer | null) {
+        if (site && streamer) {
             const dir = await site.getCompleteDir(streamer);
             return dir;
         }
@@ -147,7 +130,7 @@ export class PostProcess {
         let name = completeDir + fileinc + "." + fileType;
         while (fs.existsSync(name)) {
             this.dvr.errMsg(name + " already exists");
-            fileinc = filename + " (" + count + ")";
+            fileinc = filename + " (" + count.toString() + ")";
             name = completeDir + fileinc + "." + fileType;
             count++;
         }
@@ -155,4 +138,3 @@ export class PostProcess {
     }
 
 }
-

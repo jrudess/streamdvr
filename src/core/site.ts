@@ -1,14 +1,14 @@
 "use strict";
 
 import * as fs from "fs";
-import {spawn} from "child_process";
+import {spawn, ChildProcessWithoutNullStreams} from "child_process";
 import {Dvr} from "../core/dvr.js";
 import {Tui} from "../core/tui.js";
 
 const colors = require("colors");
 const yaml   = require("js-yaml");
 
-async function sleep(time: number) {
+async function sleep(time: number): Promise<number> {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
@@ -18,7 +18,7 @@ export interface Streamer {
     site:         string;
     state:        string;
     filename:     string;
-    capture:      any;
+    capture:      ChildProcessWithoutNullStreams | null;
     postProcess:  boolean;
     filesize:     number;
     stuckcounter: number;
@@ -32,24 +32,39 @@ export interface Id {
 }
 
 export interface CapInfo {
-    site: Site | null;
-    streamer: Streamer | null;
-    filename: string;
+    site:      Site | null;
+    streamer:  Streamer | null;
+    filename:  string;
     spawnArgs: Array<string>;
+}
+
+export interface SiteConfig {
+    name:         string;
+    enable:       boolean;
+    plugin:       string;
+    siteUrl:      string;
+    urlback:      string;
+    m3u8fetch:    string;
+    recorder:     string;
+    username:     string;
+    password:     string;
+    scanInterval: number;
+    batchSize:    number;
+    streamers:    Array<Array<string>>;
 }
 
 export abstract class Site {
 
-    public config: any;
+    public config: SiteConfig;
+    public siteName: string;
     public padName: string;
+    public streamerList: Map<string, Streamer>;
+    public redrawList: boolean;
 
-    protected siteName: string;
     protected listName: string;
     protected cfgFile: string;
     protected updateName: string;
-    protected tempList: Array<any>;
-    protected streamerList: Map<string, Streamer>;
-    protected redrawList: boolean;
+    protected tempList: Array<Array<string>>;
     protected paused: boolean;
 
     protected dvr: Dvr;
@@ -73,7 +88,7 @@ export abstract class Site {
             tui.addSite(this);
         }
 
-        this.infoMsg(this.config.streamers.length + " streamer(s) in config");
+        this.infoMsg(this.config.streamers.length.toString() + " streamer(s) in config");
 
         if (typeof this.config.siteUrl === "undefined") {
             this.errMsg(this.cfgFile + " is missing siteUrl");
@@ -96,28 +111,32 @@ export abstract class Site {
     }
 
     protected checkFileSize() {
-        const maxSize = this.dvr.config.recording.maxSize;
+        const maxSize: number = this.dvr.config.recording.maxSize;
         for (const streamer of this.streamerList.values()) {
             if (streamer.capture === null || streamer.postProcess) {
                 continue;
             }
 
-            const stat = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
-            const sizeMB = Math.round(stat.size / 1048576);
-            this.dbgMsg(colors.file(streamer.filename) + ", size=" + sizeMB + "MB, maxSize=" + maxSize + "MB");
+            const stat: fs.Stats = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
+            const sizeMB: number = Math.round(stat.size / 1048576);
+            this.dbgMsg(`${colors.file(streamer.filename)}` + ", size=" + sizeMB.toString()
+                + "MB, maxSize=" + maxSize.toString() + "MB");
             if (sizeMB === streamer.filesize) {
-                this.infoMsg(colors.name(streamer.nm) + " recording appears to be stuck (counter=" + streamer.stuckcounter + "), file size is not increasing: " + sizeMB + "MB");
+                this.infoMsg(`${colors.name(streamer.nm)}` + " recording appears to be stuck (counter=" +
+                    streamer.stuckcounter.toString() + "), file size is not increasing: " +
+                    sizeMB.toString() + "MB");
                 streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
             if (streamer.stuckcounter >= 2) {
-                this.infoMsg(colors.name(streamer.nm) + " terminating stuck recording");
+                this.infoMsg(`${colors.name(streamer.nm)}` + " terminating stuck recording");
                 this.haltCapture(streamer.uid);
                 streamer.stuckcounter = 0;
                 this.redrawList = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.infoMsg(colors.name(streamer.nm) + " recording has exceeded file size limit (size=" + sizeMB + " > maxSize=" + maxSize + ")");
+                this.infoMsg(`${colors.name(streamer.nm)}` + " recording has exceeded file size limit (size=" +
+                    sizeMB.toString() + " > maxSize=" + maxSize.toString() + ")");
                 this.haltCapture(streamer.uid);
                 this.redrawList = true;
             }
@@ -200,7 +219,7 @@ export abstract class Site {
         }
     }
 
-    protected abstract createListItem(id: Id): void;
+    protected abstract createListItem(id: Id): Array<string>;
 
     protected async updateList(id: Id, options: any): Promise<boolean> {
         let dirty = false;
@@ -209,10 +228,10 @@ export abstract class Site {
             if (this.streamerList.has(id.uid)) {
                 let streamer: Streamer | undefined = this.streamerList.get(id.uid);
                 if (streamer && options.pausetimer && options.pausetimer > 0) {
-                    const print = streamer.paused ? " pausing for " : " unpausing for ";
-                    this.infoMsg(colors.name(id.nm) + print + options.pausetimer + " seconds");
+                    const print: string = streamer.paused ? " pausing for " : " unpausing for ";
+                    this.infoMsg(`${colors.name(id.nm)}` + print + `${options.pausetimer.toString()}` + " seconds");
                     await sleep(options.pausetimer * 1000);
-                    this.infoMsg(colors.name(id.nm) + " pause-timer expired");
+                    this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
                     streamer = this.streamerList.get(id.uid);
                 }
                 const toggle = await this.togglePause(streamer, options);
@@ -277,19 +296,19 @@ export abstract class Site {
         return dirty;
     }
 
-    protected async addStreamer(id: Id, list: Array<any>, options: any) {
+    protected async addStreamer(id: Id, list: Array<Array<string>>, options: any) {
         let added = true;
 
         for (const entry of list) {
             if (entry[0] === id.uid) {
-                this.errMsg(colors.name(id.nm) + " is already in the capture list");
+                this.errMsg(`${colors.name(id.nm)}` + " is already in the capture list");
                 added = false;
                 break;
             }
         }
 
         if (added) {
-            this.infoMsg(colors.name(id.nm) + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
+            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
         }
 
         if (!this.streamerList.has(id.uid)) {
@@ -315,15 +334,15 @@ export abstract class Site {
         return added;
     }
 
-    protected removeStreamer(id: Id, list: Array<any>) {
+    protected removeStreamer(id: Id, list: Array<Array<string>>) {
         if (this.streamerList.has(id.uid)) {
-            this.infoMsg(colors.name(id.nm) + " removed from capture list.");
+            this.infoMsg(`${colors.name(id.nm)}` + " removed from capture list.");
             this.haltCapture(id.uid);
             this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
             this.render(true);
             return true;
         }
-        this.errMsg(colors.name(id.nm) + " not in capture list.");
+        this.errMsg(`${colors.name(id.nm)}` + " not in capture list.");
         return false;
     }
 
@@ -335,7 +354,8 @@ export abstract class Site {
         if (streamer && streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(colors.name(streamer.nm) + " is no longer broadcasting, terminating capture process (pid=" + streamer.capture.pid + ")");
+            this.dbgMsg(`${colors.name(streamer.nm)}` + " is no longer broadcasting, terminating capture process (pid=" +
+                streamer.capture.pid.toString() + ")");
             this.haltCapture(streamer.uid);
             this.redrawList = true;
         }
@@ -412,7 +432,7 @@ export abstract class Site {
         if (this.streamerList.has(uid)) {
             const streamer = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null) {
-                this.dbgMsg(colors.name(streamer.nm) + " is already capturing");
+                this.dbgMsg(`${colors.name(streamer.nm)}` + " is already capturing");
                 return false;
             }
             return true;
@@ -456,10 +476,10 @@ export abstract class Site {
 
         const streamer = capInfo.streamer;
         const script   = this.dvr.calcPath(this.config.recorder);
-        const capture  = spawn(script, capInfo.spawnArgs);
+        const capture: ChildProcessWithoutNullStreams = spawn(script, capInfo.spawnArgs);
 
         this.dbgMsg("Starting recording: " +
-            colors.cmd(script) + " " + colors.cmd(capInfo.spawnArgs.join(" ")));
+            `${colors.cmd(script)}` + " " + `${colors.cmd(capInfo.spawnArgs.join(" "))}`);
 
         if (this.dvr.config.debug.recorder) {
             const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
@@ -469,10 +489,10 @@ export abstract class Site {
 
         if (capture.pid) {
             const filename = capInfo.filename + ".ts";
-            this.infoMsg(colors.name(streamer.nm) + " recording started: " + colors.file(filename));
+            this.infoMsg(`${colors.name(streamer.nm)}` + " recording started: " + `${colors.file(filename)}`);
             this.storeCapInfo(streamer, filename, capture, false);
         } else {
-            this.errMsg(colors.name(streamer.nm) + " capture failed to start");
+            this.errMsg(`${colors.name(streamer.nm)}` + " capture failed to start");
         }
 
         capture.on("close", () => {
@@ -483,25 +503,27 @@ export abstract class Site {
 
     protected async endCapture(streamer: Streamer, capInfo: CapInfo) {
         const fullname = capInfo.filename + ".ts";
-        fs.stat(this.dvr.config.recording.captureDirectory + "/" + fullname, (err: any, stats: any) => {
-            if (err) {
-                if (err.code === "ENOENT") {
-                    this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
-                } else {
-                    this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
-                }
-                this.storeCapInfo(streamer, "", null, false);
-            } else {
+        try {
+            const stats: fs.Stats = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
+            if (stats) {
                 const sizeMB = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
-                    this.infoMsg(colors.name(streamer.nm) + " recording automatically deleted (size=" + sizeMB + " < minSize=" + this.dvr.config.recording.minSize + ")");
+                    this.infoMsg(`${colors.name(streamer.nm)}` + " recording automatically deleted (size=" +
+                        sizeMB.toString() + " < minSize=" + this.dvr.config.recording.minSize.toString() + ")");
                     fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                     this.storeCapInfo(streamer, "", null, false);
                 } else {
-                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
+                    await this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
                 }
             }
-        });
+        } catch(err) {
+            if (err.code === "ENOENT") {
+                this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
+            } else {
+                this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
+            }
+            this.storeCapInfo(streamer, "", null, false);
+        }
         await this.refresh(streamer);
     }
 
@@ -532,4 +554,3 @@ export abstract class Site {
         this.dvr.dbgMsg(msg, this);
     }
 }
-

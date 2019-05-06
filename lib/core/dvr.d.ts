@@ -1,8 +1,64 @@
 import { PostProcess } from "./postprocess";
 import { Site } from "./site";
 import { Tui } from "./tui";
+export interface EnableConfig {
+    daemon: boolean;
+}
+export interface RecordingConfig {
+    autoConvertType: string;
+    captureDirectory: string;
+    completeDirectory: string;
+    postprocess: string;
+    dateFormat: string;
+    fileNameFormat: string;
+    includeSiteInDir: boolean;
+    streamerSubdir: boolean;
+    siteSubdir: boolean;
+    keepTsFile: boolean;
+    minSize: number;
+    maxSize: number;
+}
+export interface LogConfig {
+    enable: boolean;
+    append: boolean;
+}
+export interface TuiConfig {
+    enable: boolean;
+    allowUnicode: boolean;
+}
+export interface ColorConfig {
+    name: string;
+    state: string;
+    offline: string;
+    prompt: string;
+    file: string;
+    time: string;
+    site: string;
+    cmd: string;
+    debug: string;
+    error: string;
+}
+export interface ProxyConfig {
+    enable: boolean;
+    server: string;
+}
+export interface DebugConfig {
+    log: boolean;
+    recorder: boolean;
+    errortrace: boolean;
+}
+export interface Config {
+    enable: EnableConfig;
+    recording: RecordingConfig;
+    postprocess: string;
+    log: LogConfig;
+    tui: TuiConfig;
+    colors: ColorConfig;
+    proxy: ProxyConfig;
+    debug: DebugConfig;
+}
 export declare class Dvr {
-    config: any;
+    config: Config;
     logger: Console | undefined;
     postProcess: PostProcess;
     path: string;
@@ -17,9 +73,9 @@ export declare class Dvr {
     calcPath(file: string): string;
     run(site: Site): Promise<void>;
     getDateTime(): string;
-    protected log(text: string, options: any): void;
-    protected msg(msg: string, site?: Site, options?: any): void;
-    infoMsg(msg: string, site?: Site): void;
-    errMsg(msg: string, site?: Site): void;
-    dbgMsg(msg: string, site: Site): void;
+    protected log(text: string, options?: any): void;
+    protected msg(msg: string, site?: Site | null, options?: any): void;
+    infoMsg(msg: string, site?: Site | null): void;
+    errMsg(msg: string, site?: Site | null): void;
+    dbgMsg(msg: string, site?: Site | null): void;
 }
