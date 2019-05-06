@@ -17,31 +17,6 @@ class Basic extends Site {
 
         this.urlback = urlback;
 
-        if (this.config.streamers.length > 0) {
-            if (this.config.streamers[0].constructor !== Array) {
-                this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
-                this.convertFormat(this.config.streamers);
-            }
-        }
-
-        for (const streamer of this.config.streamers) {
-            const nm = streamer[0];
-            const paused = streamer[1] === "paused";
-            this.streamerList.set(nm, {
-                uid:          nm,
-                nm:           nm,
-                site:         this.padName,
-                state:        "Offline",
-                filename:     "",
-                capture:      null,
-                postProcess:  false,
-                filesize:     0,
-                stuckcounter: 0,
-                paused:       paused,
-                isTemp:       false,
-            });
-        }
-        this.redrawList = true;
     }
 
     protected async convertFormat(streamerList: Array<any>) {
@@ -86,6 +61,31 @@ class Basic extends Site {
     }
 
     public async connect() {
+        if (this.config.streamers.length > 0) {
+            if (this.config.streamers[0].constructor !== Array) {
+                this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
+                await this.convertFormat(this.config.streamers);
+            }
+        }
+
+        for (const streamer of this.config.streamers) {
+            const nm = streamer[0];
+            const paused = streamer[1] === "paused";
+            this.streamerList.set(nm, {
+                uid:          nm,
+                nm:           nm,
+                site:         this.padName,
+                state:        "Offline",
+                filename:     "",
+                capture:      null,
+                postProcess:  false,
+                filesize:     0,
+                stuckcounter: 0,
+                paused:       paused,
+                isTemp:       false,
+            });
+        }
+        this.redrawList = true;
         return true;
     }
 
