@@ -9,6 +9,6 @@ export declare class PostProcess {
     protected convert(): Promise<void>;
     protected postScript(site: Site | null, streamer: any, completeDir: string, completeFile: string): Promise<void>;
     protected nextConvert(site: Site | null, streamer: any): Promise<void>;
-    protected getCompleteDir(site: Site | null, streamer: Streamer | null): Promise<string>;
+    protected getCompleteDir(site: Site | null, streamer: Streamer | null): string;
     protected uniqueFileName(completeDir: string, filename: string, fileType: string): string;
 }

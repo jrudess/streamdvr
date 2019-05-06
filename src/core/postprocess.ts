@@ -36,7 +36,7 @@ export class PostProcess {
         const capDir: string            = this.config.recording.captureDirectory + "/";
         const capFile: string           = capInfo.filename + ".ts";
         const fileType: string          = this.config.recording.autoConvertType;
-        const completeDir: string       = await this.getCompleteDir(site, streamer) + "/";
+        const completeDir: string       = this.getCompleteDir(site, streamer) + "/";
         const uniqueName: string        = this.uniqueFileName(completeDir, capInfo.filename, fileType);
         const completeFile: string      = uniqueName + "." + fileType;
 
@@ -114,10 +114,9 @@ export class PostProcess {
         }
     }
 
-    protected async getCompleteDir(site: Site | null, streamer: Streamer | null) {
+    protected getCompleteDir(site: Site | null, streamer: Streamer | null) {
         if (site && streamer) {
-            const dir = await site.getCompleteDir(streamer);
-            return dir;
+            return site.getCompleteDir(streamer);
         }
 
         return this.dvr.mkdir(this.config.recording.completeDirectory + "/UNKNOWN");

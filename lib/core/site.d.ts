@@ -76,7 +76,7 @@ export declare abstract class Site {
     protected writeConfig(): Promise<void>;
     protected abstract setupCapture(streamer: Streamer, url: string): any;
     protected canStartCap(uid: string): boolean;
-    getCompleteDir(streamer: Streamer): Promise<string>;
+    getCompleteDir(streamer: Streamer): string;
     protected refresh(streamer: Streamer | undefined, options?: any): Promise<void>;
     protected startCapture(capInfo: CapInfo): void;
     protected endCapture(streamer: Streamer, capInfo: CapInfo): Promise<void>;

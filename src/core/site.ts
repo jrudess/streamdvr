@@ -440,7 +440,7 @@ export abstract class Site {
         return false;
     }
 
-    public async getCompleteDir(streamer: Streamer) {
+    public getCompleteDir(streamer: Streamer) {
         let completeDir = this.dvr.config.recording.completeDirectory;
 
         if (this.dvr.config.recording.siteSubdir) {
@@ -451,11 +451,7 @@ export abstract class Site {
             if (this.dvr.config.recording.includeSiteInDir) {
                 completeDir += "_" + this.listName;
             }
-            try {
-                await fs.promises.mkdir(completeDir, {recursive: true});
-            } catch (err) {
-                this.errMsg(err.toString());
-            }
+            fs.mkdirSync(completeDir, {recursive: true});
         }
 
         return completeDir;
