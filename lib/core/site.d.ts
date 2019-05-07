@@ -43,9 +43,9 @@ export declare abstract class Site {
     config: SiteConfig;
     siteName: string;
     padName: string;
+    listName: string;
     streamerList: Map<string, Streamer>;
     redrawList: boolean;
-    protected listName: string;
     protected cfgFile: string;
     protected updateName: string;
     protected tempList: Array<Array<string>>;
@@ -62,7 +62,7 @@ export declare abstract class Site {
     protected getCaptureArguments(url: string, filename: string, options?: any): string[];
     processUpdates(options: any): Promise<void>;
     protected abstract createListItem(id: Id): Array<string>;
-    protected updateList(id: Id, options: any): Promise<boolean>;
+    updateList(id: Id, options: any): Promise<boolean>;
     pause(): Promise<void>;
     protected updateStreamers(list: Array<string>, options: any): Promise<boolean>;
     protected addStreamer(id: Id, list: Array<Array<string>>, options: any): Promise<boolean>;
@@ -73,7 +73,7 @@ export declare abstract class Site {
     getNumCapsInProgress(): number;
     haltAllCaptures(): void;
     protected haltCapture(uid: string): void;
-    protected writeConfig(): Promise<void>;
+    writeConfig(): Promise<void>;
     protected abstract setupCapture(streamer: Streamer, url: string): any;
     protected canStartCap(uid: string): boolean;
     getCompleteDir(streamer: Streamer): string;

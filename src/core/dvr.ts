@@ -79,7 +79,7 @@ export interface Config {
     debug:       DebugConfig;
 }
 
-export class Dvr {
+export abstract class Dvr {
 
     public config: Config;
     public logger: Console | undefined;
@@ -146,7 +146,7 @@ export class Dvr {
         return configfile;
     }
 
-    protected loadConfig() {
+    public loadConfig() {
         try {
             this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
@@ -174,6 +174,8 @@ export class Dvr {
             this.tui.render(false);
         }
     }
+
+    abstract exit(): void;
 
     public mkdir(dir: string) {
         const fulldir = path.resolve(dir);

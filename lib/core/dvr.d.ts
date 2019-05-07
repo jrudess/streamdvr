@@ -57,7 +57,7 @@ export interface Config {
     proxy: ProxyConfig;
     debug: DebugConfig;
 }
-export declare class Dvr {
+export declare abstract class Dvr {
     config: Config;
     logger: Console | undefined;
     postProcess: PostProcess;
@@ -68,7 +68,8 @@ export declare class Dvr {
     tui: Tui | undefined;
     constructor(dir: string);
     protected findConfig(): string;
-    protected loadConfig(): void;
+    loadConfig(): void;
+    abstract exit(): void;
     mkdir(dir: string): string;
     calcPath(file: string): string;
     run(site: Site): Promise<void>;

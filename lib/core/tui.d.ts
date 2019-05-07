@@ -1,8 +1,9 @@
+import { Dvr, Config } from "./dvr";
 import { Site } from "./site";
 export declare class Tui {
-    protected dvr: any;
-    protected config: any;
-    protected SITES: Array<any>;
+    protected dvr: Dvr;
+    protected config: Config;
+    protected SITES: Array<Site>;
     protected hideOffline: boolean;
     protected listSelect: any;
     protected sitelistSelect: any;
@@ -14,7 +15,7 @@ export declare class Tui {
     protected listmenu: any;
     protected sitemenu: any;
     protected logbody: any;
-    constructor(dvr: any);
+    constructor(dvr: Dvr);
     protected createTui(): void;
     protected parseCli(tokens: any): void;
     addSite(site: Site): void;

@@ -58,10 +58,10 @@ export abstract class Site {
     public config: SiteConfig;
     public siteName: string;
     public padName: string;
+    public listName: string;
     public streamerList: Map<string, Streamer>;
     public redrawList: boolean;
 
-    protected listName: string;
     protected cfgFile: string;
     protected updateName: string;
     protected tempList: Array<Array<string>>;
@@ -221,7 +221,7 @@ export abstract class Site {
 
     protected abstract createListItem(id: Id): Array<string>;
 
-    protected async updateList(id: Id, options: any): Promise<boolean> {
+    public async updateList(id: Id, options: any): Promise<boolean> {
         let dirty = false;
         const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
@@ -411,7 +411,7 @@ export abstract class Site {
         }
     }
 
-    protected async writeConfig() {
+    public async writeConfig() {
         let filehandle: fs.promises.FileHandle | undefined;
         try {
             filehandle = await fs.promises.open(this.cfgFile, "w");

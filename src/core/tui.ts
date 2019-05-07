@@ -1,14 +1,15 @@
 "use strict";
 
+import {Dvr, Config} from "./dvr";
 import {Site, Id} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
 export class Tui {
 
-    protected dvr:  any;
-    protected config: any;
-    protected SITES: Array<any>;
+    protected dvr: Dvr;
+    protected config: Config;
+    protected SITES: Array<Site>;
     protected hideOffline: boolean;
     protected listSelect: any;
     protected sitelistSelect: any;
@@ -21,7 +22,7 @@ export class Tui {
     protected sitemenu: any;
     protected logbody: any;
 
-    constructor(dvr: any) {
+    constructor(dvr: Dvr) {
 
         this.dvr = dvr;
         this.config = dvr.config;
@@ -641,4 +642,3 @@ export class Tui {
         }
     }
 }
-
