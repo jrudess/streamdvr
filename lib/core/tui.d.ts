@@ -1,5 +1,5 @@
 import { Dvr, Config } from "./dvr";
-import { Site } from "./site";
+import { Site, Streamer, UpdateOptions } from "./site";
 export declare class Tui {
     protected dvr: Dvr;
     protected config: Config;
@@ -20,9 +20,9 @@ export declare class Tui {
     protected parseCli(tokens: any): void;
     addSite(site: Site): void;
     log(text: string): void;
-    protected buildListEntry(site: Site, streamer: any): string[];
-    protected populateTable(site: Site, table: any): void;
+    protected buildListEntry(site: Site, streamer: Streamer): string[];
+    protected populateTable(site: Site, table: Array<Array<string>>): void;
     protected rebuildList(): void;
     render(redrawList: boolean, site?: Site): void;
-    protected updateList(siteName: string, nm: string, options: any): Promise<void>;
+    protected updateList(siteName: string, nm: string, options: UpdateOptions): Promise<void>;
 }

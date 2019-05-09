@@ -1,13 +1,13 @@
 "use strict";
 
-import * as fs       from "fs";
-import * as moment   from "moment";
-import * as path     from "path";
-import * as yaml     from "js-yaml";
+import * as fs from "fs";
+import * as moment from "moment";
+import * as path from "path";
+import * as yaml from "js-yaml";
 
 import {PostProcess} from "./postprocess";
-import {Site}        from "./site";
-import {Tui}         from "./tui";
+import {Site, UpdateOptions, UpdateOptionsDefault} from "./site";
+import {Tui} from "./tui";
 
 const colors = require("colors");
 
@@ -77,6 +77,10 @@ export interface Config {
     colors:      ColorConfig;
     proxy:       ProxyConfig;
     debug:       DebugConfig;
+}
+
+export interface LogOptions {
+    trace: boolean;
 }
 
 export abstract class Dvr {
@@ -175,7 +179,7 @@ export abstract class Dvr {
         }
     }
 
-    abstract exit(): void;
+    public abstract exit(): void;
 
     public mkdir(dir: string) {
         const fulldir = path.resolve(dir);
@@ -192,6 +196,10 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
+        const add: UpdateOptions = UpdateOptionsDefault;
+        const remove: UpdateOptions = UpdateOptionsDefault;
+        remove.add = false;
+
         // Scan capture directory for leftover ts files to convert
         // in case of a bad shutdown
         const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
@@ -201,18 +209,13 @@ export abstract class Dvr {
             await this.postProcess.add({site: null, streamer: null, filename: ts.slice(0, -3), spawnArgs: []});
         }
 
-        let startup = true;
-        await site.getStreamers({init: startup});
         while (true) {
             try {
-                if (!startup) {
-                    await site.disconnect();
-                    await site.connect();
-                }
-                await site.processUpdates({add: true,  init: startup});
-                await site.processUpdates({add: false, init: startup});
+                await site.disconnect();
+                await site.connect();
+                await site.processUpdates(add);
+                await site.processUpdates(remove);
                 await site.getStreamers();
-                startup = false;
             } catch (err) {
                 site.errMsg(err.toString());
             }
@@ -225,7 +228,7 @@ export abstract class Dvr {
         return moment().format(this.config.recording.dateFormat);
     }
 
-    protected log(text: string, options?: any) {
+    protected log(text: string, options?: LogOptions) {
         if (this.config.tui.enable && this.tui) {
             this.tui.log(text);
         } else if (options && options.trace && this.config.debug.errortrace) {
@@ -238,12 +241,14 @@ export abstract class Dvr {
         }
     }
 
-    protected msg(msg: string, site?: Site | null, options?: any) {
-        const time = "[" + this.getDateTime() + "] ";
+    protected msg(msg: string, site?: Site | null, options?: LogOptions) {
+        const time: string = "[" + this.getDateTime() + "] ";
         if (site) {
             this.log(`${colors.time(time)}` + `${colors.site(site.padName)}` + msg, options);
         } else {
-            this.log(`${colors.time(time)}` + `${colors.site("DVR".padEnd(9, " "))}` + msg, options);
+            let outmsg: string = "DVR".padEnd(9, " ");
+            outmsg = `${colors.time(time)}` + `${colors.site(outmsg)}` + msg;
+            this.log(outmsg, options);
         }
     }
 

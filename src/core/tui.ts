@@ -1,7 +1,7 @@
 "use strict";
 
 import {Dvr, Config} from "./dvr";
-import {Site, Id} from "./site";
+import {Site, Id, Streamer, UpdateOptions, UpdateOptionsDefault} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
@@ -294,7 +294,7 @@ export class Tui {
 
         this.list.key("r", () => {
             for (const site of this.SITES) {
-                site.getStreamers();
+                new Promise(() => site.getStreamers());
             }
         });
 
@@ -342,10 +342,13 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
-                    this.listmenu.hide();
-                    this.list.focus();
-                    this.render(false);
+                    const options: UpdateOptions = UpdateOptionsDefault;
+                    options.pause = true;
+                    new Promise(() => this.updateList(site, name, options)).then(() => {
+                        this.listmenu.hide();
+                        this.list.focus();
+                        this.render(false);
+                    });
                 }
                 break;
             case 1: // pause timer
@@ -358,15 +361,19 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
-                    this.listmenu.hide();
-                    this.list.focus();
-                    this.render(false);
+                    const options: UpdateOptions = UpdateOptionsDefault;
+                    options.add = false;
+                    new Promise(() => this.updateList(site, name, options)).then(() => {
+                        this.listmenu.hide();
+                        this.list.focus();
+                        this.render(false);
+                    });
                 }
                 break;
             case 3: // toggle offline
                 this.hideOffline = !this.hideOffline;
                 this.listmenu.hide();
+                this.list.interactive = true;
                 this.list.focus();
                 this.render(true);
                 this.listSelect = this.list.rows.length <= 1 ?
@@ -388,10 +395,14 @@ export class Tui {
                 const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
                 case 0: // pause
-                    this.updateList(site, "", {add: 0, pause: 1, isTemp: false, init: false});
-                    this.sitelist.focus();
-                    this.sitemenu.hide();
-                    this.render(false);
+                    const options: UpdateOptions = UpdateOptionsDefault;
+                    options.pause = true;
+                    new Promise(() => this.updateList(site, "", options)).then(() => {
+                        this.sitelist.focus();
+                        this.sitelist.interactive = true;
+                        this.sitemenu.hide();
+                        this.render(false);
+                    });
                     break;
                 case 1: // add
                     this.prompt.show();
@@ -463,8 +474,14 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false, pausetimer: text});
+                    const options: UpdateOptions = UpdateOptionsDefault;
+                    new Promise(async () => {
+                        options.pause = true;
+                        return this.updateList(site, name, options);
+                    }).then(async () => {
+                        options.pausetimer = Number(text);
+                        return this.updateList(site, name, options);
+                    });
                 }
                 this.listmenu.hide();
                 this.list.focus();
@@ -473,7 +490,8 @@ export class Tui {
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
-                    this.updateList(site, text, {add: 1, pause: 0, isTemp: 0, init: false});
+                    const options: UpdateOptions = UpdateOptionsDefault;
+                    new Promise(() => this.updateList(site, text, options));
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -501,13 +519,22 @@ export class Tui {
         case "remove":
         case "pause":
         case "unpause":
+            const options: UpdateOptions = UpdateOptionsDefault;
+            options.add = add;
+            options.pause = pause;
+            options.isTemp = temp;
             if (tokens.length >= 3) {
-                this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
-                if (pause && tokens.length >= 4) {
-                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false, pausetimer: tokens[3]});
-                }
+                new Promise(() => this.updateList(tokens[1], tokens[2], options)).then(() => {
+                    if (pause && tokens.length >= 4) {
+                        options.pausetimer = tokens[3];
+                        return this.updateList(tokens[1], tokens[2], options);
+                    }
+                    return;
+                });
             } else if (tokens.length === 2) {
-                this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
+                new Promise(async () => {
+                    return this.updateList(tokens[1], "", options);
+                });
             }
             break;
 
@@ -532,7 +559,7 @@ export class Tui {
     public addSite(site: Site) {
         this.SITES.push(site);
 
-        const sitetable = [];
+        const sitetable: Array<Array<string>> = [];
         sitetable.push(["", ""]);
         for (const site of this.SITES) {
             sitetable.push(["{" + this.config.colors.state + "-fg}" + site.siteName + "{/}", ""]);
@@ -546,7 +573,7 @@ export class Tui {
         this.render(false);
     }
 
-    protected buildListEntry(site: Site, streamer: any) {
+    protected buildListEntry(site: Site, streamer: Streamer) {
         const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
         let state = "{";
         if (streamer.filename === "") {
@@ -560,13 +587,13 @@ export class Tui {
             state += this.config.colors.file + "-fg}" + streamer.filename;
         }
         state += "{/}";
-        const temp = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
+        const temp: string = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
         return [name, temp, site.siteName, state];
     }
 
-    protected populateTable(site: Site, table: any) {
-        let sortedKeys: Array<any> = [];
-        const streamerList = site.streamerList;
+    protected populateTable(site: Site, table: Array<Array<string>>) {
+        let sortedKeys: Array<string> = [];
+        const streamerList: Map<string, Streamer> = site.streamerList;
         if (streamerList.size > 0) {
             // Map keys are UID, but want to sort list by name.
             sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
@@ -584,7 +611,7 @@ export class Tui {
             });
         }
         for (const key of sortedKeys) {
-            const streamer = streamerList.get(key);
+            const streamer: Streamer | undefined = streamerList.get(key);
             if (!streamer) {
                 continue;
             }
@@ -596,7 +623,7 @@ export class Tui {
     }
 
     protected rebuildList() {
-        const table = [];
+        const table: Array<Array<string>> = [];
         table.push(["", "", "", ""]);
         for (const site of this.SITES.values()) {
             this.populateTable(site, table);
@@ -616,7 +643,7 @@ export class Tui {
     }
 
     // Add and remove streamers
-    protected async updateList(siteName: string, nm: string, options: any) {
+    protected async updateList(siteName: string, nm: string, options: UpdateOptions) {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
@@ -631,7 +658,7 @@ export class Tui {
                     try {
                         let dirty: boolean = await site.updateList(id, options) && !options.isTemp;
                         if (dirty) {
-                            await site.writeConfig();
+                            site.writeConfig();
                         }
                     } catch (err) {
                         this.dvr.errMsg(err.toString());

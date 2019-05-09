@@ -39,6 +39,20 @@ export interface SiteConfig {
     batchSize: number;
     streamers: Array<Array<string>>;
 }
+export interface UpdateOptions {
+    add: boolean;
+    pause: boolean;
+    pausetimer: number;
+    isTemp: boolean;
+}
+export declare const UpdateOptionsDefault: UpdateOptions;
+export interface StreamerStateOptions {
+    msg: string;
+    isStreaming: boolean;
+    prevState: string;
+    init: boolean;
+}
+export declare const StreamerStateDefaults: StreamerStateOptions;
 export declare abstract class Site {
     config: SiteConfig;
     siteName: string;
@@ -53,34 +67,34 @@ export declare abstract class Site {
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
-    protected abstract togglePause(streamer: Streamer | undefined, options: any): Promise<boolean>;
+    protected abstract togglePause(streamer: Streamer | undefined): boolean;
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
-    protected getCaptureArguments(url: string, filename: string, options?: any): string[];
-    processUpdates(options: any): Promise<void>;
+    protected getCaptureArguments(url: string, filename: string, params?: Array<string>): string[];
+    processUpdates(options: UpdateOptions): Promise<void>;
     protected abstract createListItem(id: Id): Array<string>;
-    updateList(id: Id, options: any): Promise<boolean>;
-    pause(): Promise<void>;
-    protected updateStreamers(list: Array<string>, options: any): Promise<boolean>;
-    protected addStreamer(id: Id, list: Array<Array<string>>, options: any): Promise<boolean>;
+    updateList(id: Id, options: UpdateOptions): Promise<boolean>;
+    pause(): void;
+    protected updateStreamers(list: Array<string>, options: UpdateOptions): Promise<boolean>;
+    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions): Promise<boolean>;
     protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
-    protected checkStreamerState(streamer: Streamer | undefined, options?: any): Promise<void>;
-    getStreamers(options?: any): Promise<boolean>;
+    protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions): void;
+    getStreamers(): Promise<boolean>;
     storeCapInfo(streamer: Streamer, filename: string, capture: any, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;
     haltAllCaptures(): void;
     protected haltCapture(uid: string): void;
-    writeConfig(): Promise<void>;
+    writeConfig(): void;
     protected abstract setupCapture(streamer: Streamer, url: string): any;
     protected canStartCap(uid: string): boolean;
     getCompleteDir(streamer: Streamer): string;
-    protected refresh(streamer: Streamer | undefined, options?: any): Promise<void>;
+    protected refresh(streamer: Streamer): void;
     protected startCapture(capInfo: CapInfo): void;
     protected endCapture(streamer: Streamer, capInfo: CapInfo): Promise<void>;
-    clearProcessing(streamer: Streamer): Promise<void>;
+    clearProcessing(streamer: Streamer | null): Promise<void>;
     protected render(redrawList: boolean): void;
     infoMsg(msg: string): void;
     errMsg(msg: string): void;

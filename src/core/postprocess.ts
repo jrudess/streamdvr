@@ -12,9 +12,9 @@ export class PostProcess {
 
     protected dvr: Dvr;
     protected config: Config;
-    protected postProcessQ: Array<any>;
+    protected postProcessQ: Array<CapInfo>;
 
-    constructor(dvr: any) {
+    constructor(dvr: Dvr) {
         this.dvr = dvr;
         this.config = dvr.config;
         this.postProcessQ = [];
@@ -81,7 +81,7 @@ export class PostProcess {
         });
     }
 
-    protected async postScript(site: Site | null, streamer: any, completeDir: string, completeFile: string) {
+    protected async postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string) {
         if (!this.config.postprocess) {
             await this.nextConvert(site, streamer);
             return;
@@ -101,7 +101,7 @@ export class PostProcess {
         });
     }
 
-    protected async nextConvert(site: Site | null, streamer: any) {
+    protected async nextConvert(site: Site | null, streamer: Streamer | null) {
 
         if (site) {
             await site.clearProcessing(streamer);

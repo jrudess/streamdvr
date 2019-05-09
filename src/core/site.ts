@@ -53,6 +53,34 @@ export interface SiteConfig {
     streamers:    Array<Array<string>>;
 }
 
+export interface UpdateOptions {
+    add:        boolean;
+    pause:      boolean;
+    pausetimer: number;
+    isTemp:     boolean;
+}
+
+export const UpdateOptionsDefault: UpdateOptions = {
+    add: true,
+    pause: false,
+    pausetimer: 0,
+    isTemp: false,
+};
+
+export interface StreamerStateOptions {
+    msg: string;
+    isStreaming: boolean;
+    prevState: string;
+    init: boolean;
+}
+
+export const StreamerStateDefaults: StreamerStateOptions = {
+    msg: "",
+    isStreaming: false,
+    prevState: "Offline",
+    init: false,
+};
+
 export abstract class Site {
 
     public config: SiteConfig;
@@ -96,7 +124,7 @@ export abstract class Site {
 
     }
 
-    protected abstract async togglePause(streamer: Streamer | undefined, options: any): Promise<boolean>;
+    protected abstract togglePause(streamer: Streamer | undefined): boolean;
 
     public getStreamerList() {
         return Array.from(this.streamerList.values());
@@ -146,7 +174,7 @@ export abstract class Site {
     public abstract async connect(): Promise<boolean>;
     public abstract async disconnect(): Promise<boolean>;
 
-    protected getCaptureArguments(url: string, filename: string, options?: any) {
+    protected getCaptureArguments(url: string, filename: string, params?: Array<string>) {
         let args = [
             "-o",
             this.dvr.config.recording.captureDirectory + "/" + filename + ".ts",
@@ -171,14 +199,14 @@ export abstract class Site {
             args.push("--" + this.listName + "-password=" + this.config.password);
         }
 
-        if (options && options.params) {
-            args = args.concat(options.params);
+        if (params) {
+            args = args.concat(params);
         }
 
         return args;
     }
 
-    public async processUpdates(options: any) {
+    public async processUpdates(options: UpdateOptions) {
         const stats = fs.statSync(this.updateName);
         if (!stats.isFile()) {
             this.dbgMsg(this.updateName + " does not exist");
@@ -192,14 +220,14 @@ export abstract class Site {
             if (!updates.include) {
                 updates.include = [];
             } else if (updates.include.length > 0) {
-                this.infoMsg(updates.include.length + " streamer(s) to include");
+                this.infoMsg(`${updates.include.length}` + " streamer(s) to include");
                 list = updates.include;
                 updates.include = [];
             }
         } else if (!updates.exclude) {
             updates.exclude = [];
         } else if (updates.exclude.length > 0) {
-            this.infoMsg(updates.exclude.length + " streamer(s) to exclude");
+            this.infoMsg(`${updates.exclude.length}` + " streamer(s) to exclude");
             list = updates.exclude;
             updates.exclude = [];
         }
@@ -212,7 +240,7 @@ export abstract class Site {
         try {
             const dirty = await this.updateStreamers(list, options);
             if (dirty) {
-                await this.writeConfig();
+                this.writeConfig();
             }
         } catch (err) {
             this.errMsg(err.toString());
@@ -221,7 +249,7 @@ export abstract class Site {
 
     protected abstract createListItem(id: Id): Array<string>;
 
-    public async updateList(id: Id, options: any): Promise<boolean> {
+    public async updateList(id: Id, options: UpdateOptions): Promise<boolean> {
         let dirty = false;
         const list = options.isTemp ? this.tempList : this.config.streamers;
         if (options.pause) {
@@ -234,7 +262,7 @@ export abstract class Site {
                     this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
                     streamer = this.streamerList.get(id.uid);
                 }
-                const toggle = await this.togglePause(streamer, options);
+                const toggle = this.togglePause(streamer);
                 if (toggle) {
                     dirty = true;
                     this.render(true);
@@ -269,20 +297,20 @@ export abstract class Site {
         return dirty && !options.isTemp;
     }
 
-    public async pause() {
+    public pause() {
         this.paused = !this.paused;
         for (const [, streamer] of this.streamerList) {
             streamer.paused = this.paused;
             if (this.paused) {
                 this.haltCapture(streamer.uid);
             } else if (streamer.state !== "Offline") {
-                await this.refresh(streamer);
+                this.refresh(streamer);
             }
         }
         this.render(true);
     }
 
-    protected async updateStreamers(list: Array<string>, options: any) {
+    protected async updateStreamers(list: Array<string>, options: UpdateOptions) {
         let dirty = false;
 
         for (const entry of list) {
@@ -290,13 +318,16 @@ export abstract class Site {
                 uid: entry,
                 nm: entry,
             };
-            dirty = await this.updateList(id, {add: options.add, pause: 0, isTemp: false, init: options.init}) || dirty;
+            const newoptions = options;
+            newoptions.pause = false;
+            newoptions.isTemp = false;
+            dirty = await this.updateList(id, newoptions) || dirty;
         }
 
         return dirty;
     }
 
-    protected async addStreamer(id: Id, list: Array<Array<string>>, options: any) {
+    protected async addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions) {
         let added = true;
 
         for (const entry of list) {
@@ -312,7 +343,7 @@ export abstract class Site {
         }
 
         if (!this.streamerList.has(id.uid)) {
-            this.streamerList.set(id.uid, {
+            const streamer: Streamer = {
                 uid: id.uid,
                 nm: id.nm,
                 site: this.padName,
@@ -324,12 +355,10 @@ export abstract class Site {
                 stuckcounter: 0,
                 isTemp: options.isTemp,
                 paused: this.paused,
-            });
+            };
+            this.streamerList.set(id.uid, streamer);
             this.render(true);
-            if (!options || !options.init) {
-                const streamer = this.streamerList.get(id.uid);
-                await this.refresh(streamer, options);
-            }
+            this.refresh(streamer);
         }
         return added;
     }
@@ -346,7 +375,7 @@ export abstract class Site {
         return false;
     }
 
-    protected async checkStreamerState(streamer: Streamer | undefined, options?: any) {
+    protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions) {
         if (streamer && streamer.state !== options.prevState) {
             this.infoMsg(options.msg);
             this.redrawList = true;
@@ -362,7 +391,7 @@ export abstract class Site {
         this.render(false);
     }
 
-    public async getStreamers(options?: any) {
+    public async getStreamers() {
         if (this.dvr.tryingToExit) {
             this.dbgMsg("Skipping lookup while exit in progress...");
             return false;
@@ -411,19 +440,11 @@ export abstract class Site {
         }
     }
 
-    public async writeConfig() {
-        let filehandle: fs.promises.FileHandle | undefined;
-        try {
-            filehandle = await fs.promises.open(this.cfgFile, "w");
-            await filehandle.writeFile(yaml.safeDump(this.config));
-        } finally {
-            if (filehandle) {
-                this.dbgMsg("Rewriting " + this.cfgFile);
-                await filehandle.close();
-            } else {
-                this.errMsg("Could not write " + this.cfgFile);
-            }
-        }
+    public writeConfig() {
+        const fd = fs.openSync(this.cfgFile, "w");
+        fs.writeFileSync(fd, yaml.safeDump(this.config));
+        this.dbgMsg("Rewriting " + this.cfgFile);
+        fs.closeSync(fd);
     }
 
     protected abstract setupCapture(streamer: Streamer, url: string): any;
@@ -457,11 +478,10 @@ export abstract class Site {
         return completeDir;
     }
 
-    protected async refresh(streamer: Streamer | undefined, options?: any) {
+    protected refresh(streamer: Streamer) {
         if (streamer && !this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
-            if (!options || !options.init) {
-                await this.checkStreamerState(streamer);
-            }
+            const options: StreamerStateOptions = StreamerStateDefaults;
+            this.checkStreamerState(streamer, options);
         }
     }
 
@@ -470,8 +490,8 @@ export abstract class Site {
             return;
         }
 
-        const streamer = capInfo.streamer;
-        const script   = this.dvr.calcPath(this.config.recorder);
+        const streamer: Streamer = capInfo.streamer;
+        const script: string = this.dvr.calcPath(this.config.recorder);
         const capture: ChildProcessWithoutNullStreams = spawn(script, capInfo.spawnArgs);
 
         this.dbgMsg("Starting recording: " +
@@ -512,24 +532,27 @@ export abstract class Site {
                     await this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
                 }
             }
-        } catch(err) {
+        } catch (err) {
             if (err.code === "ENOENT") {
-                this.errMsg(colors.name(streamer.nm) + ", " + colors.file(capInfo.filename) + ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
+                this.errMsg(`${colors.name(streamer.nm)}` + ", " + `${colors.file(capInfo.filename)}` +
+                    ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
             } else {
-                this.errMsg(colors.name(streamer.nm) + ": " + err.toString());
+                this.errMsg(`${colors.name(streamer.nm)}` + ": " + `${err.toString()}`);
             }
             this.storeCapInfo(streamer, "", null, false);
         }
-        await this.refresh(streamer);
+        this.refresh(streamer);
     }
 
-    public async clearProcessing(streamer: Streamer) {
+    public async clearProcessing(streamer: Streamer | null) {
         // Note: setting postProcess to undefined releases program to exit
-        this.storeCapInfo(streamer, "", null, false);
-        this.redrawList = true;
+        if (streamer) {
+            this.storeCapInfo(streamer, "", null, false);
+            this.redrawList = true;
 
-        streamer.postProcess = false;
-        await this.refresh(streamer);
+            streamer.postProcess = false;
+            this.refresh(streamer);
+        }
     }
 
     protected render(redrawList: boolean) {

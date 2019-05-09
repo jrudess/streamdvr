@@ -57,6 +57,9 @@ export interface Config {
     proxy: ProxyConfig;
     debug: DebugConfig;
 }
+export interface LogOptions {
+    trace: boolean;
+}
 export declare abstract class Dvr {
     config: Config;
     logger: Console | undefined;
@@ -74,8 +77,8 @@ export declare abstract class Dvr {
     calcPath(file: string): string;
     run(site: Site): Promise<void>;
     getDateTime(): string;
-    protected log(text: string, options?: any): void;
-    protected msg(msg: string, site?: Site | null, options?: any): void;
+    protected log(text: string, options?: LogOptions): void;
+    protected msg(msg: string, site?: Site | null, options?: LogOptions): void;
     infoMsg(msg: string, site?: Site | null): void;
     errMsg(msg: string, site?: Site | null): void;
     dbgMsg(msg: string, site?: Site | null): void;

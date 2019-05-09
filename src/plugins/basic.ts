@@ -1,10 +1,11 @@
 "use strict";
 
-import {promisify} from "util";
-import {Site, Streamer, Id, CapInfo} from "../core/site";
+// import {promisify} from "util";
+import {Site, Streamer, Id, CapInfo, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
+import {execSync} from "child_process";
 
 const colors = require("colors");
-const exec   = promisify(require("child_process").exec);
+// const exec   = promisify(require("child_process").exec);
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
@@ -19,7 +20,7 @@ class Basic extends Site {
 
     }
 
-    protected async convertFormat(streamerList: Array<any>) {
+    protected convertFormat(streamerList: Array<any>) {
         const newList = [];
         for (const streamer of streamerList.values()) {
             const newItem = [];
@@ -28,7 +29,7 @@ class Basic extends Site {
             newList.push(newItem);
         }
         this.config.streamers = newList;
-        await this.writeConfig();
+        this.writeConfig();
     }
 
     protected createListItem(id: Id): Array<string> {
@@ -38,7 +39,7 @@ class Basic extends Site {
         return listItem;
     }
 
-    public async togglePause(streamer: Streamer | undefined, options: any): Promise<boolean> {
+    public togglePause(streamer: Streamer | undefined): boolean {
         if (streamer) {
             for (const item of this.config.streamers) {
                 if (item[0] === streamer.uid) {
@@ -46,7 +47,8 @@ class Basic extends Site {
                         this.infoMsg(colors.name(streamer.nm) + " is unpaused.");
                         item[1] = "unpaused";
                         streamer.paused = false;
-                        await this.refresh(streamer, options);
+                        // this.refresh(streamer, options);
+                        this.refresh(streamer);
                     } else {
                         this.infoMsg(colors.name(streamer.nm) + " is paused");
                         item[1] = "paused";
@@ -64,7 +66,7 @@ class Basic extends Site {
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
                 this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
-                await this.convertFormat(this.config.streamers);
+                this.convertFormat(this.config.streamers);
             }
         }
 
@@ -93,7 +95,7 @@ class Basic extends Site {
         return true;
     }
 
-    protected async m3u8Script(nm: string) {
+    protected m3u8Script(nm: string) {
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
         let cmd           = script + " -s " + streamerUrl;
@@ -111,29 +113,29 @@ class Basic extends Site {
         }
 
         this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
-        try {
-            // m3u8 url in stdout
-            const stdio = await exec(cmd, {stdio: ["pipe", "pipe", "ignore"]});
-            let url = stdio.stdout.toString();
-            url = url.replace(/\r?\n|\r/g, "");
 
-            return {status: true, m3u8: url};
-        } catch (stdio) {
-            if (stdio.stdout) {
-                this.errMsg(stdio.stdout);
+        // m3u8 url in stdout
+        try {
+            const stdout = execSync(cmd, {stdio: ["pipe", "pipe", "ignore"]});
+            let url = stdout.toString();
+            if (url) {
+                url = url.replace(/\r?\n|\r/g, "");
+                return {status: true, m3u8: url};
             }
-            if (stdio.stderr) {
-                this.errMsg(stdio.stderr);
+        } catch (err) {
+            if (err.stdio) {
+                this.errMsg(err.stdio.toString());
             }
-            return {status: false, m3u8: ""};
         }
+
+        return {status: false, m3u8: ""};
     }
 
-    protected async checkStreamerState(streamer: Streamer, options?: any) {
+    protected checkStreamerState(streamer: Streamer) {
         // Detect if streamer is online or actively streaming
-        const prevState = streamer.state;
-        const stream    = await this.m3u8Script(streamer.nm);
+        const stream = this.m3u8Script(streamer.nm);
 
+        const prevState = streamer.state;
         let msg = colors.name(streamer.nm);
         if (stream.status) {
             msg += " is streaming.";
@@ -143,14 +145,11 @@ class Basic extends Site {
             streamer.state = "Offline";
         }
 
-        let newoptions: any = {};
-        if (options) {
-            newoptions = options;
-        }
-        newoptions.msg = msg;
-        newoptions.isStreaming = stream.status;
-        newoptions.prevState = prevState;
-        await super.checkStreamerState(streamer, newoptions);
+        const options: StreamerStateOptions = StreamerStateDefaults;
+        options.msg = msg;
+        options.isStreaming = stream.status;
+        options.prevState = prevState;
+        super.checkStreamerState(streamer, options);
 
         if (stream.status) {
             if (streamer.paused) {
@@ -161,15 +160,14 @@ class Basic extends Site {
         }
     }
 
-    protected async checkBatch(batch: any, options: any) {
+    protected async checkBatch(batch: Array<string>) {
         const queries = [];
 
         for (const item of batch) {
             const streamer: Streamer | undefined = this.streamerList.get(item);
             if (streamer) {
-                queries.push(this.checkStreamerState(streamer, options));
+                queries.push(this.checkStreamerState(streamer));
             }
-
         }
 
         try {
@@ -181,12 +179,12 @@ class Basic extends Site {
         }
     }
 
-    protected serialize(nms: any) {
+    protected serialize(nms: Array<string>) {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
         // serial.  Set batchSize to 0 for full parallel, or 1 for full serial.
-        const serRuns = [];
+        const serRuns: Array<Array<string>> = [];
         let count = 0;
         let batchSize = 5;
         if (typeof this.config.batchSize !== "undefined") {
@@ -194,7 +192,7 @@ class Basic extends Site {
         }
 
         while (count < nms.length) {
-            const parBatch = [];
+            const parBatch: Array<string> = [];
             const limit = count + batchSize;
 
             for (let i = count; (i < limit) && (i < nms.length); i++) {
@@ -206,21 +204,21 @@ class Basic extends Site {
         return serRuns;
     }
 
-    public async getStreamers(options?: any) {
+    public async getStreamers() {
         if (!super.getStreamers()) {
             return false;
         }
 
-        const nms = [];
+        const nms: Array<string> = [];
         for (const streamer of this.streamerList.values()) {
             nms.push(streamer.nm);
         }
 
-        const serRuns = this.serialize(nms);
+        const serRuns: Array<Array<string>> = this.serialize(nms);
 
         try {
             for (const item of serRuns) {
-                await this.checkBatch(item, options);
+                await this.checkBatch(item);
             }
             return true;
         } catch (err) {
@@ -234,9 +232,9 @@ class Basic extends Site {
             return {site: this, streamer: null, filename: "", spawnArgs: []};
         }
 
-        const filename  = this.getFileName(streamer.nm);
-        const newurl    = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
-        const spawnArgs = this.getCaptureArguments(newurl, filename);
+        const filename: string         = this.getFileName(streamer.nm);
+        const newurl: string           = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
+        const spawnArgs: Array<string> = this.getCaptureArguments(newurl, filename);
         return {site: this, streamer: streamer, filename: filename, spawnArgs: spawnArgs};
     }
 }
