@@ -67,7 +67,7 @@ export declare abstract class Site {
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
-    protected abstract togglePause(streamer: Streamer | undefined): boolean;
+    protected abstract togglePause(streamer: Streamer): boolean;
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
@@ -93,8 +93,8 @@ export declare abstract class Site {
     getCompleteDir(streamer: Streamer): string;
     protected refresh(streamer: Streamer): void;
     protected startCapture(capInfo: CapInfo): void;
-    protected endCapture(streamer: Streamer, capInfo: CapInfo): Promise<void>;
-    clearProcessing(streamer: Streamer | null): Promise<void>;
+    protected endCapture(streamer: Streamer, capInfo: CapInfo): void;
+    clearProcessing(streamer: Streamer): void;
     protected render(redrawList: boolean): void;
     infoMsg(msg: string): void;
     errMsg(msg: string): void;

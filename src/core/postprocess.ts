@@ -5,8 +5,8 @@ import {spawn} from "child_process";
 import {Dvr, Config} from "../core/dvr.js";
 import {Site, Streamer, CapInfo} from "../core/site.js";
 
-const mv      = require("mv");
-const colors  = require("colors");
+const mv     = require("mv");
+const colors = require("colors");
 
 export class PostProcess {
 
@@ -20,19 +20,19 @@ export class PostProcess {
         this.postProcessQ = [];
     }
 
-    public async add(capInfo: CapInfo) {
+    public add(capInfo: CapInfo) {
         this.postProcessQ.push(capInfo);
         if (this.postProcessQ.length === 1) {
-            await this.convert();
+            this.convert();
         }
     }
 
-    protected async convert() {
+    protected convert() {
 
         const capInfo: CapInfo          = this.postProcessQ[0];
         const site: Site | null         = capInfo.site;
         const streamer: Streamer | null = capInfo.streamer;
-        const namePrint: string         = streamer === null ? "" : `${colors.name(streamer.nm)}` + " ";
+        const namePrint: string         = streamer ? `${colors.name(streamer.nm)}` + " " : "";
         const capDir: string            = this.config.recording.captureDirectory + "/";
         const capFile: string           = capInfo.filename + ".ts";
         const fileType: string          = this.config.recording.autoConvertType;
@@ -49,7 +49,8 @@ export class PostProcess {
                 }
             });
 
-            await this.postScript(site, streamer, completeDir, completeFile);
+            this.postScript(site, streamer, completeDir, completeFile);
+            return;
         }
 
         const script = this.dvr.calcPath(this.config.recording.postprocess);
@@ -69,7 +70,11 @@ export class PostProcess {
 
         myCompleteProcess.on("close", () => {
             if (!this.config.recording.keepTsFile) {
-                fs.unlinkSync(args[0]);
+                if (fs.existsSync(args[0])) {
+                    fs.unlinkSync(args[0]);
+                } else {
+                    this.dvr.errMsg(args[0] + "does not exist, cannot convert");
+                }
             }
 
             this.dvr.infoMsg(namePrint + "done converting " + completeFile, site);
@@ -81,9 +86,9 @@ export class PostProcess {
         });
     }
 
-    protected async postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string) {
+    protected postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string) {
         if (!this.config.postprocess) {
-            await this.nextConvert(site, streamer);
+            this.nextConvert(site, streamer);
             return;
         }
 
@@ -101,16 +106,16 @@ export class PostProcess {
         });
     }
 
-    protected async nextConvert(site: Site | null, streamer: Streamer | null) {
+    protected nextConvert(site: Site | null, streamer: Streamer | null) {
 
-        if (site) {
-            await site.clearProcessing(streamer);
+        if (site && streamer) {
+            site.clearProcessing(streamer);
         }
 
         // Pop current job, and start next conversion job (if any)
         this.postProcessQ.shift();
         if (this.postProcessQ.length > 0) {
-            await this.convert();
+            this.convert();
         }
     }
 

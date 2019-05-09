@@ -656,7 +656,7 @@ export class Tui {
                         nm: nm,
                     };
                     try {
-                        let dirty: boolean = await site.updateList(id, options) && !options.isTemp;
+                        const dirty: boolean = await site.updateList(id, options) && !options.isTemp;
                         if (dirty) {
                             site.writeConfig();
                         }

@@ -75,6 +75,7 @@ export declare abstract class Dvr {
     abstract exit(): void;
     mkdir(dir: string): string;
     calcPath(file: string): string;
+    start(): Promise<void>;
     run(site: Site): Promise<void>;
     getDateTime(): string;
     protected log(text: string, options?: LogOptions): void;

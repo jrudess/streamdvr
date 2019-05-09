@@ -6,7 +6,7 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 
 import {PostProcess} from "./postprocess";
-import {Site, UpdateOptions, UpdateOptionsDefault} from "./site";
+import {Site, CapInfo, UpdateOptions, UpdateOptionsDefault} from "./site";
 import {Tui} from "./tui";
 
 const colors = require("colors");
@@ -195,19 +195,28 @@ export abstract class Dvr {
         return file;
     }
 
+    public async start() {
+        // Scan capture directory for leftover ts files to convert
+        // in case of a bad shutdown
+        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
+        const tsfiles: Array<string> = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
+
+        for (const ts of tsfiles.values()) {
+            const capInfo: CapInfo = {
+                site:      null,
+                streamer:  null,
+                filename:  ts.slice(0, -3),
+                spawnArgs: [],
+            };
+
+            this.postProcess.add(capInfo);
+        }
+    }
+
     public async run(site: Site) {
         const add: UpdateOptions = UpdateOptionsDefault;
         const remove: UpdateOptions = UpdateOptionsDefault;
         remove.add = false;
-
-        // Scan capture directory for leftover ts files to convert
-        // in case of a bad shutdown
-        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
-        const tsfiles = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
-
-        for (const ts of tsfiles.values()) {
-            await this.postProcess.add({site: null, streamer: null, filename: ts.slice(0, -3), spawnArgs: []});
-        }
 
         while (true) {
             try {

@@ -2,6 +2,8 @@
 
 // import {promisify} from "util";
 import {Site, Streamer, Id, CapInfo, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
+import {Dvr} from "../core/dvr";
+import {Tui} from "../core/tui";
 import {execSync} from "child_process";
 
 const colors = require("colors");
@@ -13,7 +15,7 @@ class Basic extends Site {
 
     protected urlback: string;
 
-    constructor(siteName: string, dvr: any, tui: any, urlback: string) {
+    constructor(siteName: string, dvr: Dvr, tui: Tui, urlback: string) {
         super(siteName, dvr, tui);
 
         this.urlback = urlback;
@@ -39,24 +41,22 @@ class Basic extends Site {
         return listItem;
     }
 
-    public togglePause(streamer: Streamer | undefined): boolean {
-        if (streamer) {
-            for (const item of this.config.streamers) {
-                if (item[0] === streamer.uid) {
-                    if (streamer.paused) {
-                        this.infoMsg(colors.name(streamer.nm) + " is unpaused.");
-                        item[1] = "unpaused";
-                        streamer.paused = false;
-                        // this.refresh(streamer, options);
-                        this.refresh(streamer);
-                    } else {
-                        this.infoMsg(colors.name(streamer.nm) + " is paused");
-                        item[1] = "paused";
-                        streamer.paused = true;
-                        this.haltCapture(streamer.uid);
-                    }
-                    return true;
+    public togglePause(streamer: Streamer): boolean {
+        for (const item of this.config.streamers) {
+            if (item[0] === streamer.uid) {
+                if (streamer.paused) {
+                    this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
+                    item[1] = "unpaused";
+                    streamer.paused = false;
+                    // this.refresh(streamer, options);
+                    this.refresh(streamer);
+                } else {
+                    this.infoMsg(`${colors.name(streamer.nm)}` + " is paused");
+                    item[1] = "paused";
+                    streamer.paused = true;
+                    this.haltCapture(streamer.uid);
                 }
+                return true;
             }
         }
         return false;
@@ -73,19 +73,21 @@ class Basic extends Site {
         for (const streamer of this.config.streamers) {
             const nm = streamer[0];
             const paused = streamer[1] === "paused";
-            this.streamerList.set(nm, {
-                uid:          nm,
-                nm:           nm,
-                site:         this.padName,
-                state:        "Offline",
-                filename:     "",
-                capture:      null,
-                postProcess:  false,
-                filesize:     0,
-                stuckcounter: 0,
-                paused:       paused,
-                isTemp:       false,
-            });
+            if (!this.streamerList.has(nm)) {
+                this.streamerList.set(nm, {
+                    uid:          nm,
+                    nm:           nm,
+                    site:         this.padName,
+                    state:        "Offline",
+                    filename:     "",
+                    capture:      null,
+                    postProcess:  false,
+                    filesize:     0,
+                    stuckcounter: 0,
+                    paused:       paused,
+                    isTemp:       false,
+                });
+            }
         }
         this.redrawList = true;
         return true;
@@ -112,7 +114,7 @@ class Basic extends Site {
             cmd = cmd + " -p --" + this.listName + "-password=" + this.config.password;
         }
 
-        this.dbgMsg(colors.name(nm) + " running: " + colors.cmd(cmd));
+        this.dbgMsg(`${colors.name(nm)}` + " running: " + `${colors.cmd(cmd)}`);
 
         // m3u8 url in stdout
         try {
@@ -153,7 +155,7 @@ class Basic extends Site {
 
         if (stream.status) {
             if (streamer.paused) {
-                this.dbgMsg(colors.name(streamer.nm) + " is paused, recording not started.");
+                this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
             } else if (!options || !options.init) {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }

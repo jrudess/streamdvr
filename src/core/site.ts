@@ -124,7 +124,7 @@ export abstract class Site {
 
     }
 
-    protected abstract togglePause(streamer: Streamer | undefined): boolean;
+    protected abstract togglePause(streamer: Streamer): boolean;
 
     public getStreamerList() {
         return Array.from(this.streamerList.values());
@@ -262,10 +262,12 @@ export abstract class Site {
                     this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
                     streamer = this.streamerList.get(id.uid);
                 }
-                const toggle = this.togglePause(streamer);
-                if (toggle) {
-                    dirty = true;
-                    this.render(true);
+                if (streamer) {
+                    const toggle = this.togglePause(streamer);
+                    if (toggle) {
+                        dirty = true;
+                        this.render(true);
+                    }
                 }
             }
         } else if (options.add) {
@@ -479,7 +481,7 @@ export abstract class Site {
     }
 
     protected refresh(streamer: Streamer) {
-        if (streamer && !this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
+        if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
             const options: StreamerStateOptions = StreamerStateDefaults;
             this.checkStreamerState(streamer, options);
         }
@@ -517,7 +519,7 @@ export abstract class Site {
 
     }
 
-    protected async endCapture(streamer: Streamer, capInfo: CapInfo) {
+    protected endCapture(streamer: Streamer, capInfo: CapInfo) {
         const fullname = capInfo.filename + ".ts";
         try {
             const stats: fs.Stats = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
@@ -529,7 +531,7 @@ export abstract class Site {
                     fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
                     this.storeCapInfo(streamer, "", null, false);
                 } else {
-                    await this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
+                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
                 }
             }
         } catch (err) {
@@ -544,15 +546,13 @@ export abstract class Site {
         this.refresh(streamer);
     }
 
-    public async clearProcessing(streamer: Streamer | null) {
+    public clearProcessing(streamer: Streamer) {
         // Note: setting postProcess to undefined releases program to exit
-        if (streamer) {
-            this.storeCapInfo(streamer, "", null, false);
-            this.redrawList = true;
+        this.storeCapInfo(streamer, "", null, false);
+        this.redrawList = true;
 
-            streamer.postProcess = false;
-            this.refresh(streamer);
-        }
+        streamer.postProcess = false;
+        this.refresh(streamer);
     }
 
     protected render(redrawList: boolean) {
