@@ -259,21 +259,19 @@ export abstract class Site {
         let dirty = false;
         const list = isTemp ? this.tempList : this.config.streamers;
         if (cmd === UpdateCmd.PAUSE) {
-            if (this.streamerList.has(id.uid)) {
-                let streamer: Streamer | undefined = this.streamerList.get(id.uid);
-                if (streamer && pauseTimer && pauseTimer > 0) {
-                    const print: string = streamer.paused ? " pausing for " : " unpausing for ";
-                    this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
-                    await sleep(pauseTimer * 1000);
-                    this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
-                    streamer = this.streamerList.get(id.uid);
-                }
-                if (streamer) {
-                    const toggle = this.togglePause(streamer);
-                    if (toggle) {
-                        dirty = true;
-                        this.render(true);
-                    }
+            let streamer: Streamer | undefined = this.streamerList.get(id.uid);
+            if (streamer && pauseTimer && pauseTimer > 0) {
+                const print: string = streamer.paused ? " pausing for " : " unpausing for ";
+                this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
+                await sleep(pauseTimer * 1000);
+                this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
+                streamer = this.streamerList.get(id.uid);
+            }
+            if (streamer) {
+                const toggle = this.togglePause(streamer);
+                if (toggle) {
+                    dirty = true;
+                    this.render(true);
                 }
             }
         } else if (cmd === UpdateCmd.ADD) {
@@ -323,7 +321,7 @@ export abstract class Site {
                 uid: entry,
                 nm: entry,
             };
-            dirty = await this.updateList(id, cmd) || dirty;
+            dirty = await this.updateList(id, cmd, isTemp, pauseTimer) || dirty;
         }
 
         return dirty;
