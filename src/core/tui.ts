@@ -1,7 +1,7 @@
 "use strict";
 
 import {Dvr, Config} from "./dvr";
-import {Site, Id, Streamer, UpdateOptions, UpdateOptionsDefault} from "./site";
+import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
@@ -344,9 +344,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault();
-                    options.pause = true;
-                    this.updateList(site, name, options);
+                    this.updateList(site, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -362,10 +360,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault();
-                    options.add = false;
-                    options.pause = false;
-                    this.updateList(site, name, options);
+                    this.updateList(site, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -396,9 +391,7 @@ export class Tui {
                 const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
                 case 0: // pause
-                    const options: UpdateOptions = UpdateOptionsDefault();
-                    options.pause = true;
-                    this.updateList(site, "", options);
+                    this.updateList(site, "", UpdateCmd.PAUSE);
                     this.sitelist.focus();
                     this.sitelist.interactive = true;
                     this.sitemenu.hide();
@@ -474,12 +467,10 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault();
-                    options.pause = true;
                     new Promise(async () => {
-                        await this.updateList(site, name, options);
-                        options.pausetimer = Number(text);
-                        await this.updateList(site, name, options);
+                        await this.updateList(site, name, UpdateCmd.PAUSE);
+                        const pauseTimer: number = Number(text);
+                        await this.updateList(site, name, UpdateCmd.PAUSE, false, pauseTimer);
                     });
                 }
                 this.listmenu.hide();
@@ -489,8 +480,7 @@ export class Tui {
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
-                    const options: UpdateOptions = UpdateOptionsDefault();
-                    this.updateList(site, text, options);
+                    this.updateList(site, text, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -518,18 +508,16 @@ export class Tui {
         case "remove":
         case "pause":
         case "unpause":
-            const options: UpdateOptions = UpdateOptionsDefault();
-            options.add = add;
-            options.pause = pause;
-            options.isTemp = temp;
+            const cmd: UpdateCmd = add   ? UpdateCmd.ADD :
+                                   pause ? UpdateCmd.PAUSE :
+                                           UpdateCmd.REMOVE;
             if (tokens.length >= 3) {
-                this.updateList(tokens[1], tokens[2], options);
+                this.updateList(tokens[1], tokens[2], cmd, temp);
                 if (pause && tokens.length >= 4) {
-                    options.pausetimer = tokens[3];
-                    this.updateList(tokens[1], tokens[2], options);
+                    this.updateList(tokens[1], tokens[2], cmd, temp, tokens[3]);
                 }
             } else if (tokens.length === 2) {
-                this.updateList(tokens[1], "", options);
+                this.updateList(tokens[1], "", cmd, temp);
             }
             break;
 
@@ -638,11 +626,11 @@ export class Tui {
     }
 
     // Add and remove streamers
-    protected async updateList(siteName: string, nm: string, options: UpdateOptions) {
+    protected async updateList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
-                    if (options.pause) {
+                    if (cmd === UpdateCmd.PAUSE) {
                         site.pause();
                     }
                 } else {
@@ -651,7 +639,7 @@ export class Tui {
                         nm: nm,
                     };
                     try {
-                        const dirty: boolean = await site.updateList(id, options) && !options.isTemp;
+                        const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
                         if (dirty) {
                             site.writeConfig();
                         }

@@ -31,10 +31,7 @@ class Basic extends Site {
     }
 
     protected createListItem(id: Id): Array<string> {
-        const listItem: Array<string> = [];
-        listItem.push(id.nm);
-        listItem.push("unpaused");
-        return listItem;
+        return [id.nm, "unpaused"];
     }
 
     public togglePause(streamer: Streamer): boolean {

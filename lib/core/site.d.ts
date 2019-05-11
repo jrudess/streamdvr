@@ -41,13 +41,11 @@ export interface SiteConfig {
     batchSize: number;
     streamers: Array<Array<string>>;
 }
-export interface UpdateOptions {
-    add: boolean;
-    pause: boolean;
-    pausetimer: number;
-    isTemp: boolean;
+export declare enum UpdateCmd {
+    REMOVE = 0,
+    ADD = 1,
+    PAUSE = 2
 }
-export declare function UpdateOptionsDefault(): UpdateOptions;
 export interface StreamerStateOptions {
     msg: string;
     isStreaming: boolean;
@@ -76,12 +74,12 @@ export declare abstract class Site {
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>): string[];
-    processUpdates(options: UpdateOptions): Promise<void>;
+    processUpdates(cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
     protected abstract createListItem(id: Id): Array<string>;
-    updateList(id: Id, options: UpdateOptions): Promise<boolean>;
+    updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;
     pause(): void;
-    protected updateStreamers(list: Array<string>, options: UpdateOptions): Promise<boolean>;
-    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions): boolean;
+    protected updateStreamers(list: Array<string>, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;
+    protected addStreamer(id: Id, list: Array<Array<string>>, cmd: UpdateCmd, isTemp?: boolean): boolean;
     protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
     protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;

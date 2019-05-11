@@ -6,7 +6,7 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 
 import {PostProcess} from "./postprocess";
-import {Site, CapInfo, UpdateOptions, UpdateOptionsDefault} from "./site";
+import {Site, CapInfo, UpdateCmd} from "./site";
 import {Tui} from "./tui";
 
 const colors = require("colors");
@@ -214,16 +214,12 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
-        const add: UpdateOptions = UpdateOptionsDefault();
-        const remove: UpdateOptions = UpdateOptionsDefault();
-        remove.add = false;
-
         while (true) {
             try {
                 await site.disconnect();
                 await site.connect();
-                await site.processUpdates(add);
-                await site.processUpdates(remove);
+                await site.processUpdates(UpdateCmd.ADD);
+                await site.processUpdates(UpdateCmd.REMOVE);
                 await site.getStreamers();
             } catch (err) {
                 site.errMsg(err.toString());

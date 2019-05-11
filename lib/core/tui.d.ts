@@ -1,5 +1,5 @@
 import { Dvr, Config } from "./dvr";
-import { Site, Streamer, UpdateOptions } from "./site";
+import { Site, Streamer, UpdateCmd } from "./site";
 export declare class Tui {
     protected dvr: Dvr;
     protected config: Config;
@@ -24,5 +24,5 @@ export declare class Tui {
     protected populateTable(site: Site, table: Array<Array<string>>): void;
     protected rebuildList(): void;
     render(redrawList: boolean, site?: Site): void;
-    protected updateList(siteName: string, nm: string, options: UpdateOptions): Promise<void>;
+    protected updateList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
 }

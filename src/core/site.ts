@@ -72,20 +72,10 @@ export interface SiteConfig {
     streamers:    Array<Array<string>>;
 }
 
-export interface UpdateOptions {
-    add:        boolean;
-    pause:      boolean;
-    pausetimer: number;
-    isTemp:     boolean;
-}
-export function UpdateOptionsDefault(): UpdateOptions {
-    const options: UpdateOptions = {
-        add: true,
-        pause: false,
-        pausetimer: 0,
-        isTemp:false,
-    };
-    return options;
+export enum UpdateCmd {
+    REMOVE = 0,
+    ADD    = 1,
+    PAUSE  = 2
 }
 
 export interface StreamerStateOptions {
@@ -227,7 +217,7 @@ export abstract class Site {
         return args;
     }
 
-    public async processUpdates(options: UpdateOptions) {
+    public async processUpdates(cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         if (!fs.existsSync(this.updateName)) {
             this.dbgMsg(this.updateName + " does not exist");
             return;
@@ -236,7 +226,7 @@ export abstract class Site {
         const updates = yaml.safeLoad(fs.readFileSync(this.updateName, "utf8"));
         let list = [];
 
-        if (options.add) {
+        if (cmd === UpdateCmd.ADD) {
             if (updates.include && updates.include.length > 0) {
                 this.infoMsg(`${updates.include.length}` + " streamer(s) to include");
                 list = updates.include;
@@ -254,7 +244,7 @@ export abstract class Site {
         }
 
         try {
-            const dirty = await this.updateStreamers(list, options);
+            const dirty = await this.updateStreamers(list, cmd, isTemp, pauseTimer);
             if (dirty) {
                 this.writeConfig();
             }
@@ -265,16 +255,16 @@ export abstract class Site {
 
     protected abstract createListItem(id: Id): Array<string>;
 
-    public async updateList(id: Id, options: UpdateOptions): Promise<boolean> {
+    public async updateList(id: Id, cmd: UpdateCmd, isTemp?:boolean, pauseTimer?: number): Promise<boolean> {
         let dirty = false;
-        const list = options.isTemp ? this.tempList : this.config.streamers;
-        if (options.pause) {
+        const list = isTemp ? this.tempList : this.config.streamers;
+        if (cmd === UpdateCmd.PAUSE) {
             if (this.streamerList.has(id.uid)) {
                 let streamer: Streamer | undefined = this.streamerList.get(id.uid);
-                if (streamer && options.pausetimer && options.pausetimer > 0) {
+                if (streamer && pauseTimer && pauseTimer > 0) {
                     const print: string = streamer.paused ? " pausing for " : " unpausing for ";
-                    this.infoMsg(`${colors.name(id.nm)}` + print + `${options.pausetimer.toString()}` + " seconds");
-                    await sleep(options.pausetimer * 1000);
+                    this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
+                    await sleep(pauseTimer * 1000);
                     this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
                     streamer = this.streamerList.get(id.uid);
                 }
@@ -286,33 +276,30 @@ export abstract class Site {
                     }
                 }
             }
-        } else if (options.add) {
-            try {
-                const added = this.addStreamer(id, list, options);
-                if (added) {
-                    list.push(this.createListItem(id));
-                    dirty = true;
-                }
-            } catch (err) {
-                this.errMsg(err.toString());
+        } else if (cmd === UpdateCmd.ADD) {
+            if (this.addStreamer(id, list, cmd, isTemp)) {
+                list.push(this.createListItem(id));
+                dirty = true;
             }
-        } else if (this.removeStreamer(id, list)) {
-            for (let i = 0; i < this.config.streamers.length; i++) {
-                if (this.config.streamers[i][0] === id.uid) {
-                    list.splice(i, 1);
-                    dirty = true;
-                    break;
+        } else if (cmd === UpdateCmd.REMOVE) {
+            if (this.removeStreamer(id, list)) {
+                for (let i = 0; i < this.config.streamers.length; i++) {
+                    if (this.config.streamers[i][0] === id.uid) {
+                        list.splice(i, 1);
+                        dirty = true;
+                        break;
+                    }
                 }
             }
         }
         if (dirty) {
-            if (options.isTemp) {
+            if (isTemp) {
                 this.tempList = list;
             } else {
                 this.config.streamers = list;
             }
         }
-        return dirty && !options.isTemp;
+        return dirty && !isTemp;
     }
 
     public pause() {
@@ -328,7 +315,7 @@ export abstract class Site {
         this.render(true);
     }
 
-    protected async updateStreamers(list: Array<string>, options: UpdateOptions) {
+    protected async updateStreamers(list: Array<string>, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         let dirty = false;
 
         for (const entry of list) {
@@ -336,16 +323,13 @@ export abstract class Site {
                 uid: entry,
                 nm: entry,
             };
-            const newoptions = options;
-            newoptions.pause = false;
-            newoptions.isTemp = false;
-            dirty = await this.updateList(id, newoptions) || dirty;
+            dirty = await this.updateList(id, cmd) || dirty;
         }
 
         return dirty;
     }
 
-    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions) {
+    protected addStreamer(id: Id, list: Array<Array<string>>, cmd: UpdateCmd, isTemp?: boolean) {
         let added = true;
 
         for (const entry of list) {
@@ -357,10 +341,11 @@ export abstract class Site {
         }
 
         if (added) {
-            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (options.isTemp ? " (temporarily)" : ""));
+            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (isTemp ? " (temporarily)" : ""));
         }
 
         if (!this.streamerList.has(id.uid)) {
+            const temp: boolean = isTemp ? true: false;
             const streamer: Streamer = {
                 uid: id.uid,
                 nm: id.nm,
@@ -371,7 +356,7 @@ export abstract class Site {
                 postProcess: false,
                 filesize: 0,
                 stuckcounter: 0,
-                isTemp: options.isTemp,
+                isTemp: temp,
                 paused: this.paused,
             };
             this.streamerList.set(id.uid, streamer);
