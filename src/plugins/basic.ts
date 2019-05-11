@@ -143,9 +143,7 @@ class Basic extends Site {
         if (stream.status) {
             if (streamer.paused) {
                 this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
-            } else if (streamer.capture) {
-                this.dbgMsg(`${colors.name(streamer.nm)}` + " is already recording.");
-            } else {
+            } else if (this.canStartCap(streamer.uid)) {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }
         }
@@ -220,9 +218,6 @@ class Basic extends Site {
 
     protected setupCapture(streamer: Streamer, url: string): CapInfo {
         const capInfo: CapInfo = CapInfoDefaults;
-        if (!this.canStartCap(streamer.uid)) {
-            return capInfo;
-        }
 
         const newurl: string = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
 

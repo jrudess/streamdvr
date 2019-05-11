@@ -468,11 +468,11 @@ export abstract class Site {
         fs.closeSync(fd);
     }
 
-    protected abstract setupCapture(streamer: Streamer, url: string): any;
+    protected abstract setupCapture(streamer: Streamer, url: string): CapInfo;
 
     protected canStartCap(uid: string): boolean {
         if (this.streamerList.has(uid)) {
-            const streamer = this.streamerList.get(uid);
+            const streamer: Streamer | undefined = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null) {
                 this.dbgMsg(`${colors.name(streamer.nm)}` + " is already capturing");
                 return false;
@@ -507,7 +507,7 @@ export abstract class Site {
     }
 
     protected startCapture(capInfo: CapInfo) {
-        if (!capInfo.streamer || capInfo.spawnArgs.length === 0) {
+        if (!capInfo || !capInfo.streamer || capInfo.spawnArgs.length === 0) {
             return;
         }
 

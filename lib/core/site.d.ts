@@ -90,7 +90,7 @@ export declare abstract class Site {
     haltAllCaptures(): void;
     protected haltCapture(uid: string): void;
     writeConfig(): void;
-    protected abstract setupCapture(streamer: Streamer, url: string): any;
+    protected abstract setupCapture(streamer: Streamer, url: string): CapInfo;
     protected canStartCap(uid: string): boolean;
     getCompleteDir(streamer: Streamer): string;
     protected refresh(streamer: Streamer): void;
