@@ -403,7 +403,7 @@ export abstract class Site {
         return true;
     }
 
-    public storeCapInfo(streamer: Streamer, filename: string, capture: any, isPostProcess: boolean) {
+    public storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean) {
         streamer.filename = filename;
         streamer.capture = capture;
         if (isPostProcess) {

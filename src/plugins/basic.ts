@@ -109,8 +109,8 @@ class Basic extends Site {
                 return {status: true, m3u8: url};
             }
         } catch (err) {
-            if (err.stdio) {
-                this.errMsg(err.stdio.toString());
+            if (err.stdout) {
+                this.errMsg(err.stdout.toString());
             }
         }
 

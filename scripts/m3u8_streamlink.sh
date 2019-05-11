@@ -23,13 +23,13 @@ else
     grep "No plugin" $tmp/stdout > /dev/null 2> /dev/null
     if [ "$?" -eq 0 ]; then
         # This is an offline case for CB
-        exit 1
+        exit 0
     fi
 
     grep "No playable streams" $tmp/stdout > /dev/null 2> /dev/null
     if [ "$?" -eq 0 ]; then
         # This is an offline case for twitch/mixer
-        exit 1
+        exit 0
     fi
 
     # Print the error message to stdout for streamdvr to reprint

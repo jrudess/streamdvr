@@ -83,7 +83,7 @@ export declare abstract class Site {
     protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
     protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;
-    storeCapInfo(streamer: Streamer, filename: string, capture: any, isPostProcess: boolean): void;
+    storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;
     haltAllCaptures(): void;
     protected haltCapture(uid: string): void;
