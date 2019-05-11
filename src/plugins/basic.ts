@@ -1,13 +1,11 @@
 "use strict";
 
-// import {promisify} from "util";
-import {Site, Streamer, Id, CapInfo, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
+import {Site, Id, Streamer, StreamerDefaults, CapInfo, CapInfoDefaults, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
 import {Dvr} from "../core/dvr";
 import {Tui} from "../core/tui";
 import {execSync} from "child_process";
 
 const colors = require("colors");
-// const exec   = promisify(require("child_process").exec);
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
@@ -17,9 +15,7 @@ class Basic extends Site {
 
     constructor(siteName: string, dvr: Dvr, tui: Tui, urlback: string) {
         super(siteName, dvr, tui);
-
         this.urlback = urlback;
-
     }
 
     protected convertFormat(streamerList: Array<any>) {
@@ -48,7 +44,6 @@ class Basic extends Site {
                     this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
                     item[1] = "unpaused";
                     streamer.paused = false;
-                    // this.refresh(streamer, options);
                     this.refresh(streamer);
                 } else {
                     this.infoMsg(`${colors.name(streamer.nm)}` + " is paused");
@@ -72,21 +67,13 @@ class Basic extends Site {
 
         for (const streamer of this.config.streamers) {
             const nm = streamer[0];
-            const paused = streamer[1] === "paused";
             if (!this.streamerList.has(nm)) {
-                this.streamerList.set(nm, {
-                    uid:          nm,
-                    nm:           nm,
-                    site:         this.padName,
-                    state:        "Offline",
-                    filename:     "",
-                    capture:      null,
-                    postProcess:  false,
-                    filesize:     0,
-                    stuckcounter: 0,
-                    paused:       paused,
-                    isTemp:       false,
-                });
+                const newstreamer: Streamer = StreamerDefaults;
+                newstreamer.uid = nm;
+                newstreamer.nm = nm;
+                newstreamer.site = this.padName;
+                newstreamer.paused = streamer[1] === "paused";
+                this.streamerList.set(nm, newstreamer);
             }
         }
         this.redrawList = true;
@@ -156,7 +143,9 @@ class Basic extends Site {
         if (stream.status) {
             if (streamer.paused) {
                 this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
-            } else if (!options || !options.init) {
+            } else if (streamer.capture) {
+                this.dbgMsg(`${colors.name(streamer.nm)}` + " is already recording.");
+            } else {
                 this.startCapture(this.setupCapture(streamer, stream.m3u8));
             }
         }
@@ -230,14 +219,18 @@ class Basic extends Site {
     }
 
     protected setupCapture(streamer: Streamer, url: string): CapInfo {
+        const capInfo: CapInfo = CapInfoDefaults;
         if (!this.canStartCap(streamer.uid)) {
-            return {site: this, streamer: null, filename: "", spawnArgs: []};
+            return capInfo;
         }
 
-        const filename: string         = this.getFileName(streamer.nm);
-        const newurl: string           = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
-        const spawnArgs: Array<string> = this.getCaptureArguments(newurl, filename);
-        return {site: this, streamer: streamer, filename: filename, spawnArgs: spawnArgs};
+        const newurl: string = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
+
+        capInfo.site = this;
+        capInfo.streamer = streamer;
+        capInfo.filename = this.getFileName(streamer.nm);
+        capInfo.spawnArgs = this.getCaptureArguments(newurl, capInfo.filename);
+        return capInfo;
     }
 }
 

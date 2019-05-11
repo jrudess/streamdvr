@@ -1,12 +1,12 @@
 "use strict";
 
 import * as fs from "fs";
+import * as yaml from "js-yaml";
 import {spawn, ChildProcessWithoutNullStreams} from "child_process";
 import {Dvr} from "../core/dvr.js";
 import {Tui} from "../core/tui.js";
 
 const colors = require("colors");
-const yaml   = require("js-yaml");
 
 async function sleep(time: number): Promise<number> {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -25,6 +25,19 @@ export interface Streamer {
     paused:       boolean;
     isTemp:       boolean;
 }
+export const StreamerDefaults: Streamer = {
+    uid: "",
+    nm:  "",
+    site: "",
+    state: "Offline",
+    filename: "",
+    capture: null,
+    postProcess: false,
+    filesize: 0,
+    stuckcounter: 0,
+    paused: false,
+    isTemp: false
+};
 
 export interface Id {
     uid: string;
@@ -37,6 +50,12 @@ export interface CapInfo {
     filename:  string;
     spawnArgs: Array<string>;
 }
+export const CapInfoDefaults: CapInfo = {
+    site:      null,
+    streamer:  null,
+    filename:  "",
+    spawnArgs: [],
+};
 
 export interface SiteConfig {
     name:         string;

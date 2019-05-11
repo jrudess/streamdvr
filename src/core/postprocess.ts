@@ -1,11 +1,11 @@
 "use strict";
 
 import * as fs from "fs";
+import * as mv from "mv";
 import {spawn} from "child_process";
 import {Dvr, Config} from "../core/dvr.js";
 import {Site, Streamer, CapInfo} from "../core/site.js";
 
-const mv     = require("mv");
 const colors = require("colors");
 
 export class PostProcess {
@@ -73,7 +73,7 @@ export class PostProcess {
                 if (fs.existsSync(args[0])) {
                     fs.unlinkSync(args[0]);
                 } else {
-                    this.dvr.errMsg(args[0] + "does not exist, cannot convert");
+                    this.dvr.errMsg(args[0] + "does not exist, cannot remove");
                 }
             }
 

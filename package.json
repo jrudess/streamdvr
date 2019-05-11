@@ -21,6 +21,7 @@
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
         "@types/js-yaml": "^3.12.1",
+        "@types/mv": "^2.1.0",
         "@types/node": "^12.0.0",
         "colors": "^1.3.3",
         "js-yaml": "^3.13.1",

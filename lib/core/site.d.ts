@@ -15,6 +15,7 @@ export interface Streamer {
     paused: boolean;
     isTemp: boolean;
 }
+export declare const StreamerDefaults: Streamer;
 export interface Id {
     uid: string;
     nm: string;
@@ -25,6 +26,7 @@ export interface CapInfo {
     filename: string;
     spawnArgs: Array<string>;
 }
+export declare const CapInfoDefaults: CapInfo;
 export interface SiteConfig {
     name: string;
     enable: boolean;
