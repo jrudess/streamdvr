@@ -214,8 +214,8 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
-        const add: UpdateOptions = UpdateOptionsDefault;
-        const remove: UpdateOptions = UpdateOptionsDefault;
+        const add: UpdateOptions = UpdateOptionsDefault();
+        const remove: UpdateOptions = UpdateOptionsDefault();
         remove.add = false;
 
         while (true) {

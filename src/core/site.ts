@@ -78,13 +78,15 @@ export interface UpdateOptions {
     pausetimer: number;
     isTemp:     boolean;
 }
-
-export const UpdateOptionsDefault: UpdateOptions = {
-    add: true,
-    pause: false,
-    pausetimer: 0,
-    isTemp: false,
-};
+export function UpdateOptionsDefault(): UpdateOptions {
+    const options: UpdateOptions = {
+        add: true,
+        pause: false,
+        pausetimer: 0,
+        isTemp:false,
+    };
+    return options;
+}
 
 export interface StreamerStateOptions {
     msg: string;
@@ -226,8 +228,7 @@ export abstract class Site {
     }
 
     public async processUpdates(options: UpdateOptions) {
-        const stats = fs.statSync(this.updateName);
-        if (!stats.isFile()) {
+        if (!fs.existsSync(this.updateName)) {
             this.dbgMsg(this.updateName + " does not exist");
             return;
         }
@@ -236,16 +237,12 @@ export abstract class Site {
         let list = [];
 
         if (options.add) {
-            if (!updates.include) {
-                updates.include = [];
-            } else if (updates.include.length > 0) {
+            if (updates.include && updates.include.length > 0) {
                 this.infoMsg(`${updates.include.length}` + " streamer(s) to include");
                 list = updates.include;
                 updates.include = [];
             }
-        } else if (!updates.exclude) {
-            updates.exclude = [];
-        } else if (updates.exclude.length > 0) {
+        } else if (updates.exclude && updates.exclude.length > 0) {
             this.infoMsg(`${updates.exclude.length}` + " streamer(s) to exclude");
             list = updates.exclude;
             updates.exclude = [];
@@ -291,7 +288,7 @@ export abstract class Site {
             }
         } else if (options.add) {
             try {
-                const added = await this.addStreamer(id, list, options);
+                const added = this.addStreamer(id, list, options);
                 if (added) {
                     list.push(this.createListItem(id));
                     dirty = true;
@@ -348,7 +345,7 @@ export abstract class Site {
         return dirty;
     }
 
-    protected async addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions) {
+    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions) {
         let added = true;
 
         for (const entry of list) {

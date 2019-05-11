@@ -214,6 +214,7 @@ export class Tui {
         this.sitemenu.hide();
 
         this.screen.key("1", () => {
+            this.listmenu.hide();
             this.sitemenu.hide();
             this.sitelist.interactive = false;
             this.list.interactive = true;
@@ -222,6 +223,7 @@ export class Tui {
         });
 
         this.screen.key("2", () => {
+            this.sitemenu.hide();
             this.listmenu.hide();
             this.list.interactive = false;
             this.sitelist.interactive = true;
@@ -294,7 +296,7 @@ export class Tui {
 
         this.list.key("r", () => {
             for (const site of this.SITES) {
-                new Promise(() => site.getStreamers());
+                site.getStreamers();
             }
         });
 
@@ -342,13 +344,12 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault;
+                    const options: UpdateOptions = UpdateOptionsDefault();
                     options.pause = true;
-                    new Promise(() => this.updateList(site, name, options)).then(() => {
-                        this.listmenu.hide();
-                        this.list.focus();
-                        this.render(false);
-                    });
+                    this.updateList(site, name, options);
+                    this.listmenu.hide();
+                    this.list.focus();
+                    this.render(false);
                 }
                 break;
             case 1: // pause timer
@@ -361,13 +362,13 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault;
+                    const options: UpdateOptions = UpdateOptionsDefault();
                     options.add = false;
-                    new Promise(() => this.updateList(site, name, options)).then(() => {
-                        this.listmenu.hide();
-                        this.list.focus();
-                        this.render(false);
-                    });
+                    options.pause = false;
+                    this.updateList(site, name, options);
+                    this.listmenu.hide();
+                    this.list.focus();
+                    this.render(false);
                 }
                 break;
             case 3: // toggle offline
@@ -395,14 +396,13 @@ export class Tui {
                 const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
                 case 0: // pause
-                    const options: UpdateOptions = UpdateOptionsDefault;
+                    const options: UpdateOptions = UpdateOptionsDefault();
                     options.pause = true;
-                    new Promise(() => this.updateList(site, "", options)).then(() => {
-                        this.sitelist.focus();
-                        this.sitelist.interactive = true;
-                        this.sitemenu.hide();
-                        this.render(false);
-                    });
+                    this.updateList(site, "", options);
+                    this.sitelist.focus();
+                    this.sitelist.interactive = true;
+                    this.sitemenu.hide();
+                    this.render(false);
                     break;
                 case 1: // add
                     this.prompt.show();
@@ -474,13 +474,12 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
                     const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    const options: UpdateOptions = UpdateOptionsDefault;
+                    const options: UpdateOptions = UpdateOptionsDefault();
+                    options.pause = true;
                     new Promise(async () => {
-                        options.pause = true;
-                        return this.updateList(site, name, options);
-                    }).then(async () => {
+                        await this.updateList(site, name, options);
                         options.pausetimer = Number(text);
-                        return this.updateList(site, name, options);
+                        await this.updateList(site, name, options);
                     });
                 }
                 this.listmenu.hide();
@@ -490,8 +489,8 @@ export class Tui {
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
-                    const options: UpdateOptions = UpdateOptionsDefault;
-                    new Promise(() => this.updateList(site, text, options));
+                    const options: UpdateOptions = UpdateOptionsDefault();
+                    this.updateList(site, text, options);
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -519,22 +518,18 @@ export class Tui {
         case "remove":
         case "pause":
         case "unpause":
-            const options: UpdateOptions = UpdateOptionsDefault;
+            const options: UpdateOptions = UpdateOptionsDefault();
             options.add = add;
             options.pause = pause;
             options.isTemp = temp;
             if (tokens.length >= 3) {
-                new Promise(() => this.updateList(tokens[1], tokens[2], options)).then(() => {
-                    if (pause && tokens.length >= 4) {
-                        options.pausetimer = tokens[3];
-                        return this.updateList(tokens[1], tokens[2], options);
-                    }
-                    return;
-                });
+                this.updateList(tokens[1], tokens[2], options);
+                if (pause && tokens.length >= 4) {
+                    options.pausetimer = tokens[3];
+                    this.updateList(tokens[1], tokens[2], options);
+                }
             } else if (tokens.length === 2) {
-                new Promise(async () => {
-                    return this.updateList(tokens[1], "", options);
-                });
+                this.updateList(tokens[1], "", options);
             }
             break;
 

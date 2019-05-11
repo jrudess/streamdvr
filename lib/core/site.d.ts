@@ -47,7 +47,7 @@ export interface UpdateOptions {
     pausetimer: number;
     isTemp: boolean;
 }
-export declare const UpdateOptionsDefault: UpdateOptions;
+export declare function UpdateOptionsDefault(): UpdateOptions;
 export interface StreamerStateOptions {
     msg: string;
     isStreaming: boolean;
@@ -81,7 +81,7 @@ export declare abstract class Site {
     updateList(id: Id, options: UpdateOptions): Promise<boolean>;
     pause(): void;
     protected updateStreamers(list: Array<string>, options: UpdateOptions): Promise<boolean>;
-    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions): Promise<boolean>;
+    protected addStreamer(id: Id, list: Array<Array<string>>, options: UpdateOptions): boolean;
     protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
     protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;
