@@ -21,10 +21,7 @@ class Basic extends Site {
     protected convertFormat(streamerList: Array<any>) {
         const newList = [];
         for (const streamer of streamerList.values()) {
-            const newItem = [];
-            newItem.push(streamer);   // name
-            newItem.push("unpaused");
-            newList.push(newItem);
+            newList.push([streamer, "unpaused"]);
         }
         this.config.streamers = newList;
         this.writeConfig();
@@ -122,28 +119,17 @@ class Basic extends Site {
         const stream = this.m3u8Script(streamer.nm);
 
         const prevState = streamer.state;
-        let msg = colors.name(streamer.nm);
         if (stream.status) {
-            msg += " is streaming.";
             streamer.state = "Streaming";
         } else {
-            msg += " is offline.";
             streamer.state = "Offline";
         }
 
         const options: StreamerStateOptions = StreamerStateDefaults;
-        options.msg = msg;
+        options.msg = colors.name(streamer.nm) + " is " + streamer.state;
         options.isStreaming = stream.status;
         options.prevState = prevState;
         super.checkStreamerState(streamer, options);
-
-        if (stream.status) {
-            if (streamer.paused) {
-                this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
-            } else if (this.canStartCap(streamer.uid)) {
-                this.startCapture(this.setupCapture(streamer, stream.m3u8));
-            }
-        }
     }
 
     protected async checkBatch(batch: Array<string>) {

@@ -67,6 +67,9 @@ export class PostProcess {
         }
 
         const myCompleteProcess = spawn(script, args);
+        if (streamer)  {
+            streamer.capture = myCompleteProcess;
+        }
 
         myCompleteProcess.on("close", () => {
             if (!this.config.recording.keepTsFile) {

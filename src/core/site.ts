@@ -82,14 +82,14 @@ export interface StreamerStateOptions {
     msg: string;
     isStreaming: boolean;
     prevState: string;
-    init: boolean;
+    m3u8: string;
 }
 
 export const StreamerStateDefaults: StreamerStateOptions = {
     msg: "",
     isStreaming: false,
     prevState: "Offline",
-    init: false,
+    m3u8: "",
 };
 
 export abstract class Site {
@@ -383,6 +383,7 @@ export abstract class Site {
             this.infoMsg(options.msg);
             this.redrawList = true;
         }
+
         if (streamer && streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
@@ -391,6 +392,15 @@ export abstract class Site {
             this.haltCapture(streamer.uid);
             this.redrawList = true;
         }
+
+        if (streamer && options.isStreaming) {
+            if (streamer.paused) {
+                this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
+            } else if (this.canStartCap(streamer.uid)) {
+                this.startCapture(this.setupCapture(streamer, options.m3u8));
+            }
+        }
+
         this.render(false);
     }
 
@@ -417,7 +427,7 @@ export abstract class Site {
         let count = 0;
 
         for (const streamer of this.streamerList.values()) {
-            if (streamer.capture !== null) {
+            if (streamer.capture) {
                count++;
             }
         }
@@ -445,8 +455,8 @@ export abstract class Site {
 
     public writeConfig() {
         const fd = fs.openSync(this.cfgFile, "w");
-        fs.writeFileSync(fd, yaml.safeDump(this.config));
         this.dbgMsg("Rewriting " + this.cfgFile);
+        fs.writeFileSync(fd, yaml.safeDump(this.config));
         fs.closeSync(fd);
     }
 

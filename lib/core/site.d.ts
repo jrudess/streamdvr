@@ -50,7 +50,7 @@ export interface StreamerStateOptions {
     msg: string;
     isStreaming: boolean;
     prevState: string;
-    init: boolean;
+    m3u8: string;
 }
 export declare const StreamerStateDefaults: StreamerStateOptions;
 export declare abstract class Site {
