@@ -182,6 +182,7 @@ export abstract class Site {
         }
     }
 
+    public abstract start(): void;
     public abstract async connect(): Promise<boolean>;
     public abstract async disconnect(): Promise<boolean>;
 
@@ -330,19 +331,12 @@ export abstract class Site {
         }
 
         if (!this.streamerList.has(id.uid)) {
-            const streamer: Streamer = {
-                uid: id.uid,
-                nm: id.nm,
-                site: this.padName,
-                state: "Offline",
-                filename: "",
-                capture: null,
-                postProcess: false,
-                filesize: 0,
-                stuckcounter: 0,
-                isTemp: isTemp ? true : false,
-                paused: this.paused,
-            };
+            const streamer: Streamer = StreamerDefaults;
+            streamer.uid = id.uid;
+            streamer.nm = id.nm;
+            streamer.site = this.padName;
+            streamer.isTemp = isTemp ? true : false;
+            streamer.paused = this.paused;
             this.streamerList.set(id.uid, streamer);
             this.render(true);
             this.refresh(streamer);

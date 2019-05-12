@@ -51,7 +51,7 @@ class Basic extends Site {
         return false;
     }
 
-    public async connect() {
+    public start() {
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
                 this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
@@ -71,6 +71,9 @@ class Basic extends Site {
             }
         }
         this.redrawList = true;
+    }
+
+    public async connect() {
         return true;
     }
 

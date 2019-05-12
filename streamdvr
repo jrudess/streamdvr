@@ -50,6 +50,7 @@ class Streamdvr extends Dvr {
         super.start();
         for (const plugin of this.plugins.values()) {
             if (plugin.enable) {
+                plugin.handle.start();
                 await plugin.handle.connect();
                 this.run(plugin.handle);
             }

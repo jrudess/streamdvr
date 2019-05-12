@@ -71,6 +71,7 @@ export declare abstract class Site {
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
+    abstract start(): void;
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>): string[];
