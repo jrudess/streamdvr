@@ -1,6 +1,6 @@
 {
     "name": "streamdvr",
-    "version": "0.12.3",
+    "version": "0.13.0",
     "description": "DVR for streaming entertainment",
     "main": "streamdvr",
     "engines": {
@@ -20,6 +20,9 @@
     },
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
+        "@types/js-yaml": "^3.12.1",
+        "@types/mv": "^2.1.0",
+        "@types/node": "^12.0.0",
         "colors": "^1.3.3",
         "js-yaml": "^3.13.1",
         "moment": "^2.24.0",

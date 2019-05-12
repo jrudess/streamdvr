@@ -1,9 +1,28 @@
 "use strict";
 
+import {Dvr, Config} from "./dvr";
+import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");
+const colors  = require("colors");
 
-class Tui {
-    constructor(dvr) {
+export class Tui {
+
+    protected dvr: Dvr;
+    protected config: Config;
+    protected SITES: Array<Site>;
+    protected hideOffline: boolean;
+    protected listSelect: any;
+    protected sitelistSelect: any;
+    protected screen: any;
+    protected list: any;
+    protected sitelist: any;
+    protected prompt: any;
+    protected inputBar: any;
+    protected listmenu: any;
+    protected sitemenu: any;
+    protected logbody: any;
+
+    constructor(dvr: Dvr) {
 
         this.dvr = dvr;
         this.config = dvr.config;
@@ -13,7 +32,7 @@ class Tui {
         this.createTui();
     }
 
-    createTui() {
+    protected createTui() {
         this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
         this.screen.title = "streamdvr";
         this.listSelect = null;
@@ -22,7 +41,7 @@ class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            width: 64,
+            width: 71,
             height: "100%-11",
             align: "left",
             interactive: false,
@@ -31,28 +50,28 @@ class Tui {
             noCellBorders: true,
             tags: true,
             padding: {
-                left: 1
+                left: 1,
             },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.sitelist = blessed.listtable({
             top: "100%-11",
             left: 0,
-            width: 64,
+            width: 71,
             height: 10,
             align: "left",
             interactive: false,
@@ -61,27 +80,27 @@ class Tui {
             noCellBorders: true,
             tags: true,
             padding: {
-                left: 1
+                left: 1,
             },
             alwaysScroll: true,
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.logbody = blessed.box({
             top: 0,
-            left: 64,
+            left: 71,
             height: "100%-1",
             grow: true,
             keys: true,
@@ -90,16 +109,16 @@ class Tui {
             scrollable: true,
             scrollbar: {
                 ch: " ",
-                bg: "blue"
+                bg: "blue",
             },
             border: {
-                type: "line"
+                type: "line",
             },
             style: {
                 border: {
-                    fg: "blue"
-                }
-            }
+                    fg: "blue",
+                },
+            },
         });
 
         this.prompt = blessed.text({
@@ -110,14 +129,13 @@ class Tui {
             mouse: false,
             style: {
                 fg: "white",
-                bg: "none"
-            }
+                bg: "none",
+            },
         });
-        if (this.config.tui.allowUnicode) {
-            this.prompt.content = "❯ ".prompt;
-        } else {
-            this.prompt.content = "> ".prompt;
-        }
+        this.prompt.content = this.config.tui.allowUnicode ?
+            colors.prompt("❯ ") :
+            colors.prompt("> ");
+
         this.prompt.hide();
 
         this.inputBar = blessed.textbox({
@@ -130,8 +148,8 @@ class Tui {
             inputOnFocus: true,
             style: {
                 fg: "white",
-                bg: "none"
-            }
+                bg: "none",
+            },
         });
         this.inputBar.hide();
 
@@ -144,7 +162,7 @@ class Tui {
                 left: 3,
                 right: 3,
                 top: 1,
-                bottom: 1
+                bottom: 1,
             },
             interactive: true,
             keys: true,
@@ -152,16 +170,16 @@ class Tui {
             tags: true,
             border: {
                 type: "bg",
-                ch: "░"
+                ch: "░",
             },
             style: {
                 border: {
                     bg: "blue",
-                    fg: "blue"
+                    fg: "blue",
                 },
                 bg: "black",
-                fg: "white"
-            }
+                fg: "white",
+            },
         });
         this.listmenu.hide();
 
@@ -174,7 +192,7 @@ class Tui {
                 left: 3,
                 right: 3,
                 top: 1,
-                bottom: 1
+                bottom: 1,
             },
             interactive: true,
             keys: true,
@@ -182,43 +200,45 @@ class Tui {
             tags: true,
             border: {
                 type: "bg",
-                ch: "░"
+                ch: "░",
             },
             style: {
                 border: {
                     bg: "blue",
-                    fg: "blue"
+                    fg: "blue",
                 },
                 bg: "black",
-                fg: "white"
-            }
+                fg: "white",
+            },
         });
         this.sitemenu.hide();
 
         this.screen.key("1", () => {
+            this.listmenu.hide();
             this.sitemenu.hide();
             this.sitelist.interactive = false;
             this.list.interactive = true;
             this.list.focus();
-            this.render();
+            this.render(false);
         });
 
         this.screen.key("2", () => {
+            this.sitemenu.hide();
             this.listmenu.hide();
             this.list.interactive = false;
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render();
+            this.render(false);
         });
 
         this.screen.key("pageup", () => {
             this.screen.focused.scroll(-this.screen.focused.height || -1);
-            this.render();
+            this.render(false);
         });
 
         this.screen.key("pagedown", () => {
             this.screen.focused.scroll(this.screen.focused.height || 1);
-            this.render();
+            this.render(false);
         });
 
         // Close on q, or ctrl+c
@@ -232,134 +252,129 @@ class Tui {
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render();
+                this.render(false);
             }
         });
 
         this.logbody.key(["j"], () => {
             this.logbody.scroll(1);
-            this.render();
+            this.render(false);
         });
 
         this.logbody.key(["k"], () => {
             this.logbody.scroll(-1);
-            this.render();
+            this.render(false);
         });
 
-        this.list.on("selectrow", (item, index) => {
-            if (index < this.list.rows.length) {
-                this.listSelect = this.list.rows[index];
-            } else {
-                this.listSelect = null;
-            }
+        this.list.on("selectrow", (item: any, index: number) => {
+            this.listSelect = index < this.list.rows.length ?
+                this.list.rows[index] :
+                null;
         });
 
         this.list.key(["j"], () => {
             this.list.down(1);
-            this.render();
+            this.render(false);
         });
 
         this.list.key(["k"], () => {
             this.list.up(1);
-            this.render();
+            this.render(false);
         });
 
         this.list.on("select", () => {
             this.listmenu.show();
             this.listmenu.focus();
-            this.render();
+            this.render(false);
         });
 
         this.list.on("cancel", () => {
             this.list.interactive = false;
             this.logbody.focus();
-            this.render();
+            this.render(false);
         });
 
         this.list.key("r", () => {
-            for (let i = 0; i < this.SITES.length; i++) {
-                this.SITES[i].getStreamers();
+            for (const site of this.SITES) {
+                site.getStreamers();
             }
         });
 
-        this.sitelist.on("selectrow", (item, index) => {
-            if (index < this.sitelist.rows.length) {
-                this.sitelistSelect = this.sitelist.rows[index];
-            } else {
-                this.sitelistSelect = null;
-            }
+        this.sitelist.on("selectrow", (item: any, index: number) => {
+            this.sitelistSelect = index < this.sitelist.rows.length ?
+                this.sitelist.rows[index] :
+                null;
         });
 
         this.sitelist.key(["j"], () => {
             this.sitelist.down(1);
-            this.render();
+            this.render(false);
         });
 
         this.sitelist.key(["k"], () => {
             this.sitelist.up(1);
-            this.render();
+            this.render(false);
         });
 
         this.sitelist.on("select", () => {
             this.sitemenu.show();
             this.sitemenu.focus();
-            this.render();
+            this.render(false);
         });
 
         this.sitelist.on("cancel", () => {
             this.sitelist.interactive = false;
             this.logbody.focus();
-            this.render();
+            this.render(false);
         });
 
         this.listmenu.key(["j"], () => {
             this.listmenu.down(1);
-            this.render();
+            this.render(false);
         });
 
         this.listmenu.key(["k"], () => {
             this.listmenu.up(1);
-            this.render();
+            this.render(false);
         });
 
-        this.listmenu.on("select", (item, index) => {
+        this.listmenu.on("select", (item: any, index: number) => {
             switch (index) {
             case 0: // pause
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
+                    this.updateList(site, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render();
+                    this.render(false);
                 }
                 break;
             case 1: // pause timer
                 this.prompt.show();
                 this.inputBar.show();
                 this.inputBar.focus();
-                this.render();
+                this.render(false);
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 0, isTemp: false, init: false});
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
+                    this.updateList(site, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
-                    this.render();
+                    this.render(false);
                 }
                 break;
             case 3: // toggle offline
                 this.hideOffline = !this.hideOffline;
                 this.listmenu.hide();
+                this.list.interactive = true;
                 this.list.focus();
                 this.render(true);
-                if (this.list.rows.length <= 1) {
-                    this.listSelect = null;
-                } else {
-                    this.listSelect = this.list.rows[1];
-                }
+                this.listSelect = this.list.rows.length <= 1 ?
+                    null :
+                    this.list.rows[1];
                 break;
             }
         });
@@ -368,23 +383,24 @@ class Tui {
             this.listmenu.hide();
             this.list.interactive = true;
             this.list.focus();
-            this.render();
+            this.render(false);
         });
 
-        this.sitemenu.on("select", (item, index) => {
+        this.sitemenu.on("select", (item: any, index: number) => {
             if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
-                const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
                 case 0: // pause
-                    this.updateList(site, "", {add: 0, pause: 1, isTemp: false, init: false});
+                    this.updateList(site, "", UpdateCmd.PAUSE);
                     this.sitelist.focus();
+                    this.sitelist.interactive = true;
                     this.sitemenu.hide();
-                    this.render();
+                    this.render(false);
                     break;
                 case 1: // add
                     this.prompt.show();
                     this.inputBar.show();
-                    this.render();
+                    this.render(false);
                     this.inputBar.focus();
                     break;
                 }
@@ -393,26 +409,26 @@ class Tui {
 
         this.sitemenu.key(["j"], () => {
             this.sitemenu.down(1);
-            this.render();
+            this.render(false);
         });
 
         this.sitemenu.key(["k"], () => {
             this.sitemenu.up(1);
-            this.render();
+            this.render(false);
         });
 
         this.sitemenu.on("cancel", () => {
             this.sitemenu.hide();
             this.sitelist.interactive = true;
             this.sitelist.focus();
-            this.render();
+            this.render(false);
         });
 
         this.inputBar.on("cancel", () => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
-            this.render();
+            this.render(false);
         });
 
         this.inputBar.key(["C-c"], () => (
@@ -442,46 +458,49 @@ class Tui {
         this.sitelist.selected = 1;
 
         // CLI
-        this.inputBar.on("submit", (text) => {
+        this.inputBar.on("submit", (text: string) => {
             this.prompt.hide();
             this.inputBar.clearValue();
             this.inputBar.hide();
 
             if (this.list.interactive) {
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false});
-                    this.updateList(site, name, {add: 0, pause: 1, isTemp: false, init: false, pausetimer: text});
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
+                    new Promise(async () => {
+                        await this.updateList(site, name, UpdateCmd.PAUSE);
+                        await this.updateList(site, name, UpdateCmd.PAUSE, false, Number(text));
+                        return true;
+                    });
                 }
                 this.listmenu.hide();
                 this.list.focus();
-                this.render();
+                this.render(false);
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
-                    const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
-                    this.updateList(site, text, {add: 1, pause: 0, isTemp: 0, init: false});
+                    const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                    this.updateList(site, text, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
-                this.render();
+                this.render(false);
                 return;
             }
 
-            const tokens = text.split(" ");
+            const tokens: Array<string> = text.split(" ");
             if (tokens.length !== 0) {
                 this.parseCli(tokens);
             }
 
             this.logbody.focus();
-            this.render();
+            this.render(false);
         });
     }
 
-    parseCli(tokens) {
-        const temp  = tokens[0] === "addtemp";
-        const pause = tokens[0] === "pause" || tokens[0] === "unpause";
-        const add   = tokens[0] === "add" || tokens[0] === "addtemp";
+    protected parseCli(tokens: Array<string>) {
+        const temp: boolean  = tokens[0] === "addtemp";
+        const pause: boolean = tokens[0] === "pause" || tokens[0] === "unpause";
+        const add: boolean   = tokens[0] === "add" || tokens[0] === "addtemp";
 
         switch (tokens[0]) {
         case "add":
@@ -489,13 +508,22 @@ class Tui {
         case "remove":
         case "pause":
         case "unpause":
+            const cmd: UpdateCmd = add   ? UpdateCmd.ADD :
+                                   pause ? UpdateCmd.PAUSE :
+                                           UpdateCmd.REMOVE;
             if (tokens.length >= 3) {
-                this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false});
-                if (pause && tokens.length >= 4) {
-                    this.updateList(tokens[1], tokens[2], {add: add, pause: pause, isTemp: temp, init: false, pausetimer: tokens[3]});
-                }
+                new Promise(async () => {
+                    await this.updateList(tokens[1], tokens[2], cmd, temp);
+                    if (pause && tokens.length >= 4) {
+                        await this.updateList(tokens[1], tokens[2], cmd, temp, Number(tokens[3]));
+                    }
+                    return true;
+                });
             } else if (tokens.length === 2) {
-                this.updateList(tokens[1], "", {add: add, pause: pause, isTemp: temp, init: false});
+                new Promise(async () => {
+                    await this.updateList(tokens[1], "", cmd, temp);
+                    return true;
+                });
             }
             break;
 
@@ -517,24 +545,24 @@ class Tui {
         }
     }
 
-    addSite(site) {
+    public addSite(site: Site) {
         this.SITES.push(site);
 
-        const sitetable = [];
+        const sitetable: Array<Array<string>> = [];
         sitetable.push(["", ""]);
-        for (let i = 0; i < this.SITES.length; i++) {
-            sitetable.push(["{" + this.config.colors.state + "-fg}" + this.SITES[i].siteName + "{/}", ""]);
+        for (const site of this.SITES) {
+            sitetable.push(["{" + this.config.colors.state + "-fg}" + site.siteName + "{/}", ""]);
         }
         this.sitelist.setData(sitetable);
     }
 
-    log(text) {
+    public log(text: string) {
         this.logbody.pushLine(text);
         this.logbody.setScrollPerc(100);
-        this.render();
+        this.render(false);
     }
 
-    buildListEntry(site, streamer) {
+    protected buildListEntry(site: Site, streamer: Streamer) {
         const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
         let state = "{";
         if (streamer.filename === "") {
@@ -548,27 +576,34 @@ class Tui {
             state += this.config.colors.file + "-fg}" + streamer.filename;
         }
         state += "{/}";
-        const temp = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
+        const temp: string = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
         return [name, temp, site.siteName, state];
     }
 
-    populateTable(site, table) {
-        let sortedKeys = [];
-        const streamerList = site.streamerList;
+    protected populateTable(site: Site, table: Array<Array<string>>) {
+        let sortedKeys: Array<string> = [];
+        const streamerList: Map<string, Streamer> = site.streamerList;
         if (streamerList.size > 0) {
             // Map keys are UID, but want to sort list by name.
             sortedKeys = Array.from(streamerList.keys()).sort((a, b) => {
-                if (streamerList.get(a).nm < streamerList.get(b).nm) {
-                    return -1;
-                }
-                if (streamerList.get(a).nm > streamerList.get(b).nm) {
-                    return 1;
+                const aStreamer = streamerList.get(a);
+                const bStreamer = streamerList.get(b);
+                if (aStreamer && bStreamer) {
+                    if (aStreamer.nm < bStreamer.nm) {
+                        return -1;
+                    }
+                    if (aStreamer.nm > bStreamer.nm) {
+                        return 1;
+                    }
                 }
                 return 0;
             });
         }
-        for (let j = 0; j < sortedKeys.length; j++) {
-            const streamer = streamerList.get(sortedKeys[j]);
+        for (const key of sortedKeys) {
+            const streamer: Streamer | undefined = streamerList.get(key);
+            if (!streamer) {
+                continue;
+            }
             if (streamer.state === "Offline" && this.hideOffline) {
                 continue;
             }
@@ -576,8 +611,8 @@ class Tui {
         }
     }
 
-    rebuildList() {
-        const table = [];
+    protected rebuildList() {
+        const table: Array<Array<string>> = [];
         table.push(["", "", "", ""]);
         for (const site of this.SITES.values()) {
             this.populateTable(site, table);
@@ -585,7 +620,7 @@ class Tui {
         this.list.setData(table);
     }
 
-    render(redrawList, site) {
+    public render(redrawList: boolean, site?: Site) {
         if (redrawList) {
             this.rebuildList();
             if (site) {
@@ -597,17 +632,25 @@ class Tui {
     }
 
     // Add and remove streamers
-    async updateList(siteName, nm, options) {
+    protected async updateList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         for (const site of this.SITES.values()) {
             if (siteName === site.listName) {
                 if (nm === "") {
-                    if (options.pause) {
+                    if (cmd === UpdateCmd.PAUSE) {
                         site.pause();
                     }
                 } else {
-                    const dirty = await site.updateList(nm, options) && !options.isTemp;
-                    if (dirty) {
-                        await site.writeConfig();
+                    const id: Id = {
+                        uid: nm,
+                        nm: nm,
+                    };
+                    try {
+                        const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
+                        if (dirty) {
+                            site.writeConfig();
+                        }
+                    } catch (err) {
+                        this.dvr.errMsg(err.toString());
                     }
                 }
                 return;
@@ -615,6 +658,3 @@ class Tui {
         }
     }
 }
-
-exports.Tui = Tui;
-

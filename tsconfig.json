@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "commonjs",
+        "strict": true,
+        "declaration": true,
+        "outDir": "./lib",
+        "sourceMap": true,
+        "noLib": false,
+        "moduleResolution": "node",
+        "removeComments": false,
+        "stripInternal": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true
+    },
+    "include": [
+        "./src/**/*"
+    ]
+}

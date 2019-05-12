@@ -6,7 +6,7 @@ require("events").EventEmitter.prototype._maxListeners = 100;
 
 const fs    = require("fs");
 const yaml  = require("js-yaml");
-const {Dvr} = require("./core/dvr");
+const {Dvr} = require("./lib/core/dvr");
 
 function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -20,11 +20,12 @@ class Streamdvr extends Dvr {
 
         // Scan the config.yml directory for plugins to load
         const allfiles = fs.readdirSync(this.configdir);
-        const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
+        const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml$/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
 
         for (let i = 0; i < ymlfiles.length; i++) {
             const config = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
-            if (typeof config.plugin !== "undefined" && config.enable) {
+            if (config && config.plugin && config.enable) {
+                // TODO: print better error message if config.plugin doesn't exist
                 this.plugins.push({
                     code:    require(config.plugin),
                     name:    config.name,
@@ -46,8 +47,10 @@ class Streamdvr extends Dvr {
     }
 
     async start() {
+        super.start();
         for (const plugin of this.plugins.values()) {
             if (plugin.enable) {
+                plugin.handle.start();
                 await plugin.handle.connect();
                 this.run(plugin.handle);
             }

@@ -1,5 +1,5 @@
 name: YOUTUBE
-plugin: ./plugins/basic
+plugin: ./lib/plugins/basic
 siteUrl: https://www.youtube.com/channel/
 urlback: ""
 enable: true

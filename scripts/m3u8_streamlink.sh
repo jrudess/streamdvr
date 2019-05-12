@@ -1,6 +1,6 @@
 #!/bin/bash
-# Return 0 if streamer is online and m3u8 in stdout
-# Return 1 if streamer is offline and print unexpected errors to stdout
+# Return 0 if streamer is online and m3u8 in stdout, or offline and empty stdout
+# Return 1 if there are any unhandled errors from streamlink
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -23,13 +23,13 @@ else
     grep "No plugin" $tmp/stdout > /dev/null 2> /dev/null
     if [ "$?" -eq 0 ]; then
         # This is an offline case for CB
-        exit 1
+        exit 0
     fi
 
     grep "No playable streams" $tmp/stdout > /dev/null 2> /dev/null
     if [ "$?" -eq 0 ]; then
         # This is an offline case for twitch/mixer
-        exit 1
+        exit 0
     fi
 
     # Print the error message to stdout for streamdvr to reprint
