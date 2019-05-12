@@ -41,7 +41,7 @@ export class Tui {
         this.list = blessed.listtable({
             top: 0,
             left: 0,
-            width: 67,
+            width: 69,
             height: "100%-11",
             align: "left",
             interactive: false,
@@ -71,7 +71,7 @@ export class Tui {
         this.sitelist = blessed.listtable({
             top: "100%-11",
             left: 0,
-            width: 67,
+            width: 69,
             height: 10,
             align: "left",
             interactive: false,
@@ -100,7 +100,7 @@ export class Tui {
 
         this.logbody = blessed.box({
             top: 0,
-            left: 67,
+            left: 69,
             height: "100%-1",
             grow: true,
             keys: true,
