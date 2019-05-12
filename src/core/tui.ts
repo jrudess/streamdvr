@@ -342,8 +342,8 @@ export class Tui {
             switch (index) {
             case 0: // pause
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
                     this.updateList(site, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
@@ -358,8 +358,8 @@ export class Tui {
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
                     this.updateList(site, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
@@ -388,7 +388,7 @@ export class Tui {
 
         this.sitemenu.on("select", (item: any, index: number) => {
             if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
-                const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                 switch (index) {
                 case 0: // pause
                     this.updateList(site, "", UpdateCmd.PAUSE);
@@ -465,12 +465,12 @@ export class Tui {
 
             if (this.list.interactive) {
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name = blessed.helpers.stripTags(this.listSelect[0]);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
                     new Promise(async () => {
                         await this.updateList(site, name, UpdateCmd.PAUSE);
-                        const pauseTimer: number = Number(text);
-                        await this.updateList(site, name, UpdateCmd.PAUSE, false, pauseTimer);
+                        await this.updateList(site, name, UpdateCmd.PAUSE, false, Number(text));
+                        return true;
                     });
                 }
                 this.listmenu.hide();
@@ -479,7 +479,7 @@ export class Tui {
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
-                    const site = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                    const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
                     this.updateList(site, text, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
@@ -487,7 +487,7 @@ export class Tui {
                 return;
             }
 
-            const tokens = text.split(" ");
+            const tokens: Array<string> = text.split(" ");
             if (tokens.length !== 0) {
                 this.parseCli(tokens);
             }
@@ -497,10 +497,10 @@ export class Tui {
         });
     }
 
-    protected parseCli(tokens: any) {
-        const temp  = tokens[0] === "addtemp";
-        const pause = tokens[0] === "pause" || tokens[0] === "unpause";
-        const add   = tokens[0] === "add" || tokens[0] === "addtemp";
+    protected parseCli(tokens: Array<string>) {
+        const temp: boolean  = tokens[0] === "addtemp";
+        const pause: boolean = tokens[0] === "pause" || tokens[0] === "unpause";
+        const add: boolean   = tokens[0] === "add" || tokens[0] === "addtemp";
 
         switch (tokens[0]) {
         case "add":
@@ -512,12 +512,18 @@ export class Tui {
                                    pause ? UpdateCmd.PAUSE :
                                            UpdateCmd.REMOVE;
             if (tokens.length >= 3) {
-                this.updateList(tokens[1], tokens[2], cmd, temp);
-                if (pause && tokens.length >= 4) {
-                    this.updateList(tokens[1], tokens[2], cmd, temp, tokens[3]);
-                }
+                new Promise(async () => {
+                    await this.updateList(tokens[1], tokens[2], cmd, temp);
+                    if (pause && tokens.length >= 4) {
+                        await this.updateList(tokens[1], tokens[2], cmd, temp, Number(tokens[3]));
+                    }
+                    return true;
+                });
             } else if (tokens.length === 2) {
-                this.updateList(tokens[1], "", cmd, temp);
+                new Promise(async () => {
+                    await this.updateList(tokens[1], "", cmd, temp);
+                    return true;
+                });
             }
             break;
 

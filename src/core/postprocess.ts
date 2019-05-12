@@ -60,15 +60,12 @@ export class PostProcess {
             fileType,
         ];
 
+        const myCompleteProcess = spawn(script, args);
+
         this.dvr.infoMsg(namePrint + "converting to " + fileType + ": " +
             `${colors.cmd(script)}` + " " + `${colors.cmd(args.join(" "))}`, site);
         if (site && streamer) {
-            site.storeCapInfo(streamer, uniqueName, null, true);
-        }
-
-        const myCompleteProcess = spawn(script, args);
-        if (streamer)  {
-            streamer.capture = myCompleteProcess;
+            site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
         }
 
         myCompleteProcess.on("close", () => {
@@ -102,6 +99,10 @@ export class PostProcess {
         this.dvr.infoMsg(namePrint + "running global postprocess script: " + `${colors.cmd(script)}` +
             " " + `${colors.cmd(args.join(" "))}`, site);
         const userPostProcess = spawn(script, args);
+
+        if (site && streamer) {
+            site.storeCapInfo(streamer, completeFile, userPostProcess, true);
+        }
 
         userPostProcess.on("close", () => {
             this.dvr.infoMsg(namePrint + "done post-processing " + `${colors.file(completeFile)}`, site);

@@ -17,7 +17,7 @@ export declare class Tui {
     protected logbody: any;
     constructor(dvr: Dvr);
     protected createTui(): void;
-    protected parseCli(tokens: any): void;
+    protected parseCli(tokens: Array<string>): void;
     addSite(site: Site): void;
     log(text: string): void;
     protected buildListEntry(site: Site, streamer: Streamer): string[];

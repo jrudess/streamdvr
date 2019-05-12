@@ -15,7 +15,6 @@ export interface Streamer {
     paused: boolean;
     isTemp: boolean;
 }
-export declare const StreamerDefaults: Streamer;
 export interface Id {
     uid: string;
     nm: string;
@@ -62,12 +61,11 @@ export declare abstract class Site {
     redrawList: boolean;
     protected cfgFile: string;
     protected updateName: string;
-    protected tempList: Array<Array<string>>;
     protected paused: boolean;
+    protected pauseIndex: number;
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
-    protected abstract togglePause(streamer: Streamer): boolean;
     getStreamerList(): Streamer[];
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
@@ -75,14 +73,16 @@ export declare abstract class Site {
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>): string[];
-    processUpdates(cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
+    processUpdates(cmd: UpdateCmd): Promise<void>;
     protected abstract createListItem(id: Id): Array<string>;
     updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;
+    protected updateStreamers(list: Array<string>, cmd: UpdateCmd): Promise<boolean>;
+    protected addStreamer(id: Id, isTemp?: boolean): boolean;
+    protected removeStreamer(id: Id): boolean;
+    pauseStreamer(id: Id, pauseTimer?: number): Promise<boolean>;
     pause(): void;
-    protected updateStreamers(list: Array<string>, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;
-    protected addStreamer(id: Id, list: Array<Array<string>>, cmd: UpdateCmd, isTemp?: boolean): boolean;
-    protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
-    protected checkStreamerState(streamer: Streamer, options: StreamerStateOptions): void;
+    protected togglePause(streamer: Streamer): boolean;
+    protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;
     storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;

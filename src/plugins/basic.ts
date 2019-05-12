@@ -1,6 +1,6 @@
 "use strict";
 
-import {Site, Id, Streamer, StreamerDefaults, CapInfo, CapInfoDefaults, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
+import {Site, Id, Streamer, CapInfo, CapInfoDefaults, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
 import {Dvr} from "../core/dvr";
 import {Tui} from "../core/tui";
 import {execSync} from "child_process";
@@ -19,7 +19,7 @@ class Basic extends Site {
     }
 
     protected convertFormat(streamerList: Array<any>) {
-        const newList = [];
+        const newList: Array<any> = [];
         for (const streamer of streamerList.values()) {
             newList.push([streamer, "unpaused"]);
         }
@@ -31,26 +31,6 @@ class Basic extends Site {
         return [id.nm, "unpaused"];
     }
 
-    public togglePause(streamer: Streamer): boolean {
-        for (const item of this.config.streamers) {
-            if (item[0] === streamer.uid) {
-                if (streamer.paused) {
-                    this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
-                    item[1] = "unpaused";
-                    streamer.paused = false;
-                    this.refresh(streamer);
-                } else {
-                    this.infoMsg(`${colors.name(streamer.nm)}` + " is paused");
-                    item[1] = "paused";
-                    streamer.paused = true;
-                    this.haltCapture(streamer.uid);
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
     public start() {
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
@@ -59,15 +39,23 @@ class Basic extends Site {
             }
         }
 
-        for (const streamer of this.config.streamers) {
-            const nm = streamer[0];
+        for (const entry of this.config.streamers) {
+            const nm: string = entry[0];
             if (!this.streamerList.has(nm)) {
-                const newstreamer: Streamer = StreamerDefaults;
-                newstreamer.uid = nm;
-                newstreamer.nm = nm;
-                newstreamer.site = this.padName;
-                newstreamer.paused = streamer[1] === "paused";
-                this.streamerList.set(nm, newstreamer);
+                const streamer: Streamer = {
+                    uid: nm,
+                    nm: nm,
+                    site: this.padName,
+                    state: "Offline",
+                    filename: "",
+                    capture: null,
+                    postProcess: false,
+                    filesize: 0,
+                    stuckcounter: 0,
+                    paused: entry[this.pauseIndex] === "paused",
+                    isTemp: false,
+                };
+                this.streamerList.set(nm, streamer);
             }
         }
         this.redrawList = true;
@@ -120,14 +108,13 @@ class Basic extends Site {
     protected checkStreamerState(streamer: Streamer) {
         // Detect if streamer is online or actively streaming
         const stream = this.m3u8Script(streamer.nm);
-
-        const prevState = streamer.state;
-        streamer.state = stream.status ? "Streaming" : "Offline";
-
         const options: StreamerStateOptions = StreamerStateDefaults;
-        options.msg = colors.name(streamer.nm) + " is " + streamer.state;
+
+        options.prevState   = streamer.state;
         options.isStreaming = stream.status;
-        options.prevState = prevState;
+        streamer.state      = stream.status ? "Streaming" : "Offline";
+        options.msg         = `${colors.name(streamer.nm)}` + " is " + streamer.state;
+
         super.checkStreamerState(streamer, options);
     }
 

@@ -25,19 +25,6 @@ export interface Streamer {
     paused:       boolean;
     isTemp:       boolean;
 }
-export const StreamerDefaults: Streamer = {
-    uid: "",
-    nm:  "",
-    site: "",
-    state: "Offline",
-    filename: "",
-    capture: null,
-    postProcess: false,
-    filesize: 0,
-    stuckcounter: 0,
-    paused: false,
-    isTemp: false,
-};
 
 export interface Id {
     uid: string;
@@ -103,8 +90,8 @@ export abstract class Site {
 
     protected cfgFile: string;
     protected updateName: string;
-    protected tempList: Array<Array<string>>;
     protected paused: boolean;
+    protected pauseIndex: number;
 
     protected dvr: Dvr;
     protected tui: Tui;
@@ -118,10 +105,10 @@ export abstract class Site {
         this.cfgFile      = dvr.configdir + this.listName + ".yml";
         this.updateName   = dvr.configdir + this.listName + "_updates.yml";
         this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
-        this.tempList     = []; // temp record list (session only)
         this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
         this.redrawList   = false;
         this.paused       = false;
+        this.pauseIndex   = 1;
 
         if (dvr.config.tui.enable) {
             tui.addSite(this);
@@ -134,8 +121,6 @@ export abstract class Site {
         }
 
     }
-
-    protected abstract togglePause(streamer: Streamer): boolean;
 
     public getStreamerList() {
         return Array.from(this.streamerList.values());
@@ -218,7 +203,7 @@ export abstract class Site {
         return args;
     }
 
-    public async processUpdates(cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
+    public async processUpdates(cmd: UpdateCmd) {
         if (!fs.existsSync(this.updateName)) {
             this.dbgMsg(this.updateName + " does not exist");
             return;
@@ -233,10 +218,12 @@ export abstract class Site {
                 list = updates.include;
                 updates.include = [];
             }
-        } else if (updates.exclude && updates.exclude.length > 0) {
-            this.infoMsg(`${updates.exclude.length}` + " streamer(s) to exclude");
-            list = updates.exclude;
-            updates.exclude = [];
+        } else if (cmd === UpdateCmd.REMOVE) {
+            if (updates.exclude && updates.exclude.length > 0) {
+                this.infoMsg(`${updates.exclude.length}` + " streamer(s) to exclude");
+                list = updates.exclude;
+                updates.exclude = [];
+            }
         }
 
         // clear the processed array from file
@@ -245,7 +232,7 @@ export abstract class Site {
         }
 
         try {
-            const dirty = await this.updateStreamers(list, cmd, isTemp, pauseTimer);
+            const dirty = await this.updateStreamers(list, cmd);
             if (dirty) {
                 this.writeConfig();
             }
@@ -258,33 +245,104 @@ export abstract class Site {
 
     public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
         let dirty = false;
-        const list = isTemp ? this.tempList : this.config.streamers;
         if (cmd === UpdateCmd.PAUSE) {
-            let streamer: Streamer | undefined = this.streamerList.get(id.uid);
-            if (streamer && pauseTimer && pauseTimer > 0) {
-                const print: string = streamer.paused ? " pausing for " : " unpausing for ";
-                this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
-                await sleep(pauseTimer * 1000);
-                this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
-                streamer = this.streamerList.get(id.uid);
-            }
-            if (streamer) {
-                dirty = this.togglePause(streamer);
-                this.render(true);
-            }
+            dirty = await this.pauseStreamer(id, pauseTimer);
         } else if (cmd === UpdateCmd.ADD) {
-            dirty = this.addStreamer(id, list, cmd, isTemp);
+            dirty = this.addStreamer(id, isTemp);
         } else if (cmd === UpdateCmd.REMOVE) {
-            dirty = this.removeStreamer(id, list);
+            dirty = this.removeStreamer(id);
         }
-        if (dirty) {
-            if (isTemp) {
-                this.tempList = list;
-            } else {
-                this.config.streamers = list;
+        return dirty;
+    }
+
+    protected async updateStreamers(list: Array<string>, cmd: UpdateCmd) {
+        let dirty = false;
+
+        for (const entry of list) {
+            this.dbgMsg("updateStreamers: uid = " + entry);
+            const id: Id = {
+                uid: entry,
+                nm: entry,
+            };
+            dirty = await this.updateList(id, cmd) || dirty;
+        }
+
+        return dirty;
+    }
+
+    protected addStreamer(id: Id, isTemp?: boolean) {
+        let added = true;
+
+        for (const entry of this.config.streamers) {
+            if (entry[0] === id.uid) {
+                this.errMsg(`${colors.name(id.nm)}` + " is already in the capture list");
+                added = false;
+                break;
             }
         }
-        return dirty && !isTemp;
+
+        if (added) {
+            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (isTemp ? " (temporarily)" : ""));
+            if (!isTemp) {
+                this.config.streamers.push(this.createListItem(id));
+            }
+        }
+
+        if (!this.streamerList.has(id.uid)) {
+            const streamer: Streamer = {
+                uid: id.uid,
+                nm: id.nm,
+                site: this.padName,
+                state: "Offline",
+                filename: "",
+                capture: null,
+                postProcess: false,
+                filesize: 0,
+                stuckcounter: 0,
+                paused: this.paused,
+                isTemp: isTemp ? true : false,
+            };
+            this.streamerList.set(id.uid, streamer);
+            this.render(true);
+            this.refresh(streamer);
+        }
+        return added;
+    }
+
+    protected removeStreamer(id: Id) {
+        if (this.streamerList.has(id.uid)) {
+            this.infoMsg(`${colors.name(id.nm)}` + " removed from capture list.");
+            this.haltCapture(id.uid);
+            this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
+            this.render(true);
+
+            for (let i = 0; i < this.config.streamers.length; i++) {
+                if (this.config.streamers[i][0] === id.uid) {
+                    this.config.streamers.splice(i, 1);
+                    break;
+                }
+            }
+            return true;
+        }
+        this.errMsg(`${colors.name(id.nm)}` + " not in capture list.");
+        return false;
+    }
+
+    public async pauseStreamer(id: Id,  pauseTimer?: number) {
+        let dirty = false;
+        let streamer: Streamer | undefined = this.streamerList.get(id.uid);
+        if (streamer && pauseTimer && pauseTimer > 0) {
+            const print: string = streamer.paused ? " pausing for " : " unpausing for ";
+            this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
+            await sleep(pauseTimer * 1000);
+            this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
+            streamer = this.streamerList.get(id.uid);
+        }
+        if (streamer) {
+            dirty = this.togglePause(streamer);
+            this.render(true);
+        }
+        return dirty;
     }
 
     public pause() {
@@ -300,70 +358,31 @@ export abstract class Site {
         this.render(true);
     }
 
-    protected async updateStreamers(list: Array<string>, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
-        let dirty = false;
-
-        for (const entry of list) {
-            const id: Id = {
-                uid: entry,
-                nm: entry,
-            };
-            dirty = await this.updateList(id, cmd, isTemp, pauseTimer) || dirty;
-        }
-
-        return dirty;
-    }
-
-    protected addStreamer(id: Id, list: Array<Array<string>>, cmd: UpdateCmd, isTemp?: boolean) {
-        let added = true;
-
-        for (const entry of list) {
-            if (entry[0] === id.uid) {
-                this.errMsg(`${colors.name(id.nm)}` + " is already in the capture list");
-                added = false;
-                break;
-            }
-        }
-
-        if (added) {
-            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (isTemp ? " (temporarily)" : ""));
-            list.push(this.createListItem(id));
-        }
-
-        if (!this.streamerList.has(id.uid)) {
-            const streamer: Streamer = StreamerDefaults;
-            streamer.uid = id.uid;
-            streamer.nm = id.nm;
-            streamer.site = this.padName;
-            streamer.isTemp = isTemp ? true : false;
-            streamer.paused = this.paused;
-            this.streamerList.set(id.uid, streamer);
-            this.render(true);
+    protected togglePause(streamer: Streamer): boolean {
+        if (streamer.paused) {
+            this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
             this.refresh(streamer);
+        } else {
+            this.infoMsg(`${colors.name(streamer.nm)}` + " is paused.");
+            this.haltCapture(streamer.uid);
         }
-        return added;
-    }
+        streamer.paused = !streamer.paused;
 
-    protected removeStreamer(id: Id, list: Array<Array<string>>) {
-        if (this.streamerList.has(id.uid)) {
-            this.infoMsg(`${colors.name(id.nm)}` + " removed from capture list.");
-            this.haltCapture(id.uid);
-            this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
-            this.render(true);
-
-            for (let i = 0; i < this.config.streamers.length; i++) {
-                if (this.config.streamers[i][0] === id.uid) {
-                    list.splice(i, 1);
-                    return true;
-                }
+        for (const item of this.config.streamers) {
+            if (item[0] === streamer.uid) {
+                item[this.pauseIndex] = item[this.pauseIndex] === "paused" ? "unpaused" : "paused";
+                return true;
             }
-            return false;
         }
-        this.errMsg(`${colors.name(id.nm)}` + " not in capture list.");
         return false;
     }
 
-    protected checkStreamerState(streamer: Streamer, options: StreamerStateOptions) {
+    protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions) {
+        if (!options) {
+            this.errMsg("site::checkStreamerState() options input is undefined");
+            return;
+        }
+
         if (streamer.state !== options.prevState) {
             this.infoMsg(options.msg);
             this.redrawList = true;
@@ -478,8 +497,7 @@ export abstract class Site {
 
     protected refresh(streamer: Streamer) {
         if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
-            const options: StreamerStateOptions = StreamerStateDefaults;
-            this.checkStreamerState(streamer, options);
+            this.checkStreamerState(streamer);
         }
     }
 
