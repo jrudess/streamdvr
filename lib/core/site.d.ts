@@ -82,7 +82,7 @@ export declare abstract class Site {
     protected updateStreamers(list: Array<string>, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;
     protected addStreamer(id: Id, list: Array<Array<string>>, cmd: UpdateCmd, isTemp?: boolean): boolean;
     protected removeStreamer(id: Id, list: Array<Array<string>>): boolean;
-    protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions): void;
+    protected checkStreamerState(streamer: Streamer, options: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;
     storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;

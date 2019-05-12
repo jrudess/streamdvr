@@ -363,13 +363,13 @@ export abstract class Site {
         return false;
     }
 
-    protected checkStreamerState(streamer: Streamer | undefined, options: StreamerStateOptions) {
-        if (streamer && streamer.state !== options.prevState) {
+    protected checkStreamerState(streamer: Streamer, options: StreamerStateOptions) {
+        if (streamer.state !== options.prevState) {
             this.infoMsg(options.msg);
             this.redrawList = true;
         }
 
-        if (streamer && streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
+        if (streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
             this.dbgMsg(`${colors.name(streamer.nm)}` + " is no longer broadcasting, terminating capture process (pid=" +
@@ -378,7 +378,7 @@ export abstract class Site {
             this.redrawList = true;
         }
 
-        if (streamer && options.isStreaming) {
+        if (options.isStreaming) {
             if (streamer.paused) {
                 this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
             } else if (this.canStartCap(streamer.uid)) {
