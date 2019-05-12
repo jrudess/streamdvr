@@ -348,12 +348,13 @@ export abstract class Site {
     protected togglePause(streamer: Streamer): boolean {
         if (streamer.paused) {
             this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
+            streamer.paused = false; // must be set before calling refresh()
             this.refresh(streamer);
         } else {
             this.infoMsg(`${colors.name(streamer.nm)}` + " is paused.");
+            streamer.paused = true;
             this.haltCapture(streamer.uid);
         }
-        streamer.paused = !streamer.paused;
 
         for (const item of this.config.streamers) {
             if (item[0] === streamer.uid) {
