@@ -119,11 +119,7 @@ class Basic extends Site {
         const stream = this.m3u8Script(streamer.nm);
 
         const prevState = streamer.state;
-        if (stream.status) {
-            streamer.state = "Streaming";
-        } else {
-            streamer.state = "Offline";
-        }
+        streamer.state = stream.status ? "Streaming" : "Offline";
 
         const options: StreamerStateOptions = StreamerStateDefaults;
         options.msg = colors.name(streamer.nm) + " is " + streamer.state;

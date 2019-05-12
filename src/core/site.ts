@@ -36,7 +36,7 @@ export const StreamerDefaults: Streamer = {
     filesize: 0,
     stuckcounter: 0,
     paused: false,
-    isTemp: false
+    isTemp: false,
 };
 
 export interface Id {
@@ -75,7 +75,7 @@ export interface SiteConfig {
 export enum UpdateCmd {
     REMOVE = 0,
     ADD    = 1,
-    PAUSE  = 2
+    PAUSE  = 2,
 }
 
 export interface StreamerStateOptions {
@@ -255,7 +255,7 @@ export abstract class Site {
 
     protected abstract createListItem(id: Id): Array<string>;
 
-    public async updateList(id: Id, cmd: UpdateCmd, isTemp?:boolean, pauseTimer?: number): Promise<boolean> {
+    public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
         let dirty = false;
         const list = isTemp ? this.tempList : this.config.streamers;
         if (cmd === UpdateCmd.PAUSE) {
@@ -268,27 +268,13 @@ export abstract class Site {
                 streamer = this.streamerList.get(id.uid);
             }
             if (streamer) {
-                const toggle = this.togglePause(streamer);
-                if (toggle) {
-                    dirty = true;
-                    this.render(true);
-                }
+                dirty = this.togglePause(streamer);
+                this.render(true);
             }
         } else if (cmd === UpdateCmd.ADD) {
-            if (this.addStreamer(id, list, cmd, isTemp)) {
-                list.push(this.createListItem(id));
-                dirty = true;
-            }
+            dirty = this.addStreamer(id, list, cmd, isTemp);
         } else if (cmd === UpdateCmd.REMOVE) {
-            if (this.removeStreamer(id, list)) {
-                for (let i = 0; i < this.config.streamers.length; i++) {
-                    if (this.config.streamers[i][0] === id.uid) {
-                        list.splice(i, 1);
-                        dirty = true;
-                        break;
-                    }
-                }
-            }
+            dirty = this.removeStreamer(id, list);
         }
         if (dirty) {
             if (isTemp) {
@@ -340,10 +326,10 @@ export abstract class Site {
 
         if (added) {
             this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (isTemp ? " (temporarily)" : ""));
+            list.push(this.createListItem(id));
         }
 
         if (!this.streamerList.has(id.uid)) {
-            const temp: boolean = isTemp ? true: false;
             const streamer: Streamer = {
                 uid: id.uid,
                 nm: id.nm,
@@ -354,7 +340,7 @@ export abstract class Site {
                 postProcess: false,
                 filesize: 0,
                 stuckcounter: 0,
-                isTemp: temp,
+                isTemp: isTemp ? true : false,
                 paused: this.paused,
             };
             this.streamerList.set(id.uid, streamer);
@@ -370,7 +356,14 @@ export abstract class Site {
             this.haltCapture(id.uid);
             this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
             this.render(true);
-            return true;
+
+            for (let i = 0; i < this.config.streamers.length; i++) {
+                if (this.config.streamers[i][0] === id.uid) {
+                    list.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
         }
         this.errMsg(`${colors.name(id.nm)}` + " not in capture list.");
         return false;
