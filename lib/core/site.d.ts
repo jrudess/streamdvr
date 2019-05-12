@@ -25,7 +25,6 @@ export interface CapInfo {
     filename: string;
     spawnArgs: Array<string>;
 }
-export declare const CapInfoDefaults: CapInfo;
 export interface SiteConfig {
     name: string;
     enable: boolean;
@@ -51,7 +50,6 @@ export interface StreamerStateOptions {
     prevState: string;
     m3u8: string;
 }
-export declare const StreamerStateDefaults: StreamerStateOptions;
 export declare abstract class Site {
     config: SiteConfig;
     siteName: string;

@@ -1,6 +1,6 @@
 "use strict";
 
-import {Site, Id, Streamer, CapInfo, CapInfoDefaults, StreamerStateOptions, StreamerStateDefaults} from "../core/site";
+import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site";
 import {Dvr} from "../core/dvr";
 import {Tui} from "../core/tui";
 import {execSync} from "child_process";
@@ -108,13 +108,14 @@ class Basic extends Site {
     protected checkStreamerState(streamer: Streamer) {
         // Detect if streamer is online or actively streaming
         const stream = this.m3u8Script(streamer.nm);
-        const options: StreamerStateOptions = StreamerStateDefaults;
-
-        options.prevState   = streamer.state;
-        options.isStreaming = stream.status;
-        streamer.state      = stream.status ? "Streaming" : "Offline";
-        options.msg         = `${colors.name(streamer.nm)}` + " is " + streamer.state;
-
+        const options: StreamerStateOptions = {
+            msg: "",
+            isStreaming: stream.status,
+            prevState: streamer.state,
+            m3u8: "",
+        };
+        streamer.state = stream.status ? "Streaming" : "Offline";
+        options.msg    = `${colors.name(streamer.nm)}` + " is " + streamer.state;
         super.checkStreamerState(streamer, options);
     }
 
@@ -186,14 +187,15 @@ class Basic extends Site {
     }
 
     protected setupCapture(streamer: Streamer, url: string): CapInfo {
-        const capInfo: CapInfo = CapInfoDefaults;
-
         const newurl: string = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
 
-        capInfo.site = this;
-        capInfo.streamer = streamer;
-        capInfo.filename = this.getFileName(streamer.nm);
-        capInfo.spawnArgs = this.getCaptureArguments(newurl, capInfo.filename);
+        const filename: string = this.getFileName(streamer.nm);
+        const capInfo: CapInfo = {
+            site: this,
+            streamer: streamer,
+            filename: filename,
+            spawnArgs: this.getCaptureArguments(newurl, filename),
+        };
         return capInfo;
     }
 }

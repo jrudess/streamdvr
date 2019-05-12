@@ -37,12 +37,6 @@ export interface CapInfo {
     filename:  string;
     spawnArgs: Array<string>;
 }
-export const CapInfoDefaults: CapInfo = {
-    site:      null,
-    streamer:  null,
-    filename:  "",
-    spawnArgs: [],
-};
 
 export interface SiteConfig {
     name:         string;
@@ -71,13 +65,6 @@ export interface StreamerStateOptions {
     prevState: string;
     m3u8: string;
 }
-
-export const StreamerStateDefaults: StreamerStateOptions = {
-    msg: "",
-    isStreaming: false,
-    prevState: "Offline",
-    m3u8: "",
-};
 
 export abstract class Site {
 
