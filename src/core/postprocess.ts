@@ -2,8 +2,9 @@
 
 import * as fs from "fs";
 import * as mv from "mv";
+import * as path from "path";
 import {spawn} from "child_process";
-import {Dvr, Config} from "../core/dvr.js";
+import {Dvr, Config, MSG} from "../core/dvr.js";
 import {Site, Streamer, CapInfo} from "../core/site.js";
 
 const colors = require("colors");
@@ -32,20 +33,19 @@ export class PostProcess {
         const capInfo: CapInfo          = this.postProcessQ[0];
         const site: Site | null         = capInfo.site;
         const streamer: Streamer | null = capInfo.streamer;
-        const namePrint: string         = streamer ? `${colors.name(streamer.nm)}` + " " : "";
-        const capDir: string            = this.config.recording.captureDirectory + "/";
-        const capFile: string           = capInfo.filename + ".ts";
+        const namePrint: string         = streamer ? `${colors.name(streamer.nm)} ` : "";
         const fileType: string          = this.config.recording.autoConvertType;
-        const completeDir: string       = this.getCompleteDir(site, streamer) + "/";
+        const completeDir: string       = this.getCompleteDir(site, streamer);
         const uniqueName: string        = this.uniqueFileName(completeDir, capInfo.filename, fileType);
         const completeFile: string      = uniqueName + "." + fileType;
+        const capPath: string           = path.join(this.config.recording.captureDirectory, capInfo.filename + ".ts");
+        const cmpPath: string           = path.join(completeDir, completeFile);
 
         if (fileType === "ts") {
-            this.dvr.dbgMsg(namePrint + "recording moved " +
-                capDir + capFile + " to " + completeDir + completeFile);
-            mv(capDir + capFile, completeDir + completeFile, (err: Error) => {
+            this.dvr.print(MSG.DEBUG, `${namePrint} recording moved ${capPath} to ${cmpPath}`);
+            mv(capPath, cmpPath, (err: Error) => {
                 if (err) {
-                    this.dvr.errMsg(`${colors.site(capInfo.filename)}` + ": " + `${err.toString()}`);
+                    this.dvr.print(MSG.ERROR, `${colors.site(capInfo.filename)}: ${err.toString()}`);
                 }
             });
 
@@ -54,16 +54,11 @@ export class PostProcess {
         }
 
         const script = this.dvr.calcPath(this.config.recording.postprocess);
-        const args = [
-            capDir + capFile,
-            completeDir + completeFile,
-            fileType,
-        ];
-
+        const args = [ capPath, cmpPath, fileType ];
         const myCompleteProcess = spawn(script, args);
 
-        this.dvr.infoMsg(namePrint + "converting to " + fileType + ": " +
-            `${colors.cmd(script)}` + " " + `${colors.cmd(args.join(" "))}`, site);
+        this.dvr.print(MSG.INFO, `${namePrint} converting to ${fileType}: ` +
+            `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
         }
@@ -73,16 +68,16 @@ export class PostProcess {
                 if (fs.existsSync(args[0])) {
                     fs.unlinkSync(args[0]);
                 } else {
-                    this.dvr.errMsg(args[0] + "does not exist, cannot remove");
+                    this.dvr.print(MSG.ERROR, `${args[0]} does not exist, cannot remove`);
                 }
             }
 
-            this.dvr.infoMsg(namePrint + "done converting " + completeFile, site);
+            this.dvr.print(MSG.INFO, `${namePrint} done converting ${completeFile}`, site);
             this.postScript(site, streamer, completeDir, completeFile);
         });
 
         myCompleteProcess.on("error", (err: Error) => {
-            this.dvr.errMsg(err.toString());
+            this.dvr.print(MSG.ERROR, err.toString());
         });
     }
 
@@ -92,12 +87,12 @@ export class PostProcess {
             return;
         }
 
-        const script    = this.dvr.calcPath(this.config.postprocess);
-        const args      = [completeDir, completeFile];
-        const namePrint = streamer === null ? "" : `${colors.name(streamer.nm)}` + " ";
+        const script: string      = this.dvr.calcPath(this.config.postprocess);
+        const args: Array<string> = [completeDir, completeFile];
+        const namePrint: string   = streamer === null ? "" : `${colors.name(streamer.nm)} `;
 
-        this.dvr.infoMsg(namePrint + "running global postprocess script: " + `${colors.cmd(script)}` +
-            " " + `${colors.cmd(args.join(" "))}`, site);
+        this.dvr.print(MSG.INFO, `${namePrint} running global postprocess script: ` +
+            `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
         const userPostProcess = spawn(script, args);
 
         if (site && streamer) {
@@ -105,7 +100,7 @@ export class PostProcess {
         }
 
         userPostProcess.on("close", () => {
-            this.dvr.infoMsg(namePrint + "done post-processing " + `${colors.file(completeFile)}`, site);
+            this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${colors.file(completeFile)}`, site);
             this.nextConvert(site, streamer);
         });
     }
@@ -135,11 +130,11 @@ export class PostProcess {
         // If the output file already exists, make filename unique
         let count = 1;
         let fileinc = filename;
-        let name = completeDir + fileinc + "." + fileType;
+        let name = path.join(completeDir,  fileinc + "." + fileType);
         while (fs.existsSync(name)) {
-            this.dvr.errMsg(name + " already exists");
+            this.dvr.print(MSG.ERROR, name + " already exists");
             fileinc = filename + " (" + count.toString() + ")";
-            name = completeDir + fileinc + "." + fileType;
+            name = path.join(completeDir, fileinc + "." + fileType);
             count++;
         }
         return fileinc;

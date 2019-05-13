@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { ChildProcessWithoutNullStreams } from "child_process";
-import { Dvr } from "../core/dvr.js";
+import { Dvr, MSG } from "../core/dvr.js";
 import { Tui } from "../core/tui.js";
 export interface Streamer {
     uid: string;
@@ -95,7 +95,5 @@ export declare abstract class Site {
     protected endCapture(streamer: Streamer, capInfo: CapInfo): void;
     clearProcessing(streamer: Streamer): void;
     protected render(redrawList: boolean): void;
-    infoMsg(msg: string): void;
-    errMsg(msg: string): void;
-    dbgMsg(msg: string): void;
+    print(lvl: MSG, msg: string): void;
 }

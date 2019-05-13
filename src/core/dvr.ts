@@ -15,6 +15,12 @@ async function sleep(time: number): Promise<number> {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+export enum MSG {
+    INFO  = 0,
+    DEBUG = 1,
+    ERROR = 2,
+}
+
 export interface EnableConfig {
     daemon: boolean;
 }
@@ -125,23 +131,22 @@ export abstract class Dvr {
         let checkHome = 1;
 
         if (process.env.XDG_CONFIG_HOME) {
-            this.configdir = process.env.XDG_CONFIG_HOME + "/streamdvr/";
-            if (fs.existsSync(this.configdir + "config.yml")) {
+            this.configdir = path.join(process.env.XDG_CONFIG_HOME, "streamdvr");
+            if (fs.existsSync(path.join(this.configdir, "config.yml"))) {
                 checkHome = 0;
             }
         }
 
         if (checkHome) {
-            this.configdir = process.platform === "win32" ?
-                `${process.env.APPDATA}` + "/streamdvr/" :
-                `${process.env.HOME}` + "/.config/streamdvr/";
+            this.configdir = `${process.env.HOME}/.config/streamdvr`;
+            console.log(this.configdir);
         }
 
-        if (!fs.existsSync(this.configdir + "config.yml")) {
+        if (!fs.existsSync(path.join(this.configdir, "config.yml"))) {
             this.configdir = "./config/";
         }
 
-        const configfile = this.configdir + "config.yml";
+        const configfile = path.join(this.configdir, "config.yml");
         if (!fs.existsSync(configfile)) {
             console.log("ERROR: Could not find config.yml");
             process.exit(1);
@@ -154,7 +159,7 @@ export abstract class Dvr {
         try {
             this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
-            console.log("ERROR: Failed to load config.yml:" + `${err.toString()}`);
+            console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);
         }
 
@@ -222,7 +227,7 @@ export abstract class Dvr {
                 await site.processUpdates(UpdateCmd.REMOVE);
                 await site.getStreamers();
             } catch (err) {
-                site.errMsg(err.toString());
+                site.print(MSG.ERROR, err.toString());
             }
             const interval = site.config.scanInterval ? site.config.scanInterval : 300;
             await sleep(interval * 1000);
@@ -247,27 +252,31 @@ export abstract class Dvr {
     }
 
     protected msg(msg: string, site?: Site | null, options?: LogOptions) {
-        const time: string = "[" + this.getDateTime() + "] ";
+        const time: string = `[${this.getDateTime()}]`;
         if (site) {
-            this.log(`${colors.time(time)}` + `${colors.site(site.padName)}` + msg, options);
+            this.log(`${colors.time(time)} ${colors.site(site.padName)} ${msg}`, options);
         } else {
-            let outmsg: string = "DVR".padEnd(9, " ");
-            outmsg = `${colors.time(time)}` + `${colors.site(outmsg)}` + msg;
+            let outmsg: string = "DVR".padEnd(8, " ");
+            outmsg = `${colors.time(time)} ${colors.site(outmsg)} ${msg}`;
             this.log(outmsg, options);
         }
     }
 
-    public infoMsg(msg: string, site?: Site | null) {
-        this.msg(msg, site);
-    }
-
-    public errMsg(msg: string, site?: Site | null) {
-        this.msg(`${colors.error("[ERROR] ")}` + msg, site, {trace: true});
-    }
-
-    public dbgMsg(msg: string, site?: Site | null) {
-        if (this.config.debug.log) {
-            this.msg(`${colors.debug("[DEBUG] ")}` + msg, site);
+    public print(lvl: MSG, msg: string, site?: Site | null) {
+        let out: string = "";
+        const options = {trace: false};
+        if (lvl === MSG.ERROR) {
+            out = `${colors.error("[ERROR]")} ${msg}`;
+            options.trace = true;
+        } else if (lvl === MSG.DEBUG) {
+            if (this.config.debug.log) {
+                out = `${colors.debug("[DEBUG]")} ${msg}`;
+            }
+        } else {
+            out = msg;
+        }
+        if (out) {
+            this.msg(out, site, options);
         }
     }
 

@@ -1,9 +1,10 @@
 "use strict";
 
 import * as fs from "fs";
+import * as path from "path";
 import * as yaml from "js-yaml";
 import {spawn, ChildProcessWithoutNullStreams} from "child_process";
-import {Dvr} from "../core/dvr.js";
+import {Dvr, MSG} from "../core/dvr.js";
 import {Tui} from "../core/tui.js";
 
 const colors = require("colors");
@@ -87,10 +88,10 @@ export abstract class Site {
         this.siteName     = siteName;
         this.dvr          = dvr;
         this.tui          = tui;
-        this.padName      = siteName.padEnd(9, " ");
+        this.padName      = siteName.padEnd(8, " ");
         this.listName     = siteName.toLowerCase();
-        this.cfgFile      = dvr.configdir + this.listName + ".yml";
-        this.updateName   = dvr.configdir + this.listName + "_updates.yml";
+        this.cfgFile      = path.join(dvr.configdir, `${this.listName}.yml`);
+        this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
         this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
         this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
         this.redrawList   = false;
@@ -101,10 +102,10 @@ export abstract class Site {
             tui.addSite(this);
         }
 
-        this.infoMsg(this.config.streamers.length.toString() + " streamer(s) in config");
+        this.print(MSG.INFO, `${this.config.streamers.length.toString()} streamer(s) in config`);
 
         if (typeof this.config.siteUrl === "undefined") {
-            this.errMsg(this.cfgFile + " is missing siteUrl");
+            this.print(MSG.ERROR, `${this.cfgFile} is missing siteUrl`);
         }
 
     }
@@ -128,26 +129,24 @@ export abstract class Site {
                 continue;
             }
 
-            const stat: fs.Stats = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + streamer.filename);
+            const stat: fs.Stats = fs.statSync(path.join(this.dvr.config.recording.captureDirectory, streamer.filename));
             const sizeMB: number = Math.round(stat.size / 1048576);
-            this.dbgMsg(`${colors.file(streamer.filename)}` + ", size=" + sizeMB.toString()
-                + "MB, maxSize=" + maxSize.toString() + "MB");
+            this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
             if (sizeMB === streamer.filesize) {
-                this.infoMsg(`${colors.name(streamer.nm)}` + " recording appears to be stuck (counter=" +
-                    streamer.stuckcounter.toString() + "), file size is not increasing: " +
-                    sizeMB.toString() + "MB");
+                this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
+                    `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
                 streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
             if (streamer.stuckcounter >= 2) {
-                this.infoMsg(`${colors.name(streamer.nm)}` + " terminating stuck recording");
+                this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
                 this.haltCapture(streamer.uid);
                 streamer.stuckcounter = 0;
                 this.redrawList = true;
             } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.infoMsg(`${colors.name(streamer.nm)}` + " recording has exceeded file size limit (size=" +
-                    sizeMB.toString() + " > maxSize=" + maxSize.toString() + ")");
+                this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
+                    `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
                 this.haltCapture(streamer.uid);
                 this.redrawList = true;
             }
@@ -161,7 +160,7 @@ export abstract class Site {
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>) {
         let args = [
             "-o",
-            this.dvr.config.recording.captureDirectory + "/" + filename + ".ts",
+            path.join(this.dvr.config.recording.captureDirectory, `${filename}.ts`),
             "-s",
             url,
         ];
@@ -176,11 +175,11 @@ export abstract class Site {
         }
 
         if (this.config.username) {
-            args.push("--" + this.listName + "-username=" + this.config.username);
+            args.push(`--${this.listName}-username=${this.config.username}`);
         }
 
         if (this.config.password) {
-            args.push("--" + this.listName + "-password=" + this.config.password);
+            args.push(`--${this.listName}-password=${this.config.password}`);
         }
 
         if (params) {
@@ -192,7 +191,7 @@ export abstract class Site {
 
     public async processUpdates(cmd: UpdateCmd) {
         if (!fs.existsSync(this.updateName)) {
-            this.dbgMsg(this.updateName + " does not exist");
+            this.print(MSG.DEBUG, `${this.updateName} does not exist`);
             return;
         }
 
@@ -201,13 +200,13 @@ export abstract class Site {
 
         if (cmd === UpdateCmd.ADD) {
             if (updates.include && updates.include.length > 0) {
-                this.infoMsg(`${updates.include.length}` + " streamer(s) to include");
+                this.print(MSG.INFO, `${updates.include.length} streamer(s) to include`);
                 list = updates.include;
                 updates.include = [];
             }
         } else if (cmd === UpdateCmd.REMOVE) {
             if (updates.exclude && updates.exclude.length > 0) {
-                this.infoMsg(`${updates.exclude.length}` + " streamer(s) to exclude");
+                this.print(MSG.INFO, `${updates.exclude.length} streamer(s) to exclude`);
                 list = updates.exclude;
                 updates.exclude = [];
             }
@@ -224,7 +223,7 @@ export abstract class Site {
                 this.writeConfig();
             }
         } catch (err) {
-            this.errMsg(err.toString());
+            this.print(MSG.ERROR, err.toString());
         }
     }
 
@@ -246,7 +245,7 @@ export abstract class Site {
         let dirty = false;
 
         for (const entry of list) {
-            this.dbgMsg("updateStreamers: uid = " + entry);
+            this.print(MSG.DEBUG, "updateStreamers: uid = " + entry);
             const id: Id = {
                 uid: entry,
                 nm: entry,
@@ -262,14 +261,14 @@ export abstract class Site {
 
         for (const entry of this.config.streamers) {
             if (entry[0] === id.uid) {
-                this.errMsg(`${colors.name(id.nm)}` + " is already in the capture list");
+                this.print(MSG.ERROR, `${colors.name(id.nm)} is already in the capture list`);
                 added = false;
                 break;
             }
         }
 
         if (added) {
-            this.infoMsg(`${colors.name(id.nm)}` + " added to capture list" + (isTemp ? " (temporarily)" : ""));
+            this.print(MSG.INFO, `${colors.name(id.nm)} added to capture list` + (isTemp ? " (temporarily)" : ""));
             if (!isTemp) {
                 this.config.streamers.push(this.createListItem(id));
             }
@@ -298,7 +297,7 @@ export abstract class Site {
 
     protected removeStreamer(id: Id) {
         if (this.streamerList.has(id.uid)) {
-            this.infoMsg(`${colors.name(id.nm)}` + " removed from capture list.");
+            this.print(MSG.INFO, `${colors.name(id.nm)} removed from capture list.`);
             this.haltCapture(id.uid);
             this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
             this.render(true);
@@ -311,7 +310,7 @@ export abstract class Site {
             }
             return true;
         }
-        this.errMsg(`${colors.name(id.nm)}` + " not in capture list.");
+        this.print(MSG.ERROR, `${colors.name(id.nm)} not in capture list.`);
         return false;
     }
 
@@ -320,9 +319,9 @@ export abstract class Site {
         let streamer: Streamer | undefined = this.streamerList.get(id.uid);
         if (streamer && pauseTimer && pauseTimer > 0) {
             const print: string = streamer.paused ? " pausing for " : " unpausing for ";
-            this.infoMsg(`${colors.name(id.nm)}` + print + `${pauseTimer.toString()}` + " seconds");
+            this.print(MSG.INFO, `${colors.name(id.nm)} ${print} ${pauseTimer.toString()} seconds`);
             await sleep(pauseTimer * 1000);
-            this.infoMsg(`${colors.name(id.nm)}` + " pause-timer expired");
+            this.print(MSG.INFO, `${colors.name(id.nm)} pause-timer expired`);
             streamer = this.streamerList.get(id.uid);
         }
         if (streamer) {
@@ -347,11 +346,11 @@ export abstract class Site {
 
     protected togglePause(streamer: Streamer): boolean {
         if (streamer.paused) {
-            this.infoMsg(`${colors.name(streamer.nm)}` + " is unpaused.");
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} is unpaused.`);
             streamer.paused = false; // must be set before calling refresh()
             this.refresh(streamer);
         } else {
-            this.infoMsg(`${colors.name(streamer.nm)}` + " is paused.");
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} is paused.`);
             streamer.paused = true;
             this.haltCapture(streamer.uid);
         }
@@ -367,27 +366,27 @@ export abstract class Site {
 
     protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions) {
         if (!options) {
-            this.errMsg("site::checkStreamerState() options input is undefined");
+            this.print(MSG.ERROR, "site::checkStreamerState() options input is undefined");
             return;
         }
 
         if (streamer.state !== options.prevState) {
-            this.infoMsg(options.msg);
+            this.print(MSG.INFO, options.msg);
             this.redrawList = true;
         }
 
         if (streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
             // Sometimes the recording process doesn't end when a streamer
             // stops broadcasting, so terminate it.
-            this.dbgMsg(`${colors.name(streamer.nm)}` + " is no longer broadcasting, terminating capture process (pid=" +
-                streamer.capture.pid.toString() + ")");
+            this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is no longer broadcasting, ` +
+                `terminating capture process (pid=${streamer.capture.pid.toString()})`);
             this.haltCapture(streamer.uid);
             this.redrawList = true;
         }
 
         if (options.isStreaming) {
             if (streamer.paused) {
-                this.dbgMsg(`${colors.name(streamer.nm)}` + " is paused, recording not started.");
+                this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is paused, recording not started.`);
             } else if (this.canStartCap(streamer.uid)) {
                 this.startCapture(this.setupCapture(streamer, options.m3u8));
             }
@@ -398,7 +397,7 @@ export abstract class Site {
 
     public async getStreamers() {
         if (this.dvr.tryingToExit) {
-            this.dbgMsg("Skipping lookup while exit in progress...");
+            this.print(MSG.DEBUG, "Skipping lookup while exit in progress...");
             return false;
         }
         this.checkFileSize();
@@ -447,7 +446,7 @@ export abstract class Site {
 
     public writeConfig() {
         const fd = fs.openSync(this.cfgFile, "w");
-        this.dbgMsg("Rewriting " + this.cfgFile);
+        this.print(MSG.DEBUG, `Rewriting ${this.cfgFile}`);
         fs.writeFileSync(fd, yaml.safeDump(this.config));
         fs.closeSync(fd);
     }
@@ -458,7 +457,7 @@ export abstract class Site {
         if (this.streamerList.has(uid)) {
             const streamer: Streamer | undefined = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null) {
-                this.dbgMsg(`${colors.name(streamer.nm)}` + " is already capturing");
+                this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is already capturing`);
                 return false;
             }
             return true;
@@ -498,21 +497,20 @@ export abstract class Site {
         const script: string = this.dvr.calcPath(this.config.recorder);
         const capture: ChildProcessWithoutNullStreams = spawn(script, capInfo.spawnArgs);
 
-        this.dbgMsg("Starting recording: " +
-            `${colors.cmd(script)}` + " " + `${colors.cmd(capInfo.spawnArgs.join(" "))}`);
+        this.print(MSG.DEBUG, `Starting recording: ${colors.cmd(script)} ${colors.cmd(capInfo.spawnArgs.join(" "))}`);
 
         if (this.dvr.config.debug.recorder) {
-            const logStream = fs.createWriteStream("./" + capInfo.filename + ".log", {flags: "w"});
+            const logStream = fs.createWriteStream(`.${capInfo.filename}.log`, {flags: "w"});
             capture.stdout.pipe(logStream);
             capture.stderr.pipe(logStream);
         }
 
         if (capture.pid) {
-            const filename = capInfo.filename + ".ts";
-            this.infoMsg(`${colors.name(streamer.nm)}` + " recording started: " + `${colors.file(filename)}`);
+            const filename = `${capInfo.filename}.ts`;
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} recording started: ${colors.file(filename)}`);
             this.storeCapInfo(streamer, filename, capture, false);
         } else {
-            this.errMsg(`${colors.name(streamer.nm)}` + " capture failed to start");
+            this.print(MSG.ERROR, `${colors.name(streamer.nm)} capture failed to start`);
         }
 
         capture.on("close", () => {
@@ -522,15 +520,15 @@ export abstract class Site {
     }
 
     protected endCapture(streamer: Streamer, capInfo: CapInfo) {
-        const fullname = capInfo.filename + ".ts";
+        const fullname = `${capInfo.filename}.ts`;
         try {
-            const stats: fs.Stats = fs.statSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
+            const stats: fs.Stats = fs.statSync(path.join(this.dvr.config.recording.captureDirectory, fullname));
             if (stats) {
                 const sizeMB = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
-                    this.infoMsg(`${colors.name(streamer.nm)}` + " recording automatically deleted (size=" +
-                        sizeMB.toString() + " < minSize=" + this.dvr.config.recording.minSize.toString() + ")");
-                    fs.unlinkSync(this.dvr.config.recording.captureDirectory + "/" + fullname);
+                    this.print(MSG.INFO, `${colors.name(streamer.nm)} recording automatically deleted (size=${sizeMB.toString()}` +
+                        `< minSize=${this.dvr.config.recording.minSize.toString()})`);
+                    fs.unlinkSync(path.join(this.dvr.config.recording.captureDirectory, fullname));
                     this.storeCapInfo(streamer, "", null, false);
                 } else {
                     this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
@@ -538,10 +536,10 @@ export abstract class Site {
             }
         } catch (err) {
             if (err.code === "ENOENT") {
-                this.errMsg(`${colors.name(streamer.nm)}` + ", " + `${colors.file(capInfo.filename)}` +
-                    ".ts not found in capturing directory, cannot convert to " + this.dvr.config.recording.autoConvertType);
+                this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(capInfo.filename)}.ts not found ` +
+                    `in capturing directory, cannot convert to ${this.dvr.config.recording.autoConvertType}`);
             } else {
-                this.errMsg(`${colors.name(streamer.nm)}` + ": " + `${err.toString()}`);
+                this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);
             }
             this.storeCapInfo(streamer, "", null, false);
         }
@@ -563,15 +561,8 @@ export abstract class Site {
         }
     }
 
-    public infoMsg(msg: string) {
-        this.dvr.infoMsg(msg, this);
+    public print(lvl: MSG, msg: string) {
+        this.dvr.print(lvl, msg, this);
     }
 
-    public errMsg(msg: string) {
-        this.dvr.errMsg(msg, this);
-    }
-
-    public dbgMsg(msg: string) {
-        this.dvr.dbgMsg(msg, this);
-    }
 }

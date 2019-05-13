@@ -1,6 +1,6 @@
 "use strict";
 
-import {Dvr, Config} from "./dvr";
+import {Dvr, Config, MSG} from "./dvr";
 import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
@@ -650,7 +650,7 @@ export class Tui {
                             site.writeConfig();
                         }
                     } catch (err) {
-                        this.dvr.errMsg(err.toString());
+                        this.dvr.print(MSG.ERROR, err.toString());
                     }
                 }
                 return;

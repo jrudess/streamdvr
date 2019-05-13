@@ -1,6 +1,11 @@
 import { PostProcess } from "./postprocess";
 import { Site } from "./site";
 import { Tui } from "./tui";
+export declare enum MSG {
+    INFO = 0,
+    DEBUG = 1,
+    ERROR = 2
+}
 export interface EnableConfig {
     daemon: boolean;
 }
@@ -80,7 +85,5 @@ export declare abstract class Dvr {
     getDateTime(): string;
     protected log(text: string, options?: LogOptions): void;
     protected msg(msg: string, site?: Site | null, options?: LogOptions): void;
-    infoMsg(msg: string, site?: Site | null): void;
-    errMsg(msg: string, site?: Site | null): void;
-    dbgMsg(msg: string, site?: Site | null): void;
+    print(lvl: MSG, msg: string, site?: Site | null): void;
 }

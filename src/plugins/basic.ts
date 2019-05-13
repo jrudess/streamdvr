@@ -1,7 +1,7 @@
 "use strict";
 
 import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site";
-import {Dvr} from "../core/dvr";
+import {Dvr, MSG} from "../core/dvr";
 import {Tui} from "../core/tui";
 import {execSync} from "child_process";
 
@@ -34,7 +34,7 @@ class Basic extends Site {
     public start() {
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
-                this.infoMsg("Upgrading " + this.cfgFile + " to new format, this is a one-time conversion.");
+                this.print(MSG.INFO, `Upgrading ${this.cfgFile} to new format, this is a one-time conversion.`);
                 this.convertFormat(this.config.streamers);
             }
         }
@@ -72,21 +72,21 @@ class Basic extends Site {
     protected m3u8Script(nm: string) {
         const streamerUrl = this.config.siteUrl + nm + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
-        let cmd           = script + " -s " + streamerUrl;
+        let cmd           = `${script} -s ${streamerUrl}`;
 
         if (this.dvr.config.proxy.enable) {
-            cmd = cmd + " -p " + this.dvr.config.proxy.server;
+            cmd = `${cmd} -p ${this.dvr.config.proxy.server}`;
         }
 
         if (this.config.username) {
-            cmd = cmd + " -u --" + this.listName + "-username=" + this.config.username;
+            cmd = `${cmd} -u --${this.listName}-username=${this.config.username}`;
         }
 
         if (this.config.password) {
-            cmd = cmd + " -p --" + this.listName + "-password=" + this.config.password;
+            cmd = `${cmd} -p --${this.listName}-password=${this.config.password}`;
         }
 
-        this.dbgMsg(`${colors.name(nm)}` + " running: " + `${colors.cmd(cmd)}`);
+        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(cmd)}`);
 
         // m3u8 url in stdout
         try {
@@ -98,7 +98,7 @@ class Basic extends Site {
             }
         } catch (err) {
             if (err.stdout) {
-                this.errMsg(err.stdout.toString());
+                this.print(MSG.ERROR, err.stdout.toString());
             }
         }
 
@@ -115,7 +115,7 @@ class Basic extends Site {
             m3u8: "",
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
-        options.msg    = `${colors.name(streamer.nm)}` + " is " + streamer.state;
+        options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
         super.checkStreamerState(streamer, options);
     }
 
@@ -133,7 +133,7 @@ class Basic extends Site {
             await Promise.all(queries);
             return true;
         } catch (err) {
-            this.errMsg(err.toString());
+            this.print(MSG.ERROR, err.toString());
             return false;
         }
     }
@@ -181,7 +181,7 @@ class Basic extends Site {
             }
             return true;
         } catch (err) {
-            this.errMsg(err.toString());
+            this.print(MSG.ERROR, err.toString());
             return false;
         }
     }

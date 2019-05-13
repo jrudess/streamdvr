@@ -5,6 +5,7 @@
 require("events").EventEmitter.prototype._maxListeners = 100;
 
 const fs    = require("fs");
+const path  = require("path");
 const yaml  = require("js-yaml");
 const {Dvr} = require("./lib/core/dvr");
 
@@ -23,7 +24,7 @@ class Streamdvr extends Dvr {
         const ymlfiles = allfiles.filter((x) => x.match(/.*\.yml$/ig) && !x.match(/.*_updates\.yml/ig) && x !== "config.yml");
 
         for (let i = 0; i < ymlfiles.length; i++) {
-            const config = yaml.safeLoad(fs.readFileSync(this.configdir + ymlfiles[i], "utf8"));
+            const config = yaml.safeLoad(fs.readFileSync(path.join(this.configdir, ymlfiles[i]), "utf8"));
             if (config && config.plugin && config.enable) {
                 // TODO: print better error message if config.plugin doesn't exist
                 this.plugins.push({
