@@ -3,9 +3,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source $DIR/record_setup.sh
 
 if [ "$debug" -eq "0" ]; then
-    debugargs="-ldebug"
-else
     debugargs="-Q"
+else
+    debugargs="-ldebug"
 fi
 
 if [ ! -z "$proxyserver" ]; then
