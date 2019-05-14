@@ -64,13 +64,13 @@ export declare abstract class Site {
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
-    getStreamerList(): Streamer[];
+    getStreamerList(): Array<Streamer>;
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
     abstract start(): void;
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
-    protected getCaptureArguments(url: string, filename: string, params?: Array<string>): string[];
+    protected getCaptureArguments(url: string, filename: string, params?: Array<string>): Array<string>;
     processUpdates(cmd: UpdateCmd): Promise<void>;
     protected abstract createListItem(id: Id): Array<string>;
     updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean>;

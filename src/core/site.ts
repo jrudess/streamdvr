@@ -110,7 +110,7 @@ export abstract class Site {
 
     }
 
-    public getStreamerList() {
+    public getStreamerList(): Array<Streamer> {
         return Array.from(this.streamerList.values());
     }
 
@@ -122,7 +122,7 @@ export abstract class Site {
         return filename;
     }
 
-    protected checkFileSize() {
+    protected checkFileSize(): void {
         const maxSize: number = this.dvr.config.recording.maxSize;
         for (const streamer of this.streamerList.values()) {
             if (streamer.capture === null || streamer.postProcess) {
@@ -157,8 +157,8 @@ export abstract class Site {
     public abstract async connect(): Promise<boolean>;
     public abstract async disconnect(): Promise<boolean>;
 
-    protected getCaptureArguments(url: string, filename: string, params?: Array<string>) {
-        let args = [
+    protected getCaptureArguments(url: string, filename: string, params?: Array<string>): Array<string> {
+        let args: Array<string> = [
             "-o",
             path.join(this.dvr.config.recording.captureDirectory, `${filename}.ts`),
             "-s",
@@ -218,7 +218,7 @@ export abstract class Site {
         }
 
         try {
-            const dirty = await this.updateStreamers(list, cmd);
+            const dirty: boolean = await this.updateStreamers(list, cmd);
             if (dirty) {
                 this.writeConfig();
             }
@@ -230,7 +230,7 @@ export abstract class Site {
     protected abstract createListItem(id: Id): Array<string>;
 
     public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
-        let dirty = false;
+        let dirty: boolean = false;
         if (cmd === UpdateCmd.PAUSE) {
             dirty = await this.pauseStreamer(id, pauseTimer);
         } else if (cmd === UpdateCmd.ADD) {
@@ -256,8 +256,8 @@ export abstract class Site {
         return dirty;
     }
 
-    protected addStreamer(id: Id, isTemp?: boolean) {
-        let added = true;
+    protected addStreamer(id: Id, isTemp?: boolean): boolean {
+        let added: boolean = true;
 
         for (const entry of this.config.streamers) {
             if (entry[0] === id.uid) {
@@ -295,7 +295,7 @@ export abstract class Site {
         return added;
     }
 
-    protected removeStreamer(id: Id) {
+    protected removeStreamer(id: Id): boolean {
         if (this.streamerList.has(id.uid)) {
             this.print(MSG.INFO, `${colors.name(id.nm)} removed from capture list.`);
             this.haltCapture(id.uid);
@@ -331,7 +331,7 @@ export abstract class Site {
         return dirty;
     }
 
-    public pause() {
+    public pause(): void {
         this.paused = !this.paused;
         for (const [, streamer] of this.streamerList) {
             streamer.paused = this.paused;
@@ -364,7 +364,7 @@ export abstract class Site {
         return false;
     }
 
-    protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions) {
+    protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions): void {
         if (!options) {
             this.print(MSG.ERROR, "site::checkStreamerState() options input is undefined");
             return;
@@ -395,7 +395,7 @@ export abstract class Site {
         this.render(false);
     }
 
-    public async getStreamers() {
+    public async getStreamers(): Promise<boolean> {
         if (this.dvr.tryingToExit) {
             this.print(MSG.DEBUG, "Skipping lookup while exit in progress...");
             return false;
@@ -414,7 +414,7 @@ export abstract class Site {
         this.render(true);
     }
 
-    public getNumCapsInProgress() {
+    public getNumCapsInProgress(): number {
         let count = 0;
 
         for (const streamer of this.streamerList.values()) {
@@ -435,17 +435,17 @@ export abstract class Site {
         }
     }
 
-    protected haltCapture(uid: string) {
+    protected haltCapture(uid: string): void {
         if (this.streamerList.has(uid)) {
-            const streamer = this.streamerList.get(uid);
+            const streamer: Streamer | undefined = this.streamerList.get(uid);
             if (streamer && streamer.capture !== null && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
             }
         }
     }
 
-    public writeConfig() {
-        const fd = fs.openSync(this.cfgFile, "w");
+    public writeConfig(): void {
+        const fd: number = fs.openSync(this.cfgFile, "w");
         this.print(MSG.DEBUG, `Rewriting ${this.cfgFile}`);
         fs.writeFileSync(fd, yaml.safeDump(this.config));
         fs.closeSync(fd);
@@ -482,13 +482,13 @@ export abstract class Site {
         return completeDir;
     }
 
-    protected refresh(streamer: Streamer) {
+    protected refresh(streamer: Streamer): void {
         if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
             this.checkStreamerState(streamer);
         }
     }
 
-    protected startCapture(capInfo: CapInfo) {
+    protected startCapture(capInfo: CapInfo): void {
         if (!capInfo || !capInfo.streamer || capInfo.spawnArgs.length === 0) {
             return;
         }
@@ -500,13 +500,13 @@ export abstract class Site {
         this.print(MSG.DEBUG, `Starting recording: ${colors.cmd(script)} ${colors.cmd(capInfo.spawnArgs.join(" "))}`);
 
         if (this.dvr.config.debug.recorder) {
-            const logStream = fs.createWriteStream(`.${capInfo.filename}.log`, {flags: "w"});
+            const logStream: fs.WriteStream = fs.createWriteStream(`.${capInfo.filename}.log`, {flags: "w"});
             capture.stdout.pipe(logStream);
             capture.stderr.pipe(logStream);
         }
 
         if (capture.pid) {
-            const filename = `${capInfo.filename}.ts`;
+            const filename: string = `${capInfo.filename}.ts`;
             this.print(MSG.INFO, `${colors.name(streamer.nm)} recording started: ${colors.file(filename)}`);
             this.storeCapInfo(streamer, filename, capture, false);
         } else {
@@ -519,12 +519,12 @@ export abstract class Site {
 
     }
 
-    protected endCapture(streamer: Streamer, capInfo: CapInfo) {
-        const fullname = `${capInfo.filename}.ts`;
+    protected endCapture(streamer: Streamer, capInfo: CapInfo): void {
+        const fullname: string = `${capInfo.filename}.ts`;
         try {
             const stats: fs.Stats = fs.statSync(path.join(this.dvr.config.recording.captureDirectory, fullname));
             if (stats) {
-                const sizeMB = stats.size / 1048576;
+                const sizeMB: number = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
                     this.print(MSG.INFO, `${colors.name(streamer.nm)} recording automatically deleted (size=${sizeMB.toString()}` +
                         `< minSize=${this.dvr.config.recording.minSize.toString()})`);
@@ -546,7 +546,7 @@ export abstract class Site {
         this.refresh(streamer);
     }
 
-    public clearProcessing(streamer: Streamer) {
+    public clearProcessing(streamer: Streamer): void {
         // Note: setting postProcess to undefined releases program to exit
         this.storeCapInfo(streamer, "", null, false);
         this.redrawList = true;
@@ -555,13 +555,13 @@ export abstract class Site {
         this.refresh(streamer);
     }
 
-    protected render(redrawList: boolean) {
+    protected render(redrawList: boolean): void {
         if (this.dvr.config.tui.enable) {
             this.tui.render(redrawList || this.redrawList, this);
         }
     }
 
-    public print(lvl: MSG, msg: string) {
+    public print(lvl: MSG, msg: string): void {
         this.dvr.print(lvl, msg, this);
     }
 

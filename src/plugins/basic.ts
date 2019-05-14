@@ -18,7 +18,7 @@ class Basic extends Site {
         this.urlback = urlback;
     }
 
-    protected convertFormat(streamerList: Array<any>) {
+    protected convertFormat(streamerList: Array<any>): void {
         const newList: Array<any> = [];
         for (const streamer of streamerList.values()) {
             newList.push([streamer, "unpaused"]);
@@ -31,7 +31,7 @@ class Basic extends Site {
         return [id.nm, "unpaused"];
     }
 
-    public start() {
+    public start(): void {
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
                 this.print(MSG.INFO, `Upgrading ${this.cfgFile} to new format, this is a one-time conversion.`);
@@ -61,11 +61,11 @@ class Basic extends Site {
         this.redrawList = true;
     }
 
-    public async connect() {
+    public async connect(): Promise<boolean> {
         return true;
     }
 
-    public async disconnect() {
+    public async disconnect(): Promise<boolean> {
         return true;
     }
 
@@ -105,21 +105,21 @@ class Basic extends Site {
         return {status: false, m3u8: ""};
     }
 
-    protected checkStreamerState(streamer: Streamer) {
+    protected checkStreamerState(streamer: Streamer): void {
         // Detect if streamer is online or actively streaming
         const stream = this.m3u8Script(streamer.nm);
         const options: StreamerStateOptions = {
             msg: "",
             isStreaming: stream.status,
             prevState: streamer.state,
-            m3u8: stream.m3u8
+            m3u8: stream.m3u8,
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
         options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
         super.checkStreamerState(streamer, options);
     }
 
-    protected async checkBatch(batch: Array<string>) {
+    protected async checkBatch(batch: Array<string>): Promise<boolean> {
         const queries = [];
 
         for (const item of batch) {
@@ -138,7 +138,7 @@ class Basic extends Site {
         }
     }
 
-    protected serialize(nms: Array<string>) {
+    protected serialize(nms: Array<string>): Array<Array<string>> {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
@@ -163,7 +163,7 @@ class Basic extends Site {
         return serRuns;
     }
 
-    public async getStreamers() {
+    public async getStreamers(): Promise<boolean> {
         if (!super.getStreamers()) {
             return false;
         }

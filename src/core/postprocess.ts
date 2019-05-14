@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as mv from "mv";
 import * as path from "path";
-import {spawn} from "child_process";
+import {spawn, ChildProcessWithoutNullStreams} from "child_process";
 import {Dvr, Config, MSG} from "../core/dvr.js";
 import {Site, Streamer, CapInfo} from "../core/site.js";
 
@@ -21,14 +21,14 @@ export class PostProcess {
         this.postProcessQ = [];
     }
 
-    public add(capInfo: CapInfo) {
+    public add(capInfo: CapInfo): void {
         this.postProcessQ.push(capInfo);
         if (this.postProcessQ.length === 1) {
             this.convert();
         }
     }
 
-    protected convert() {
+    protected convert(): void {
 
         const capInfo: CapInfo          = this.postProcessQ[0];
         const site: Site | null         = capInfo.site;
@@ -53,9 +53,9 @@ export class PostProcess {
             return;
         }
 
-        const script = this.dvr.calcPath(this.config.recording.postprocess);
-        const args = [ capPath, cmpPath, fileType ];
-        const myCompleteProcess = spawn(script, args);
+        const script: string = this.dvr.calcPath(this.config.recording.postprocess);
+        const args: Array<string> = [ capPath, cmpPath, fileType ];
+        const myCompleteProcess: ChildProcessWithoutNullStreams = spawn(script, args);
 
         this.dvr.print(MSG.INFO, `${namePrint} converting to ${fileType}: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
@@ -81,7 +81,7 @@ export class PostProcess {
         });
     }
 
-    protected postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string) {
+    protected postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string): void {
         if (!this.config.postprocess) {
             this.nextConvert(site, streamer);
             return;
@@ -93,7 +93,7 @@ export class PostProcess {
 
         this.dvr.print(MSG.INFO, `${namePrint} running global postprocess script: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
-        const userPostProcess = spawn(script, args);
+        const userPostProcess: ChildProcessWithoutNullStreams = spawn(script, args);
 
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, userPostProcess, true);
@@ -105,7 +105,7 @@ export class PostProcess {
         });
     }
 
-    protected nextConvert(site: Site | null, streamer: Streamer | null) {
+    protected nextConvert(site: Site | null, streamer: Streamer | null): void {
 
         if (site && streamer) {
             site.clearProcessing(streamer);
@@ -118,7 +118,7 @@ export class PostProcess {
         }
     }
 
-    protected getCompleteDir(site: Site | null, streamer: Streamer | null) {
+    protected getCompleteDir(site: Site | null, streamer: Streamer | null): string {
         if (site && streamer) {
             return site.getCompleteDir(streamer);
         }

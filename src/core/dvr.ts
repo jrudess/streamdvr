@@ -114,8 +114,8 @@ export abstract class Dvr {
 
         if (this.config.log.enable) {
             const {Console} = require("console");
-            const attr = this.config.log.append ? "a" : "w";
-            const logFile = fs.createWriteStream("./streamdvr.log", {flags: attr});
+            const attr: string = this.config.log.append ? "a" : "w";
+            const logFile: fs.WriteStream = fs.createWriteStream("./streamdvr.log", {flags: attr});
             this.logger = new Console({stdout: logFile, stderr: logFile});
         }
 
@@ -127,7 +127,7 @@ export abstract class Dvr {
 
     }
 
-    protected findConfig() {
+    protected findConfig(): string {
         let checkHome = 1;
 
         if (process.env.XDG_CONFIG_HOME) {
@@ -146,7 +146,7 @@ export abstract class Dvr {
             this.configdir = "./config/";
         }
 
-        const configfile = path.join(this.configdir, "config.yml");
+        const configfile: string = path.join(this.configdir, "config.yml");
         if (!fs.existsSync(configfile)) {
             console.log("ERROR: Could not find config.yml");
             process.exit(1);
@@ -155,7 +155,7 @@ export abstract class Dvr {
         return configfile;
     }
 
-    public loadConfig() {
+    public loadConfig(): void {
         try {
             this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
@@ -186,13 +186,13 @@ export abstract class Dvr {
 
     public abstract exit(): void;
 
-    public mkdir(dir: string) {
-        const fulldir = path.resolve(dir);
+    public mkdir(dir: string): string {
+        const fulldir: string = path.resolve(dir);
         fs.mkdirSync(fulldir, {recursive: true});
         return fulldir;
     }
 
-    public calcPath(file: string) {
+    public calcPath(file: string): string {
         // Check if file is relative or absolute
         if (file.charAt(0) !== "/") {
             return this.path + "/" + file;
@@ -203,7 +203,7 @@ export abstract class Dvr {
     public async start() {
         // Scan capture directory for leftover ts files to convert
         // in case of a bad shutdown
-        const allfiles = fs.readdirSync(this.config.recording.captureDirectory);
+        const allfiles: Array<string> = fs.readdirSync(this.config.recording.captureDirectory);
         const tsfiles: Array<string> = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
 
         for (const ts of tsfiles.values()) {
@@ -229,16 +229,16 @@ export abstract class Dvr {
             } catch (err) {
                 site.print(MSG.ERROR, err.toString());
             }
-            const interval = site.config.scanInterval ? site.config.scanInterval : 300;
+            const interval: number = site.config.scanInterval ? site.config.scanInterval : 300;
             await sleep(interval * 1000);
         }
     }
 
-    public getDateTime() {
+    public getDateTime(): string {
         return moment().format(this.config.recording.dateFormat);
     }
 
-    protected log(text: string, options?: LogOptions) {
+    protected log(text: string, options?: LogOptions): void {
         if (this.config.tui.enable && this.tui) {
             this.tui.log(text);
         } else if (options && options.trace && this.config.debug.errortrace) {
@@ -251,7 +251,7 @@ export abstract class Dvr {
         }
     }
 
-    protected msg(msg: string, site?: Site | null, options?: LogOptions) {
+    protected msg(msg: string, site?: Site | null, options?: LogOptions): void {
         const time: string = `[${this.getDateTime()}]`;
         if (site) {
             this.log(`${colors.time(time)} ${colors.site(site.padName)} ${msg}`, options);
@@ -262,7 +262,7 @@ export abstract class Dvr {
         }
     }
 
-    public print(lvl: MSG, msg: string, site?: Site | null) {
+    public print(lvl: MSG, msg: string, site?: Site | null): void {
         let out: string = "";
         const options = {trace: false};
         if (lvl === MSG.ERROR) {
