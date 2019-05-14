@@ -32,6 +32,13 @@ else
         exit 0
     fi
 
+    # Error returned by twitch lookups
+    grep -i "unable to find channel" $tmp/stdout > /dev/null 2> /dev/null
+    if [ "$?" -eq 0 ]; then
+        echo "$site: Streamer does not exist"
+        exit 1
+    fi
+
     # Print the error message to stdout for streamdvr to reprint
     cat $tmp/stdout
     cat $tmp/stderr
