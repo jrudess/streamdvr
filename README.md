@@ -101,15 +101,15 @@ All support for streaming sites is handled by 3rd party programs.  The site conf
           Used for log output and filenames
         * `includeSiteInDir`
           This option only applies if streamerSubdir is set.
-          recrodings are placed in completeDir/streamer_site
-          if siteSubdir is set then completeDir/site/streamer_site
+          Recordings are placed in completeDir/streamer_site.
+          If siteSubdir is set then completeDir/site/streamer_site
         * `streamerSubdir`
-          recordings are placed in completeDir/streamer/
-          if includeSiteInDir is set then completeDir/streamer_site/
-          if siteSubdir is set then completeDir/site/{streamer, streamer_site}
+          Recordings are placed in `completeDir/streamer/`
+          If includeSiteInDir is set then `completeDir/streamer_site/`.
+          If siteSubdir is set then `completeDir/site/{streamer, streamer_site}`.
         * `siteSubdir`
-          recordings are placed in completeDir/site/
-          if streamerSubdir is set then completeDir/site/streamer/
+          Recordings are placed in `completeDir/site/`.
+          If streamerSubdir is set then `completeDir/site/streamer/`.
         * `keepTsFile`
           This option leaves the ts file in captureDir after an
           mp4/mkv is converted.  This is mostly a 'debug' option.
