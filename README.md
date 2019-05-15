@@ -85,49 +85,66 @@ All support for streaming sites is handled by 3rd party programs.  The site conf
 
 * Configuration Options for `config.yml`
 
-    * enable
-        * daemon: Suppresses standard out messages
-    * recording
-        * autoConvertType: mp4, mkv, ts (no conversion)
-        * captureDirectory: Temporary storage area while recording
-        * completeDirectory: Final area to store recordings
-        * postprocess: Script to use to convert ts to mp4/mkv
-        * dateFormat: Used for log output and filenames
-        * includeSiteInDir: completeDir/site/streamer/
+    * `enable`
+        * `daemon`
+          Suppresses standard out messages
+    * `recording`
+        * `autoConvertType`
+          mp4, mkv, ts (no conversion)
+        * `captureDirectory`
+          Temporary storage area while recording
+        * `completeDirectory`
+          Final area to store recordings
+        * `postprocess`
+          Script to use to convert ts to mp4/mkv
+        * `dateFormat`
+          Used for log output and filenames
+        * `includeSiteInDir`
           This option only applies if streamerSubdir is set.
           recrodings are placed in completeDir/streamer_site
           if siteSubdir is set then completeDir/site/streamer_site
-        * streamerSubdir:
+        * `streamerSubdir`
           recordings are placed in completeDir/streamer/
-          if siteSubdir is set then completeDir/site/streamer
-        * siteSubdir:
+          if includeSiteInDir is set then completeDir/streamer_site/
+          if siteSubdir is set then completeDir/site/{streamer, streamer_site}
+        * `siteSubdir`
           recordings are placed in completeDir/site/
           if streamerSubdir is set then completeDir/site/streamer/
-        * keepTsFile:
+        * `keepTsFile`
           This option leaves the ts file in captureDir after an
           mp4/mkv is converted.  This is mostly a 'debug' option.
-        * minSize: Minimum size in megabytes for a recording.
+        * `minSize`
+          Minimum size in megabytes for a recording.
           Recordings smaller than this size are automatically deleted.
-        * maxSize: Maximum size in megabytes for a recording.
+        * `maxSize`
+          Maximum size in megabytes for a recording.
           Recordings that are larger than this size are halted and
           converted, then restarted.
-    * postprocess: path to custom post-processing script that is run after
+    * `postprocess`
+      Path to custom post-processing script that is run after
       a recording has been converted to its final file format.
       Arguments to script: arg0=path arg1=filename
-    * log
-        * enable: Store log output to streamdvr.log
-        * append:
+    * `log`
+        * `enable`
+          Store log output to streamdvr.log
+        * `append`
           Append new output to the file when true.
           Overwrite new output to the file when false.
-    * tui
-        * enable: Allow interactive control of streamdvr with a text interface
-        * allowUnicode: Disable use of any fancy unicode characters in TUI output
-    * colors:  Allows customization of various colors used in logs or TUI
-    * proxy
+    * `tui`
+        * `enable`
+          Allow interactive control of streamdvr with a text interface
+        * `allowUnicode`
+          Disable use of any fancy unicode characters in TUI output
+    * `colors`
+       Allows customization of various colors used in logs or TUI
+    * `proxy`
         * enable: Turns on socks5 proxy forwarding for m3u8_streamlink.sh and record_streamlink.sh
         * server: socks5://127.0.0.1:9999
-    * debug:
-        * log: Enables debug messages to print in the normal log
-        * recorder: Store the ffmpeg/streamlink logs to a file when recording
-        * errortrace: Include a stack-trace for each error message
+    * `debug`
+        * `log`
+          Enables debug messages to print in the normal log
+        * `recorder`
+          Store the ffmpeg/streamlink logs to a file when recording
+        * `errortrace`
+          Include a stack-trace for each error message
 
