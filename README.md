@@ -138,8 +138,10 @@ All support for streaming sites is handled by 3rd party programs.  The site conf
     * `colors`
        Allows customization of various colors used in logs or TUI
     * `proxy`
-        * enable: Turns on socks5 proxy forwarding for m3u8_streamlink.sh and record_streamlink.sh
-        * server: socks5://127.0.0.1:9999
+        * `enable`
+          Turns on socks5 proxy forwarding for m3u8_streamlink.sh and record_streamlink.sh
+        * `server`
+          socks5://127.0.0.1:9999
     * `debug`
         * `log`
           Enables debug messages to print in the normal log
