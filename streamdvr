@@ -49,14 +49,22 @@ class Streamdvr extends Dvr {
 
     async start() {
         super.start();
+        const plugins = [];
+
         for (const plugin of this.plugins.values()) {
             if (plugin.enable) {
-                plugin.handle.start();
-                await plugin.handle.connect();
-                this.run(plugin.handle);
+                plugins.push(this.startPlugin(plugin));
             }
         }
+        await Promise.all(plugins);
     }
+
+    async startPlugin(plugin) {
+        plugin.handle.start();
+        await plugin.handle.connect();
+        this.run(plugin.handle);
+    }
+
 
     busy() {
         for (const plugin of this.plugins.values()) {
