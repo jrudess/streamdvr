@@ -139,7 +139,6 @@ export abstract class Dvr {
 
         if (checkHome) {
             this.configdir = `${process.env.HOME}/.config/streamdvr`;
-            console.log(this.configdir);
         }
 
         if (!fs.existsSync(path.join(this.configdir, "config.yml"))) {

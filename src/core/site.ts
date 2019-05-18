@@ -426,7 +426,7 @@ export abstract class Site {
         return count;
     }
 
-    public haltAllCaptures() {
+    public haltAllCaptures(): void {
         for (const streamer of this.streamerList.values()) {
             // Don't kill post-process jobs, or recording can get lost.
             if (streamer.capture !== null && streamer.postProcess === false) {
