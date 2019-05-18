@@ -49,9 +49,9 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 * To suppress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
 
 * Filename formatting:
-  * %s - Site Name
-  * %n - Streamer Name
-  * %d - Date and Time
+  * `%s` Site Name
+  * `%n` Streamer Name
+  * `%d` Date and Time
 
 * TUI navigation:
   * `1` to focus the streamer list, `Esc` to unfocus
@@ -100,16 +100,16 @@ All support for streaming sites is handled by 3rd party programs.  The site conf
         * `dateFormat`
           Used for log output and filenames
         * `includeSiteInDir`
-          This option only applies if streamerSubdir is set.
-          Recordings are placed in completeDir/streamer_site.
-          If siteSubdir is set then completeDir/site/streamer_site
+          This option only applies if `streamerSubdir` is set.
+          Recordings are placed in `completeDir/streamer_site`.
+          If `siteSubdir` is set then `completeDir/site/streamer_site`.
         * `streamerSubdir`
           Recordings are placed in `completeDir/streamer/`
-          If includeSiteInDir is set then `completeDir/streamer_site/`.
-          If siteSubdir is set then `completeDir/site/{streamer, streamer_site}`.
+          If `includeSiteInDir` is set then `completeDir/streamer_site/`.
+          If `siteSubdir` is set then `completeDir/site/{streamer, streamer_site}`.
         * `siteSubdir`
           Recordings are placed in `completeDir/site/`.
-          If streamerSubdir is set then `completeDir/site/streamer/`.
+          If `streamerSubdir` is set then `completeDir/site/streamer/`.
         * `keepTsFile`
           This option leaves the ts file in captureDir after an
           mp4/mkv is converted.  This is mostly a 'debug' option.
