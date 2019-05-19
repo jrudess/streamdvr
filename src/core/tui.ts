@@ -9,7 +9,7 @@ export class Tui {
 
     protected dvr: Dvr;
     protected config: Config;
-    protected SITES: Array<Site>;
+    protected SITES: Map<string, Site>;
     protected hideOffline: boolean;
     protected listSelect: any;
     protected sitelistSelect: any;
@@ -26,7 +26,7 @@ export class Tui {
 
         this.dvr = dvr;
         this.config = dvr.config;
-        this.SITES = [];
+        this.SITES = new Map();
         this.hideOffline = false;
 
         this.createTui();
@@ -69,10 +69,10 @@ export class Tui {
         });
 
         this.sitelist = blessed.listtable({
-            top: "100%-11",
+            top: "100%-13",
             left: 0,
             width: 71,
-            height: 10,
+            height: 12,
             align: "left",
             interactive: false,
             keys: true,
@@ -184,10 +184,10 @@ export class Tui {
         this.listmenu.hide();
 
         this.sitemenu = blessed.list({
-            top: "100%-9",
+            top: "100%-11",
             left: 18,
-            width: 16,
-            height: 6,
+            width: 23,
+            height: 7,
             padding: {
                 left: 3,
                 right: 3,
@@ -295,7 +295,7 @@ export class Tui {
         });
 
         this.list.key("r", () => {
-            for (const site of this.SITES) {
+            for (const [, site] of this.SITES) {
                 site.getStreamers();
             }
         });
@@ -342,9 +342,9 @@ export class Tui {
             switch (index) {
             case 0: // pause
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, UpdateCmd.PAUSE);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
+                    this.updateStreamerList(site, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -358,9 +358,9 @@ export class Tui {
                 break;
             case 2: // remove
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
-                    this.updateList(site, name, UpdateCmd.REMOVE);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
+                    this.updateStreamerList(site, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -388,10 +388,10 @@ export class Tui {
 
         this.sitemenu.on("select", (item: any, index: number) => {
             if (this.sitelistSelect && this.sitelistSelect.length >= 1) {
-                const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
+                const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).trim();
                 switch (index) {
                 case 0: // pause
-                    this.updateList(site, "", UpdateCmd.PAUSE);
+                    this.updateSiteList(site, UpdateCmd.PAUSE);
                     this.sitelist.focus();
                     this.sitelist.interactive = true;
                     this.sitemenu.hide();
@@ -402,6 +402,13 @@ export class Tui {
                     this.inputBar.show();
                     this.render(false);
                     this.inputBar.focus();
+                    break;
+                case 2: // enable/disable
+                    this.updateSiteList(site, UpdateCmd.EN_DIS);
+                    this.sitelist.focus();
+                    this.sitelist.interactive = true;
+                    this.sitemenu.hide();
+                    this.render(false);
                     break;
                 }
             }
@@ -452,6 +459,7 @@ export class Tui {
 
         this.sitemenu.pushItem("pause");
         this.sitemenu.pushItem("add");
+        this.sitemenu.pushItem("enable/disable");
         this.sitemenu.setScrollPerc(100);
 
         this.list.selected = 1;
@@ -465,11 +473,11 @@ export class Tui {
 
             if (this.list.interactive) {
                 if (this.listSelect && this.listSelect.length >= 2) {
-                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).toLowerCase();
-                    const name: string = blessed.helpers.stripTags(this.listSelect[0]);
+                    const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
+                    const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
                     new Promise(async () => {
-                        await this.updateList(site, name, UpdateCmd.PAUSE);
-                        await this.updateList(site, name, UpdateCmd.PAUSE, false, Number(text));
+                        await this.updateStreamerList(site, name, UpdateCmd.PAUSE);
+                        await this.updateStreamerList(site, name, UpdateCmd.PAUSE, false, Number(text));
                         return true;
                     });
                 }
@@ -479,8 +487,8 @@ export class Tui {
                 return;
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
-                    const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).toLowerCase();
-                    this.updateList(site, text, UpdateCmd.ADD);
+                    const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).trim();
+                    this.updateStreamerList(site, text, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -501,6 +509,7 @@ export class Tui {
         const temp: boolean  = tokens[0] === "addtemp";
         const pause: boolean = tokens[0] === "pause" || tokens[0] === "unpause";
         const add: boolean   = tokens[0] === "add" || tokens[0] === "addtemp";
+        const siteName: string = tokens.length >= 1 ? tokens[1].toUpperCase() : "";
 
         switch (tokens[0]) {
         case "add":
@@ -512,16 +521,17 @@ export class Tui {
                                    pause ? UpdateCmd.PAUSE :
                                            UpdateCmd.REMOVE;
             if (tokens.length >= 3) {
+                const nm: string = tokens[2];
                 new Promise(async () => {
-                    await this.updateList(tokens[1], tokens[2], cmd, temp);
+                    await this.updateStreamerList(siteName, nm, cmd, temp);
                     if (pause && tokens.length >= 4) {
-                        await this.updateList(tokens[1], tokens[2], cmd, temp, Number(tokens[3]));
+                        await this.updateStreamerList(siteName, nm, cmd, temp, Number(tokens[3]));
                     }
                     return true;
                 });
             } else if (tokens.length === 2) {
                 new Promise(async () => {
-                    await this.updateList(tokens[1], "", cmd, temp);
+                    await this.updateSiteList(siteName, cmd);
                     return true;
                 });
             }
@@ -546,12 +556,16 @@ export class Tui {
     }
 
     public addSite(site: Site) {
-        this.SITES.push(site);
+        this.SITES.set(site.siteName, site);
+        this.redrawSites();
+    }
 
+    public redrawSites() {
         const sitetable: Array<Array<string>> = [];
         sitetable.push(["", ""]);
-        for (const site of this.SITES) {
-            sitetable.push(["{" + this.config.colors.state + "-fg}" + site.siteName + "{/}", ""]);
+        for (const [siteName, site] of this.SITES) {
+            const encolor: string = site.config.enable ? this.config.colors.state : this.config.colors.cmd;
+            sitetable.push([`{${encolor}-fg} ${siteName} {/}`, ""]);
         }
         this.sitelist.setData(sitetable);
     }
@@ -632,26 +646,50 @@ export class Tui {
     }
 
     // Add and remove streamers
-    protected async updateList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
-        for (const site of this.SITES.values()) {
-            if (siteName === site.listName) {
-                if (nm === "") {
-                    if (cmd === UpdateCmd.PAUSE) {
-                        site.pause();
+    protected async updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
+        for (const [name, site] of this.SITES) {
+            if (siteName === name) {
+                const id: Id = {
+                    uid: nm,
+                    nm: nm,
+                };
+                try {
+                    const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
+                    if (dirty) {
+                        site.writeConfig();
                     }
-                } else {
-                    const id: Id = {
-                        uid: nm,
-                        nm: nm,
-                    };
-                    try {
-                        const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
-                        if (dirty) {
-                            site.writeConfig();
+                } catch (err) {
+                    this.dvr.print(MSG.ERROR, err.toString());
+                }
+            }
+        }
+    }
+
+    protected async updateSiteList(siteName: string, cmd: UpdateCmd) {
+        for (const [name, site] of this.SITES) {
+            if (siteName === name) {
+                if (cmd === UpdateCmd.PAUSE) {
+                    site.pause();
+                } else if (cmd === UpdateCmd.EN_DIS) {
+                    if (site.config.enable) {
+                        site.print(MSG.INFO, "Site disabled");
+                        site.config.enable = false;
+                        await site.disconnect();
+                        site.haltAllCaptures();
+                        site.streamerList.clear();
+                    } else {
+                        site.print(MSG.INFO, "Site enabled");
+                        site.config.enable = true;
+                        site.start();
+                        await site.connect();
+                        if (!site.isRunning()) {
+                            this.dvr.run(site);
+                        } else {
+                            await site.getStreamers();
                         }
-                    } catch (err) {
-                        this.dvr.print(MSG.ERROR, err.toString());
                     }
+                    this.redrawSites();
+                    this.render(true);
                 }
                 return;
             }

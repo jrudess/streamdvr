@@ -218,15 +218,22 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
+        site.start();
         while (true) {
-            try {
+            if (site.config.enable) {
+                try {
+                    await site.disconnect();
+                    await site.connect();
+                    await site.processUpdates(UpdateCmd.ADD);
+                    await site.processUpdates(UpdateCmd.REMOVE);
+                    await site.getStreamers();
+                } catch (err) {
+                    site.print(MSG.ERROR, err.toString());
+                }
+            } else {
                 await site.disconnect();
-                await site.connect();
-                await site.processUpdates(UpdateCmd.ADD);
-                await site.processUpdates(UpdateCmd.REMOVE);
-                await site.getStreamers();
-            } catch (err) {
-                site.print(MSG.ERROR, err.toString());
+                site.stop();
+                return;
             }
             const interval: number = site.config.scanInterval ? site.config.scanInterval : 300;
             await sleep(interval * 1000);

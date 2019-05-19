@@ -58,6 +58,7 @@ export enum UpdateCmd {
     REMOVE = 0,
     ADD    = 1,
     PAUSE  = 2,
+    EN_DIS = 3,
 }
 
 export interface StreamerStateOptions {
@@ -80,6 +81,7 @@ export abstract class Site {
     protected updateName: string;
     protected paused: boolean;
     protected pauseIndex: number;
+    protected running: boolean;
 
     protected dvr: Dvr;
     protected tui: Tui;
@@ -93,10 +95,11 @@ export abstract class Site {
         this.cfgFile      = path.join(dvr.configdir, `${this.listName}.yml`);
         this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
         this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
-        this.streamerList = new Map(); // Refer to addStreamer() for JSON entries
+        this.streamerList = new Map(); // Refer to Streamer definition
         this.redrawList   = false;
         this.paused       = false;
         this.pauseIndex   = 1;
+        this.running      = false;
 
         if (dvr.config.tui.enable) {
             tui.addSite(this);
@@ -133,9 +136,9 @@ export abstract class Site {
             const sizeMB: number = Math.round(stat.size / 1048576);
             this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
             if (sizeMB === streamer.filesize) {
+                streamer.stuckcounter++;
                 this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
                     `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
-                streamer.stuckcounter++;
             } else {
                 streamer.filesize = sizeMB;
             }
@@ -153,7 +156,18 @@ export abstract class Site {
         }
     }
 
-    public abstract start(): void;
+    public start(): void {
+        this.running = true;
+    }
+
+    public stop(): void {
+        this.running = false;
+    }
+
+    public isRunning(): boolean {
+        return this.running;
+    }
+
     public abstract async connect(): Promise<boolean>;
     public abstract async disconnect(): Promise<boolean>;
 
@@ -483,7 +497,7 @@ export abstract class Site {
     }
 
     protected refresh(streamer: Streamer): void {
-        if (!this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
+        if (this.config.enable && !this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
             this.checkStreamerState(streamer);
         }
     }
@@ -527,11 +541,16 @@ export abstract class Site {
                 const sizeMB: number = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
                     this.print(MSG.INFO, `${colors.name(streamer.nm)} recording automatically deleted (size=${sizeMB.toString()}` +
-                        `< minSize=${this.dvr.config.recording.minSize.toString()})`);
+                        ` < minSize=${this.dvr.config.recording.minSize.toString()})`);
                     fs.unlinkSync(path.join(this.dvr.config.recording.captureDirectory, fullname));
                     this.storeCapInfo(streamer, "", null, false);
                 } else {
-                    this.dvr.postProcess.add({site: this, streamer: streamer, filename: capInfo.filename, spawnArgs: []});
+                    this.dvr.postProcess.add({
+                        site: this,
+                        streamer: streamer,
+                        filename: capInfo.filename,
+                        spawnArgs: [],
+                    });
                 }
             }
         } catch (err) {

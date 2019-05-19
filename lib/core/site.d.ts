@@ -42,7 +42,8 @@ export interface SiteConfig {
 export declare enum UpdateCmd {
     REMOVE = 0,
     ADD = 1,
-    PAUSE = 2
+    PAUSE = 2,
+    EN_DIS = 3
 }
 export interface StreamerStateOptions {
     msg: string;
@@ -61,13 +62,16 @@ export declare abstract class Site {
     protected updateName: string;
     protected paused: boolean;
     protected pauseIndex: number;
+    protected running: boolean;
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
     getStreamerList(): Array<Streamer>;
     protected getFileName(nm: string): string;
     protected checkFileSize(): void;
-    abstract start(): void;
+    start(): void;
+    stop(): void;
+    isRunning(): boolean;
     abstract connect(): Promise<boolean>;
     abstract disconnect(): Promise<boolean>;
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>): Array<string>;

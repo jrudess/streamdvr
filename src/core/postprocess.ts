@@ -33,7 +33,7 @@ export class PostProcess {
         const capInfo: CapInfo          = this.postProcessQ[0];
         const site: Site | null         = capInfo.site;
         const streamer: Streamer | null = capInfo.streamer;
-        const namePrint: string         = streamer ? `${colors.name(streamer.nm)} ` : "";
+        const namePrint: string         = streamer ? `${colors.name(streamer.nm)}` : "";
         const fileType: string          = this.config.recording.autoConvertType;
         const completeDir: string       = this.getCompleteDir(site, streamer);
         const uniqueName: string        = this.uniqueFileName(completeDir, capInfo.filename, fileType);
@@ -89,7 +89,7 @@ export class PostProcess {
 
         const script: string      = this.dvr.calcPath(this.config.postprocess);
         const args: Array<string> = [completeDir, completeFile];
-        const namePrint: string   = streamer === null ? "" : `${colors.name(streamer.nm)} `;
+        const namePrint: string   = streamer === null ? "" : `${colors.name(streamer.nm)}`;
 
         this.dvr.print(MSG.INFO, `${namePrint} running global postprocess script: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);

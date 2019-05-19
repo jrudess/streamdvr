@@ -3,7 +3,7 @@ import { Site, Streamer, UpdateCmd } from "./site";
 export declare class Tui {
     protected dvr: Dvr;
     protected config: Config;
-    protected SITES: Array<Site>;
+    protected SITES: Map<string, Site>;
     protected hideOffline: boolean;
     protected listSelect: any;
     protected sitelistSelect: any;
@@ -19,10 +19,12 @@ export declare class Tui {
     protected createTui(): void;
     protected parseCli(tokens: Array<string>): void;
     addSite(site: Site): void;
+    redrawSites(): void;
     log(text: string): void;
     protected buildListEntry(site: Site, streamer: Streamer): string[];
     protected populateTable(site: Site, table: Array<Array<string>>): void;
     protected rebuildList(): void;
     render(redrawList: boolean, site?: Site): void;
-    protected updateList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
+    protected updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
+    protected updateSiteList(siteName: string, cmd: UpdateCmd): Promise<void>;
 }

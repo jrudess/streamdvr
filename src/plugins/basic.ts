@@ -32,6 +32,8 @@ class Basic extends Site {
     }
 
     public start(): void {
+        super.start();
+
         if (this.config.streamers.length > 0) {
             if (this.config.streamers[0].constructor !== Array) {
                 this.print(MSG.INFO, `Upgrading ${this.cfgFile} to new format, this is a one-time conversion.`);
@@ -62,6 +64,7 @@ class Basic extends Site {
     }
 
     public async connect(): Promise<boolean> {
+        this.redrawList = true;
         return true;
     }
 
@@ -120,16 +123,15 @@ class Basic extends Site {
     }
 
     protected async checkBatch(batch: Array<string>): Promise<boolean> {
-        const queries = [];
-
-        for (const item of batch) {
-            const streamer: Streamer | undefined = this.streamerList.get(item);
-            if (streamer) {
-                queries.push(this.checkStreamerState(streamer));
-            }
-        }
-
         try {
+            const queries = [];
+            for (const item of batch) {
+                const streamer: Streamer | undefined = this.streamerList.get(item);
+                if (streamer) {
+                    queries.push(this.checkStreamerState(streamer));
+                }
+            }
+
             await Promise.all(queries);
             return true;
         } catch (err) {

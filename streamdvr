@@ -25,7 +25,7 @@ class Streamdvr extends Dvr {
 
         for (let i = 0; i < ymlfiles.length; i++) {
             const config = yaml.safeLoad(fs.readFileSync(path.join(this.configdir, ymlfiles[i]), "utf8"));
-            if (config && config.plugin && config.enable) {
+            if (config && config.plugin) {
                 // TODO: print better error message if config.plugin doesn't exist
                 this.plugins.push({
                     code:    require(config.plugin),
@@ -47,24 +47,14 @@ class Streamdvr extends Dvr {
         });
     }
 
-    async start() {
+    start() {
         super.start();
-        const plugins = [];
-
         for (const plugin of this.plugins.values()) {
             if (plugin.enable) {
-                plugins.push(this.startPlugin(plugin));
+                this.run(plugin.handle);
             }
         }
-        await Promise.all(plugins);
     }
-
-    async startPlugin(plugin) {
-        plugin.handle.start();
-        await plugin.handle.connect();
-        this.run(plugin.handle);
-    }
-
 
     busy() {
         for (const plugin of this.plugins.values()) {
