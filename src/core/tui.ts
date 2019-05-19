@@ -690,6 +690,7 @@ export class Tui {
                     }
                     this.redrawSites();
                     this.render(true);
+                    site.writeConfig();
                 }
                 return;
             }
