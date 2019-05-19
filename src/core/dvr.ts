@@ -218,17 +218,22 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
+        let init: boolean = true;
         site.start();
         while (true) {
             if (site.config.enable) {
                 try {
-                    await site.disconnect();
-                    await site.connect();
+                    if (init) {
+                        await site.connect();
+                    }
                     await site.processUpdates(UpdateCmd.ADD);
                     await site.processUpdates(UpdateCmd.REMOVE);
                     await site.getStreamers();
+                    init = false;
                 } catch (err) {
                     site.print(MSG.ERROR, err.toString());
+                    await site.disconnect();
+                    init = true;
                 }
             } else {
                 await site.disconnect();

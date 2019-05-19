@@ -5,6 +5,10 @@ import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
+async function sleep(time: number): Promise<number> {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 export class Tui {
 
     protected dvr: Dvr;
@@ -525,7 +529,8 @@ export class Tui {
                 new Promise(async () => {
                     await this.updateStreamerList(siteName, nm, cmd, temp);
                     if (pause && tokens.length >= 4) {
-                        await this.updateStreamerList(siteName, nm, cmd, temp, Number(tokens[3]));
+                        const pauseTimer: number = Number(tokens[3]);
+                        await this.updateStreamerList(siteName, nm, cmd, temp, pauseTimer);
                     }
                     return true;
                 });
@@ -647,53 +652,53 @@ export class Tui {
 
     // Add and remove streamers
     protected async updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
-        for (const [name, site] of this.SITES) {
-            if (siteName === name) {
-                const id: Id = {
-                    uid: nm,
-                    nm: nm,
-                };
-                try {
-                    const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
-                    if (dirty) {
-                        site.writeConfig();
-                    }
-                } catch (err) {
-                    this.dvr.print(MSG.ERROR, err.toString());
-                }
+        const site: Site | undefined = this.SITES.get(siteName);
+        if (!site) {
+            return;
+        }
+        const id: Id = {
+            uid: nm,
+            nm: nm,
+        };
+        try {
+            const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
+            if (dirty) {
+                site.writeConfig();
             }
+        } catch (err) {
+            this.dvr.print(MSG.ERROR, err.toString());
         }
     }
 
     protected async updateSiteList(siteName: string, cmd: UpdateCmd) {
-        for (const [name, site] of this.SITES) {
-            if (siteName === name) {
-                if (cmd === UpdateCmd.PAUSE) {
-                    site.pause();
-                } else if (cmd === UpdateCmd.EN_DIS) {
-                    if (site.config.enable) {
-                        site.print(MSG.INFO, "Site disabled");
-                        site.config.enable = false;
-                        await site.disconnect();
-                        site.haltAllCaptures();
-                        site.streamerList.clear();
-                    } else {
-                        site.print(MSG.INFO, "Site enabled");
-                        site.config.enable = true;
-                        site.start();
-                        await site.connect();
-                        if (!site.isRunning()) {
-                            this.dvr.run(site);
-                        } else {
-                            await site.getStreamers();
-                        }
-                    }
-                    this.redrawSites();
-                    this.render(true);
-                    site.writeConfig();
-                }
-                return;
-            }
+        const site: Site | undefined = this.SITES.get(siteName);
+        if (!site) {
+            return;
         }
+
+        switch (cmd) {
+        case UpdateCmd.PAUSE:
+            site.pause();
+            break;
+        case UpdateCmd.EN_DIS:
+            if (site.config.enable) {
+                site.print(MSG.DEBUG, "Site disabled");
+                site.config.enable = false;
+            } else {
+                while (site.isRunning()) {
+                    this.dvr.print(MSG.DEBUG, `${colors.site(siteName)} waiting for prior run to finish`);
+                    await sleep(10 * 1000);
+                }
+                site.print(MSG.DEBUG, "Site enabled");
+                site.config.enable = true;
+                this.dvr.run(site);
+            }
+            this.redrawSites();
+            this.render(true);
+            site.writeConfig();
+            break;
+        }
+        return;
     }
+
 }

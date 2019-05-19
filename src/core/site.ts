@@ -158,10 +158,14 @@ export abstract class Site {
 
     public start(): void {
         this.running = true;
+        this.print(MSG.DEBUG, "Site started");
     }
 
     public stop(): void {
         this.running = false;
+        this.haltAllCaptures();
+        this.streamerList.clear();
+        this.print(MSG.DEBUG, "Site stopped");
     }
 
     public isRunning(): boolean {

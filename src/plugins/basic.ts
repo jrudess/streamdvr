@@ -65,10 +65,12 @@ class Basic extends Site {
 
     public async connect(): Promise<boolean> {
         this.redrawList = true;
+        this.print(MSG.DEBUG, "Site connected");
         return true;
     }
 
     public async disconnect(): Promise<boolean> {
+        this.print(MSG.DEBUG, "Site disconnected");
         return true;
     }
 
