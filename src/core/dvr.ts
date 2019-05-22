@@ -225,6 +225,9 @@ export abstract class Dvr {
                 try {
                     if (init) {
                         await site.connect();
+                    } else {
+                        await site.disconnect();
+                        await site.connect();
                     }
                     await site.processUpdates(UpdateCmd.ADD);
                     await site.processUpdates(UpdateCmd.REMOVE);
