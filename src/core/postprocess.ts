@@ -57,7 +57,7 @@ export class PostProcess {
         const args: Array<string> = [ capPath, cmpPath, fileType ];
         const myCompleteProcess: ChildProcessWithoutNullStreams = spawn(script, args);
 
-        this.dvr.print(MSG.INFO, `${namePrint} converting to ${fileType}: ` +
+        this.dvr.print(MSG.DEBUG, `${namePrint} converting to ${fileType}: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
@@ -91,7 +91,7 @@ export class PostProcess {
         const args: Array<string> = [completeDir, completeFile];
         const namePrint: string   = streamer === null ? "" : `${colors.name(streamer.nm)}`;
 
-        this.dvr.print(MSG.INFO, `${namePrint} running global postprocess script: ` +
+        this.dvr.print(MSG.DEBUG, `${namePrint} running global postprocess script: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
         const userPostProcess: ChildProcessWithoutNullStreams = spawn(script, args);
 
