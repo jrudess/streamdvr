@@ -124,7 +124,6 @@ export abstract class Dvr {
         }
 
         this.postProcess = new PostProcess(this);
-
     }
 
     protected findConfig(): string {

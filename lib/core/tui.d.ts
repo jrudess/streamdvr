@@ -21,7 +21,7 @@ export declare class Tui {
     addSite(site: Site): void;
     redrawSites(): void;
     log(text: string): void;
-    protected buildListEntry(site: Site, streamer: Streamer): string[];
+    protected buildListEntry(site: Site, streamer: Streamer): Array<string>;
     protected populateTable(site: Site, table: Array<Array<string>>): void;
     protected rebuildList(): void;
     render(redrawList: boolean, site?: Site): void;

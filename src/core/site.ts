@@ -132,26 +132,36 @@ export abstract class Site {
                 continue;
             }
 
-            const stat: fs.Stats = fs.statSync(path.join(this.dvr.config.recording.captureDirectory, streamer.filename));
-            const sizeMB: number = Math.round(stat.size / 1048576);
-            this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
-            if (sizeMB === streamer.filesize) {
-                streamer.stuckcounter++;
-                this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
-                    `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
-            } else {
-                streamer.filesize = sizeMB;
-            }
-            if (streamer.stuckcounter >= 2) {
-                this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
-                this.haltCapture(streamer.uid);
-                streamer.stuckcounter = 0;
-                this.redrawList = true;
-            } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
-                    `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
-                this.haltCapture(streamer.uid);
-                this.redrawList = true;
+            const file: string = path.join(this.dvr.config.recording.captureDirectory, streamer.filename);
+            try  {
+                const stat: fs.Stats = fs.statSync(file);
+                const sizeMB: number = Math.round(stat.size / 1048576);
+                this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
+                if (sizeMB === streamer.filesize) {
+                    streamer.stuckcounter++;
+                    this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
+                        `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
+                } else {
+                    streamer.filesize = sizeMB;
+                }
+                if (streamer.stuckcounter >= 2) {
+                    this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
+                    this.haltCapture(streamer.uid);
+                    streamer.stuckcounter = 0;
+                    this.redrawList = true;
+                } else if (maxSize !== 0 && sizeMB >= maxSize) {
+                    this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
+                        `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
+                    this.haltCapture(streamer.uid);
+                    this.redrawList = true;
+                }
+            } catch(err) {
+                if (err.code === "ENOENT") {
+                    this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(file)} not found ` +
+                        `in capturing directory, cannot check file size`);
+                } else {
+                    this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);
+                }
             }
         }
     }
@@ -559,7 +569,7 @@ export abstract class Site {
             }
         } catch (err) {
             if (err.code === "ENOENT") {
-                this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(capInfo.filename)}.ts not found ` +
+                this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(capInfo.filename + ".ts")} not found ` +
                     `in capturing directory, cannot convert to ${this.dvr.config.recording.autoConvertType}`);
             } else {
                 this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);

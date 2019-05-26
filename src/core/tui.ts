@@ -581,21 +581,21 @@ export class Tui {
         this.render(false);
     }
 
-    protected buildListEntry(site: Site, streamer: Streamer) {
-        const name  = "{" + this.config.colors.name + "-fg}" + streamer.nm + "{/}";
-        let state = "{";
+    protected buildListEntry(site: Site, streamer: Streamer): Array<string> {
+        const name: string = `{${this.config.colors.name}-fg}${streamer.nm}{/}`;
+        let state: string = "{";
         if (streamer.filename === "") {
             if (streamer.state === "Offline") {
-                state += this.config.colors.offline + "-fg}";
+                state += `${this.config.colors.offline}-fg}`;
             } else {
-                state += this.config.colors.state + "-fg}";
+                state += `${this.config.colors.state}-fg}`;
             }
             state += streamer.state + (streamer.paused ? " [paused]" : "");
         } else {
-            state += this.config.colors.file + "-fg}" + streamer.filename;
+            state += `${this.config.colors.file}-fg}${streamer.filename}`;
         }
         state += "{/}";
-        const temp: string = streamer.isTemp ? ("{" + this.config.colors.state + "-fg}[temp]{/}") : "";
+        const temp: string = streamer.isTemp ? `{${this.config.colors.state}-fg}[temp]{/}` : "";
         return [name, temp, site.siteName, state];
     }
 
