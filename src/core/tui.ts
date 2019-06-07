@@ -513,7 +513,7 @@ export class Tui {
         const temp: boolean  = tokens[0] === "addtemp";
         const pause: boolean = tokens[0] === "pause" || tokens[0] === "unpause";
         const add: boolean   = tokens[0] === "add" || tokens[0] === "addtemp";
-        const siteName: string = tokens.length >= 1 ? tokens[1].toUpperCase() : "";
+        const siteName: string = tokens.length > 1 ? tokens[1].toUpperCase() : "";
 
         switch (tokens[0]) {
         case "add":

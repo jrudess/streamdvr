@@ -62,10 +62,10 @@ export enum UpdateCmd {
 }
 
 export interface StreamerStateOptions {
-    msg: string;
+    msg:         string;
     isStreaming: boolean;
-    prevState: string;
-    m3u8: string;
+    prevState:   string;
+    m3u8:        string;
 }
 
 export abstract class Site {
@@ -133,7 +133,7 @@ export abstract class Site {
             }
 
             const file: string = path.join(this.dvr.config.recording.captureDirectory, streamer.filename);
-            try  {
+            try {
                 const stat: fs.Stats = fs.statSync(file);
                 const sizeMB: number = Math.round(stat.size / 1048576);
                 this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
