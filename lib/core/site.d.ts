@@ -68,7 +68,8 @@ export declare abstract class Site {
     constructor(siteName: string, dvr: Dvr, tui: Tui);
     getStreamerList(): Array<Streamer>;
     protected getFileName(nm: string): string;
-    protected checkFileSize(): void;
+    protected checkFileSize(streamer: Streamer, file: string): void;
+    protected processStreamers(): void;
     start(): void;
     stop(): void;
     isRunning(): boolean;

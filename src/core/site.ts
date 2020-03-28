@@ -95,7 +95,7 @@ export abstract class Site {
         this.cfgFile      = path.join(dvr.configdir, `${this.listName}.yml`);
         this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
         this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
-        this.streamerList = new Map(); // Refer to Streamer definition
+        this.streamerList = new Map();
         this.redrawList   = false;
         this.paused       = false;
         this.pauseIndex   = 1;
@@ -125,8 +125,33 @@ export abstract class Site {
         return filename;
     }
 
-    protected checkFileSize(): void {
+    protected checkFileSize(streamer: Streamer, file: string): void {
         const maxSize: number = this.dvr.config.recording.maxSize;
+        const stat: fs.Stats  = fs.statSync(file);
+        const sizeMB: number  = Math.round(stat.size / 1048576);
+
+        this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
+        if (sizeMB === streamer.filesize) {
+            streamer.stuckcounter++;
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
+                `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
+        } else {
+            streamer.filesize = sizeMB;
+        }
+        if (streamer.stuckcounter >= 2) {
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
+            this.haltCapture(streamer.uid);
+            streamer.stuckcounter = 0;
+            this.redrawList = true;
+        } else if (maxSize !== 0 && sizeMB >= maxSize) {
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
+                `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
+            this.haltCapture(streamer.uid);
+            this.redrawList = true;
+        }
+    }
+
+    protected processStreamers(): void {
         for (const streamer of this.streamerList.values()) {
             if (streamer.capture === null || streamer.postProcess) {
                 continue;
@@ -134,28 +159,8 @@ export abstract class Site {
 
             const file: string = path.join(this.dvr.config.recording.captureDirectory, streamer.filename);
             try {
-                const stat: fs.Stats = fs.statSync(file);
-                const sizeMB: number = Math.round(stat.size / 1048576);
-                this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
-                if (sizeMB === streamer.filesize) {
-                    streamer.stuckcounter++;
-                    this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
-                        `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
-                } else {
-                    streamer.filesize = sizeMB;
-                }
-                if (streamer.stuckcounter >= 2) {
-                    this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
-                    this.haltCapture(streamer.uid);
-                    streamer.stuckcounter = 0;
-                    this.redrawList = true;
-                } else if (maxSize !== 0 && sizeMB >= maxSize) {
-                    this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
-                        `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
-                    this.haltCapture(streamer.uid);
-                    this.redrawList = true;
-                }
-            } catch(err) {
+                this.checkFileSize(streamer, file);
+            } catch (err) {
                 if (err.code === "ENOENT") {
                     this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(file)} not found ` +
                         `in capturing directory, cannot check file size`);
@@ -259,12 +264,10 @@ export abstract class Site {
 
     public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
         let dirty: boolean = false;
-        if (cmd === UpdateCmd.PAUSE) {
-            dirty = await this.pauseStreamer(id, pauseTimer);
-        } else if (cmd === UpdateCmd.ADD) {
-            dirty = this.addStreamer(id, isTemp);
-        } else if (cmd === UpdateCmd.REMOVE) {
-            dirty = this.removeStreamer(id);
+        switch (cmd) {
+            case UpdateCmd.PAUSE:  dirty = await this.pauseStreamer(id, pauseTimer); break;
+            case UpdateCmd.ADD:    dirty = this.addStreamer(id, isTemp); break;
+            case UpdateCmd.REMOVE: dirty = this.removeStreamer(id); break;
         }
         return dirty;
     }
@@ -273,7 +276,6 @@ export abstract class Site {
         let dirty = false;
 
         for (const entry of list) {
-            this.print(MSG.DEBUG, "updateStreamers: uid = " + entry);
             const id: Id = {
                 uid: entry,
                 nm: entry,
@@ -428,7 +430,7 @@ export abstract class Site {
             this.print(MSG.DEBUG, "Skipping lookup while exit in progress...");
             return false;
         }
-        this.checkFileSize();
+        this.processStreamers();
         return true;
     }
 
@@ -544,7 +546,6 @@ export abstract class Site {
         capture.on("close", () => {
             this.endCapture(streamer, capInfo);
         });
-
     }
 
     protected endCapture(streamer: Streamer, capInfo: CapInfo): void {
