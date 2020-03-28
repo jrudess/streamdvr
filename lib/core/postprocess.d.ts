@@ -11,4 +11,5 @@ export declare class PostProcess {
     protected nextConvert(site: Site | null, streamer: Streamer | null): void;
     protected getCompleteDir(site: Site | null, streamer: Streamer | null): string;
     protected uniqueFileName(completeDir: string, filename: string, fileType: string): string;
+    protected mvSync(oldPath: string, newPath: string): void;
 }

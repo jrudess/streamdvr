@@ -1,7 +1,6 @@
 "use strict";
 
 import * as fs from "fs";
-import * as mv from "mv";
 import * as path from "path";
 import {spawn, ChildProcessWithoutNullStreams} from "child_process";
 import {Dvr, Config, MSG} from "../core/dvr.js";
@@ -42,13 +41,8 @@ export class PostProcess {
         const cmpPath: string           = path.join(completeDir, completeFile);
 
         if (fileType === "ts") {
-            this.dvr.print(MSG.DEBUG, `${namePrint} recording moved ${capPath} to ${cmpPath}`);
-            mv(capPath, cmpPath, (err: Error) => {
-                if (err) {
-                    this.dvr.print(MSG.ERROR, `${colors.site(capInfo.filename)}: ${err.toString()}`);
-                }
-            });
-
+            this.dvr.print(MSG.DEBUG, `${namePrint} moving ${capPath} to ${cmpPath}`);
+            this.mvSync(capPath, cmpPath);
             this.postScript(site, streamer, completeDir, completeFile);
             return;
         }
@@ -138,6 +132,28 @@ export class PostProcess {
             count++;
         }
         return fileinc;
+    }
+
+    protected mvSync(oldPath: string, newPath: string) {
+
+        try {
+            fs.renameSync(oldPath, newPath);
+        } catch (err) {
+            if (err) {
+                if (err.code === 'EXDEV') {
+                    try {
+                        fs.copyFileSync(oldPath, newPath);
+                        fs.unlinkSync(oldPath);
+                    } catch (err) {
+                        if (err) {
+                            this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                        }
+                    }
+                } else {
+                    this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                }
+            }
+        }
     }
 
 }

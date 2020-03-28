@@ -8,7 +8,7 @@ else
     debugargs=""
 fi
 
-ffmpeg -hide_banner -i $site -c copy -vsync 2 -r 60 -b:v 500k $extraargs $debugargs "$output" &
+ffmpeg -hide_banner -i "$site" -c copy -vsync 2 -r 60 -b:v 500k $extraargs $debugargs "$output" &
 record_pid=$!
 
 killarg="-2"
