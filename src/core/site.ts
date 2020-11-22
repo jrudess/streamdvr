@@ -187,8 +187,8 @@ export abstract class Site {
         return this.running;
     }
 
-    public abstract async connect(): Promise<boolean>;
-    public abstract async disconnect(): Promise<boolean>;
+    public abstract connect(): Promise<boolean>;
+    public abstract disconnect(): Promise<boolean>;
 
     protected getCaptureArguments(url: string, filename: string, params?: Array<string>): Array<string> {
         let args: Array<string> = [
