@@ -3,7 +3,7 @@
 # Return 1 if there are any unhandled errors from youtube-dl
 
 tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
+trap 'rm -rf -- "$tmp"' EXIT
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source $DIR/record_setup.sh

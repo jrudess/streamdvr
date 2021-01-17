@@ -2,7 +2,7 @@
 # Return 0 if ffmpeg succeeds, 1 otherwise
 
 tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
+trap 'rm -rf -- "$tmp"' EXIT
 
 args=("$@")
 input=${args[0]}
