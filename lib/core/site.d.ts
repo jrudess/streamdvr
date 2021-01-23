@@ -39,6 +39,10 @@ export interface SiteConfig {
     batchSize: number;
     streamers: Array<Array<string>>;
 }
+export interface Updates {
+    include: Array<string>;
+    exclude: Array<string>;
+}
 export declare enum UpdateCmd {
     REMOVE = 0,
     ADD = 1,

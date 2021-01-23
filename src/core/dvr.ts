@@ -108,8 +108,13 @@ export abstract class Dvr {
         this.configdir = "";
         this.configfile = this.findConfig();
 
-        const config: string = fs.readFileSync(this.configfile, "utf8");
-        this.config = yaml.safeLoad(config);
+        const name: string = fs.readFileSync(this.configfile, "utf8");
+        try {
+            this.config = <Config>yaml.load(name);
+        } catch (err) {
+            console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
+            process.exit(1);
+        }
         this.loadConfig();
 
         if (this.config.log.enable) {
@@ -155,7 +160,7 @@ export abstract class Dvr {
 
     public loadConfig(): void {
         try {
-            this.config = yaml.safeLoad(fs.readFileSync(this.configfile, "utf8"));
+            this.config = <Config>yaml.load(fs.readFileSync(this.configfile, "utf8"));
         } catch (err) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);

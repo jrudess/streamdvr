@@ -54,6 +54,11 @@ export interface SiteConfig {
     streamers:    Array<Array<string>>;
 }
 
+export interface Updates {
+    include: Array<string>;
+    exclude: Array<string>;
+}
+
 export enum UpdateCmd {
     REMOVE = 0,
     ADD    = 1,
@@ -94,7 +99,12 @@ export abstract class Site {
         this.listName     = siteName.toLowerCase();
         this.cfgFile      = path.join(dvr.configdir, `${this.listName}.yml`);
         this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
-        this.config       = yaml.safeLoad(fs.readFileSync(this.cfgFile, "utf8"));
+        try {
+            this.config   = <SiteConfig>yaml.load(fs.readFileSync(this.cfgFile, "utf8"));
+        } catch (e) {
+            this.print(MSG.ERROR, e);
+            process.exit(1);
+        }
         this.streamerList = new Map();
         this.redrawList   = false;
         this.paused       = false;
@@ -228,8 +238,14 @@ export abstract class Site {
             return;
         }
 
-        const updates = yaml.safeLoad(fs.readFileSync(this.updateName, "utf8"));
-        let list = [];
+        let updates : Updates;
+        try {
+            updates = <Updates>yaml.load(fs.readFileSync(this.updateName, "utf8"));
+        } catch (e) {
+            this.print(MSG.ERROR, e);
+            return;
+        }
+        let list : Array<string> = [];
 
         if (cmd === UpdateCmd.ADD) {
             if (updates.include && updates.include.length > 0) {
@@ -247,7 +263,7 @@ export abstract class Site {
 
         // clear the processed array from file
         if (list.length > 0) {
-            fs.writeFileSync(this.updateName, yaml.safeDump(updates), "utf8");
+            fs.writeFileSync(this.updateName, yaml.dump(updates), "utf8");
         }
 
         try {
@@ -477,7 +493,7 @@ export abstract class Site {
     public writeConfig(): void {
         const fd: number = fs.openSync(this.cfgFile, "w");
         this.print(MSG.DEBUG, `Rewriting ${this.cfgFile}`);
-        fs.writeFileSync(fd, yaml.safeDump(this.config));
+        fs.writeFileSync(fd, yaml.dump(this.config));
         fs.closeSync(fd);
     }
 
