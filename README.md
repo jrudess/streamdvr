@@ -79,9 +79,11 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 Every site that is supported by either streamlink or youtube-dl will work with StreamDVR.  All that is necessary is to create a new configuration file with the site's details.  Refer to any existing yml file in the config directory for an example.
 
-* Adding new lookup utilities and recorders
+If you have created a <site>.yml for StreamDVR and would like to share it, please submit a pull request to include the new yml files in the repo.
 
 All support for streaming sites is handled by 3rd party programs.  The site configuration yml files specify the m3u8 lookup and record scripts to use.   Adding support for new programs requires adding new wrapper scripts and using those scripts in the yml configuration file.
+
+If you would like StreamDVR to support a new program and have written your own wrapper scripts, pull requests are welcome.  If you'just re aware of other programs similar to youtube-dl or streamlink, please open an issue and provide the program's name/info.  If the program looks promising (e.g. works for at least one of the existing sites), then I'll probably add support for it.
 
 * Configuration Options for `config.yml`
 
