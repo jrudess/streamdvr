@@ -17,7 +17,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
     * generate thumbnail previews
     * do anything you want
 
-* Supported sites: Twitch, Youtube, Pixiv
+* Supported sites: Twitch, Youtube, Pixiv, Picarto
 
 * Docker available at https://hub.docker.com/r/purrsevere/streamdvr-docker/
 
@@ -28,7 +28,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 * Optional Dependencies: `streamlink`, `youtube-dl`
 
   * Using `streamlink` requires an additional streamlink plugin at https://github.com/back-to/generic
-  * `streamlink` is used to fetch m3u8 URLs for Pixiv by default
+  * `streamlink` is used to fetch m3u8 URLs for Pixiv and Picarto by default
   * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Youtube by default
 
 * Install StreamDVR
