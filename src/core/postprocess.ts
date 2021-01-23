@@ -35,8 +35,7 @@ export class PostProcess {
         const namePrint: string         = streamer ? `${colors.name(streamer.nm)}` : "";
         const fileType: string          = this.config.recording.autoConvertType;
         const completeDir: string       = this.getCompleteDir(site, streamer);
-        const uniqueName: string        = this.uniqueFileName(completeDir, capInfo.filename, fileType);
-        const completeFile: string      = uniqueName + "." + fileType;
+        const completeFile: string      = this.uniqueFileName(completeDir, capInfo.filename, fileType) + "." + fileType;
         const capPath: string           = path.join(this.config.recording.captureDirectory, capInfo.filename + ".ts");
         const cmpPath: string           = path.join(completeDir, completeFile);
 

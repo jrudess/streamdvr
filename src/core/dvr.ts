@@ -228,15 +228,14 @@ export abstract class Dvr {
             if (site.config.enable) {
                 try {
                     if (init) {
-                        await site.connect();
+                        init = false;
                     } else {
                         await site.disconnect();
-                        await site.connect();
                     }
+                    await site.connect();
                     await site.processUpdates(UpdateCmd.ADD);
                     await site.processUpdates(UpdateCmd.REMOVE);
                     await site.getStreamers();
-                    init = false;
                 } catch (err) {
                     site.print(MSG.ERROR, err.toString());
                     await site.disconnect();
