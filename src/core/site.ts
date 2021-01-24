@@ -416,6 +416,11 @@ export abstract class Site {
             return;
         }
 
+        if (this.dvr.tryingToExit) {
+            this.print(MSG.INFO, `${colors.name(streamer.nm)} skipping lookup due to shutdown request`);
+            return;
+        }
+
         if (streamer.state !== options.prevState) {
             this.print(MSG.INFO, options.msg);
             this.redrawList = true;
@@ -557,7 +562,7 @@ export abstract class Site {
     }
 
     protected refresh(streamer: Streamer): void {
-        if (this.config.enable && !this.dvr.tryingToExit && this.streamerList.has(streamer.uid)) {
+        if (this.config.enable && this.streamerList.has(streamer.uid)) {
             this.checkStreamerState(streamer);
         }
     }
