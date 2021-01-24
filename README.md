@@ -83,7 +83,7 @@ If you have created a <site>.yml for StreamDVR and would like to share it, pleas
 
 All support for streaming sites is handled by 3rd party programs.  The site configuration yml files specify the m3u8 lookup and record scripts to use.   Adding support for new programs requires adding new wrapper scripts and using those scripts in the yml configuration file.
 
-If you would like StreamDVR to support a new program and have written your own wrapper scripts, pull requests are welcome.  If you'just re aware of other programs similar to youtube-dl or streamlink, please open an issue and provide the program's name/info.  If the program looks promising (e.g. works for at least one of the existing sites), then I'll probably add support for it.
+If you would like StreamDVR to support a new program and have written your own wrapper scripts, pull requests are welcome.  If you're just aware of other programs similar to youtube-dl or streamlink, please open an issue and provide the program's name/info.  If the program looks promising (e.g. works for at least one of the existing sites), then I'll probably add support for it.
 
 * Configuration Options for `config.yml`
 
