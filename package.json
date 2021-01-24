@@ -25,6 +25,6 @@
         "colors": "^1.4.0",
         "js-yaml": "^4.0.0",
         "moment": "^2.29.1",
-        "neo-blessed": "github:embark-framework/neo-blessed"
+        "neo-blessed": "github:embarklabs/neo-blessed"
     }
 }
