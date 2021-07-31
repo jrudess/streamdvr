@@ -58,10 +58,8 @@ class Streamdvr extends Dvr {
 
     busy() {
         for (const plugin of this.plugins.values()) {
-            if (plugin.enable) {
-                if (plugin.handle.getNumCapsInProgress() > 0) {
-                    return true;
-                }
+            if (plugin.enable && plugin.handle.getNumCapsInProgress() > 0) {
+                return true;
             }
         }
         return false;

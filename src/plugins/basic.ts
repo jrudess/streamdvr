@@ -13,7 +13,7 @@ class Basic extends Site {
 
     protected urlback: string;
 
-    constructor(siteName: string, dvr: Dvr, tui: Tui, urlback: string) {
+    public constructor(siteName: string, dvr: Dvr, tui: Tui, urlback: string) {
         super(siteName, dvr, tui);
         this.urlback = urlback;
     }

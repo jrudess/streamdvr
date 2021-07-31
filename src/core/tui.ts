@@ -5,10 +5,6 @@ import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");
 const colors  = require("colors");
 
-async function sleep(time: number): Promise<number> {
-    return new Promise((resolve) => setTimeout(resolve, time));
-}
-
 export class Tui {
 
     protected dvr: Dvr;
@@ -649,6 +645,10 @@ export class Tui {
         this.screen.render();
     }
 
+    protected async sleep(time: number): Promise<number> {
+        return new Promise((resolve) => setTimeout(resolve, time));
+    }
+
     // Add and remove streamers
     protected async updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         const site: Site | undefined = this.SITES.get(siteName);
@@ -686,7 +686,7 @@ export class Tui {
             } else {
                 while (site.isRunning()) {
                     this.dvr.print(MSG.DEBUG, `${colors.site(siteName)} waiting for prior run to finish`);
-                    await sleep(10 * 1000);
+                    await this.sleep(10 * 1000);
                 }
                 site.print(MSG.DEBUG, "Site enabled");
                 site.config.enable = true;

@@ -70,6 +70,7 @@ export declare abstract class Site {
     protected dvr: Dvr;
     protected tui: Tui;
     constructor(siteName: string, dvr: Dvr, tui: Tui);
+    protected sleep(time: number): Promise<number>;
     getStreamerList(): Array<Streamer>;
     protected getFileName(nm: string): string;
     protected checkFileSize(streamer: Streamer, file: string): void;

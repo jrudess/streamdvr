@@ -11,10 +11,6 @@ import {Tui} from "./tui";
 
 const colors = require("colors");
 
-async function sleep(time: number): Promise<number> {
-    return new Promise((resolve) => setTimeout(resolve, time));
-}
-
 export enum MSG {
     INFO  = 0,
     DEBUG = 1,
@@ -129,6 +125,10 @@ export abstract class Dvr {
         }
 
         this.postProcess = new PostProcess(this);
+    }
+
+    protected async sleep(time: number): Promise<number> {
+        return new Promise((resolve) => setTimeout(resolve, time));
     }
 
     protected findConfig(): string {
@@ -247,7 +247,7 @@ export abstract class Dvr {
                 return;
             }
             const interval: number = site.config.scanInterval ? site.config.scanInterval : 300;
-            await sleep(interval * 1000);
+            await this.sleep(interval * 1000);
         }
     }
 

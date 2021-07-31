@@ -14,7 +14,7 @@ export class PostProcess {
     protected config: Config;
     protected postProcessQ: Array<CapInfo>;
 
-    constructor(dvr: Dvr) {
+    public constructor(dvr: Dvr) {
         this.dvr = dvr;
         this.config = dvr.config;
         this.postProcessQ = [];

@@ -75,6 +75,7 @@ export declare abstract class Dvr {
     configfile: string;
     tui: Tui | undefined;
     constructor(dir: string);
+    protected sleep(time: number): Promise<number>;
     protected findConfig(): string;
     loadConfig(): void;
     abstract exit(): void;

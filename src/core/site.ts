@@ -9,10 +9,6 @@ import {Tui} from "../core/tui.js";
 
 const colors = require("colors");
 
-async function sleep(time: number): Promise<number> {
-    return new Promise((resolve) => setTimeout(resolve, time));
-}
-
 export interface Streamer {
     uid:          string;
     nm:           string;
@@ -121,6 +117,10 @@ export abstract class Site {
             this.print(MSG.ERROR, `${this.cfgFile} is missing siteUrl`);
         }
 
+    }
+
+    protected async sleep(time: number): Promise<number> {
+        return new Promise((resolve) => setTimeout(resolve, time));
     }
 
     public getStreamerList(): Array<Streamer> {
@@ -367,7 +367,7 @@ export abstract class Site {
         if (streamer && pauseTimer && pauseTimer > 0) {
             const print: string = streamer.paused ? " pausing for " : " unpausing for ";
             this.print(MSG.INFO, `${colors.name(id.nm)} ${print} ${pauseTimer.toString()} seconds`);
-            await sleep(pauseTimer * 1000);
+            await this.sleep(pauseTimer * 1000);
             this.print(MSG.INFO, `${colors.name(id.nm)} pause-timer expired`);
             streamer = this.streamerList.get(id.uid);
         }
