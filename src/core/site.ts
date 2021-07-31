@@ -91,7 +91,7 @@ export abstract class Site {
     protected dvr: Dvr;
     protected tui: Tui;
 
-    constructor(siteName: string, dvr: Dvr, tui: Tui) {
+    public constructor(siteName: string, dvr: Dvr, tui: Tui) {
         this.siteName     = siteName;
         this.dvr          = dvr;
         this.tui          = tui;
@@ -100,7 +100,7 @@ export abstract class Site {
         this.cfgFile      = path.join(dvr.configdir, `${this.listName}.yml`);
         this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
         try {
-            this.config   = <SiteConfig>yaml.load(fs.readFileSync(this.cfgFile, "utf8"));
+            this.config   = yaml.load(fs.readFileSync(this.cfgFile, "utf8")) as SiteConfig;
         } catch (e) {
             this.print(MSG.ERROR, e);
             process.exit(1);
@@ -173,7 +173,7 @@ export abstract class Site {
             } catch (err) {
                 if (err.code === "ENOENT") {
                     this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(file)} not found ` +
-                        `in capturing directory, cannot check file size`);
+                        "in capturing directory, cannot check file size");
                 } else {
                     this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);
                 }
@@ -238,14 +238,14 @@ export abstract class Site {
             return;
         }
 
-        let updates : Updates;
+        let updates: Updates;
         try {
-            updates = <Updates>yaml.load(fs.readFileSync(this.updateName, "utf8"));
+            updates = yaml.load(fs.readFileSync(this.updateName, "utf8")) as Updates;
         } catch (e) {
             this.print(MSG.ERROR, e);
             return;
         }
-        let list : Array<string> = [];
+        let list: Array<string> = [];
 
         if (cmd === UpdateCmd.ADD) {
             if (updates.include && updates.include.length > 0) {
@@ -281,9 +281,10 @@ export abstract class Site {
     public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
         let dirty: boolean = false;
         switch (cmd) {
-            case UpdateCmd.PAUSE:  dirty = await this.pauseStreamer(id, pauseTimer); break;
-            case UpdateCmd.ADD:    dirty = this.addStreamer(id, isTemp); break;
-            case UpdateCmd.REMOVE: dirty = this.removeStreamer(id); break;
+        case UpdateCmd.PAUSE:  dirty = await this.pauseStreamer(id, pauseTimer); break;
+        case UpdateCmd.ADD:    dirty = this.addStreamer(id, isTemp); break;
+        case UpdateCmd.REMOVE: dirty = this.removeStreamer(id); break;
+        default: this.print(MSG.ERROR, "Unexpected cmd type"); break;
         }
         return dirty;
     }
@@ -342,22 +343,22 @@ export abstract class Site {
     }
 
     protected removeStreamer(id: Id): boolean {
-        if (this.streamerList.has(id.uid)) {
-            this.print(MSG.INFO, `${colors.name(id.nm)} removed from capture list.`);
-            this.haltCapture(id.uid);
-            this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
-            this.render(true);
-
-            for (let i = 0; i < this.config.streamers.length; i++) {
-                if (this.config.streamers[i][0] === id.uid) {
-                    this.config.streamers.splice(i, 1);
-                    break;
-                }
-            }
-            return true;
+        if (!this.streamerList.has(id.uid)) {
+            this.print(MSG.ERROR, `${colors.name(id.nm)} not in capture list.`);
+            return false;
         }
-        this.print(MSG.ERROR, `${colors.name(id.nm)} not in capture list.`);
-        return false;
+        this.print(MSG.INFO, `${colors.name(id.nm)} removed from capture list.`);
+        this.haltCapture(id.uid);
+        this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
+        this.render(true);
+
+        for (let i = 0; i < this.config.streamers.length; i++) {
+            if (this.config.streamers[i][0] === id.uid) {
+                this.config.streamers.splice(i, 1);
+                break;
+            }
+        }
+        return true;
     }
 
     public async pauseStreamer(id: Id,  pauseTimer?: number) {
@@ -498,7 +499,7 @@ export abstract class Site {
 
         for (const streamer of this.streamerList.values()) {
             if (streamer.capture) {
-               count++;
+                count++;
             }
         }
 

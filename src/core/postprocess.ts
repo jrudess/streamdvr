@@ -139,7 +139,7 @@ export class PostProcess {
             fs.renameSync(oldPath, newPath);
         } catch (err) {
             if (err) {
-                if (err.code === 'EXDEV') {
+                if (err.code === "EXDEV") {
                     try {
                         fs.copyFileSync(oldPath, newPath);
                         fs.unlinkSync(oldPath);

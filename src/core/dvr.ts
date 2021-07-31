@@ -101,7 +101,7 @@ export abstract class Dvr {
     public configfile: string;
     public tui: Tui | undefined;
 
-    constructor(dir: string) {
+    public constructor(dir: string) {
         this.path = dir;
         this.tryingToExit = false;
 
@@ -110,7 +110,7 @@ export abstract class Dvr {
 
         const name: string = fs.readFileSync(this.configfile, "utf8");
         try {
-            this.config = <Config>yaml.load(name);
+            this.config = yaml.load(name) as Config;
         } catch (err) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);
@@ -160,7 +160,7 @@ export abstract class Dvr {
 
     public loadConfig(): void {
         try {
-            this.config = <Config>yaml.load(fs.readFileSync(this.configfile, "utf8"));
+            this.config = yaml.load(fs.readFileSync(this.configfile, "utf8")) as Config;
         } catch (err) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);

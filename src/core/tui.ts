@@ -26,7 +26,7 @@ export class Tui {
     protected sitemenu: any;
     protected logbody: any;
 
-    constructor(dvr: Dvr) {
+    public constructor(dvr: Dvr) {
 
         this.dvr = dvr;
         this.config = dvr.config;
@@ -414,6 +414,7 @@ export class Tui {
                     this.sitemenu.hide();
                     this.render(false);
                     break;
+                default: this.dvr.print(MSG.ERROR, "Unknown index value " + index.toString());
                 }
             }
         });
@@ -557,6 +558,8 @@ export class Tui {
             this.logbody.pushLine("reload");
             this.logbody.setScrollPerc(100);
             break;
+        default:
+            this.dvr.print(MSG.ERROR, "Unknown command " + tokens[0]);
         }
     }
 
@@ -585,11 +588,7 @@ export class Tui {
         const name: string = `{${this.config.colors.name}-fg}${streamer.nm}{/}`;
         let state: string = "{";
         if (streamer.filename === "") {
-            if (streamer.state === "Offline") {
-                state += `${this.config.colors.offline}-fg}`;
-            } else {
-                state += `${this.config.colors.state}-fg}`;
-            }
+            state += streamer.state === "Offline" ? `${this.config.colors.offline}-fg}` : `${this.config.colors.state}-fg}`;
             state += streamer.state + (streamer.paused ? " [paused]" : "");
         } else {
             state += `${this.config.colors.file}-fg}${streamer.filename}`;
@@ -697,6 +696,8 @@ export class Tui {
             this.render(true);
             site.writeConfig();
             break;
+        default:
+            site.print(MSG.ERROR, "Unexpected cmd");
         }
         return;
     }
