@@ -13,14 +13,15 @@ Happy linting! 💖
 */
 module.exports = {
     "env": {
-        "browser": true,
-        "es6": true,
+        "browser": false,
+        "es2021": true,
         "node": true
     },
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "project": "tsconfig.json",
-        "sourceType": "module"
+        "sourceType": "module",
+        "ecmaVersion": "12"
     },
     "plugins": [
         "eslint-plugin-jsdoc",

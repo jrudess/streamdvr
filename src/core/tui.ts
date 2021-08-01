@@ -296,7 +296,7 @@ export class Tui {
 
         this.list.key("r", () => {
             for (const [, site] of this.SITES) {
-                site.getStreamers();
+                void site.getStreamers();
             }
         });
 
@@ -344,7 +344,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
-                    this.updateStreamerList(site, name, UpdateCmd.PAUSE);
+                    void this.updateStreamerList(site, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -360,7 +360,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
-                    this.updateStreamerList(site, name, UpdateCmd.REMOVE);
+                    void this.updateStreamerList(site, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -376,6 +376,8 @@ export class Tui {
                     null :
                     this.list.rows[1];
                 break;
+            default:
+                this.dvr.print(MSG.ERROR, "Unexpected index " + index.toString());
             }
         });
 
@@ -391,7 +393,7 @@ export class Tui {
                 const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).trim();
                 switch (index) {
                 case 0: // pause
-                    this.updateSiteList(site, UpdateCmd.PAUSE);
+                    void this.updateSiteList(site, UpdateCmd.PAUSE);
                     this.sitelist.focus();
                     this.sitelist.interactive = true;
                     this.sitemenu.hide();
@@ -404,7 +406,7 @@ export class Tui {
                     this.inputBar.focus();
                     break;
                 case 2: // enable/disable
-                    this.updateSiteList(site, UpdateCmd.EN_DIS);
+                    void this.updateSiteList(site, UpdateCmd.EN_DIS);
                     this.sitelist.focus();
                     this.sitelist.interactive = true;
                     this.sitemenu.hide();
@@ -476,10 +478,9 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
-                    new Promise(async () => {
+                    void new Promise<void>(async () => {
                         await this.updateStreamerList(site, name, UpdateCmd.PAUSE);
                         await this.updateStreamerList(site, name, UpdateCmd.PAUSE, false, Number(text));
-                        return true;
                     });
                 }
                 this.listmenu.hide();
@@ -489,7 +490,7 @@ export class Tui {
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).trim();
-                    this.updateStreamerList(site, text, UpdateCmd.ADD);
+                    void this.updateStreamerList(site, text, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -523,7 +524,7 @@ export class Tui {
                                            UpdateCmd.REMOVE;
             if (tokens.length >= 3) {
                 const nm: string = tokens[2];
-                new Promise(async () => {
+                void new Promise(async () => {
                     await this.updateStreamerList(siteName, nm, cmd, temp);
                     if (pause && tokens.length >= 4) {
                         const pauseTimer: number = Number(tokens[3]);
@@ -532,7 +533,7 @@ export class Tui {
                     return true;
                 });
             } else if (tokens.length === 2) {
-                new Promise(async () => {
+                void new Promise(async () => {
                     await this.updateSiteList(siteName, cmd);
                     return true;
                 });
@@ -690,7 +691,7 @@ export class Tui {
                 }
                 site.print(MSG.DEBUG, "Site enabled");
                 site.config.enable = true;
-                this.dvr.run(site);
+                void this.dvr.run(site);
             }
             this.redrawSites();
             this.render(true);
