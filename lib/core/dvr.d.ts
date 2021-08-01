@@ -85,6 +85,6 @@ export declare abstract class Dvr {
     run(site: Site): Promise<void>;
     getDateTime(): string;
     protected log(text: string, options?: LogOptions): void;
-    protected msg(msg: string, site?: Site | null, options?: LogOptions): void;
-    print(lvl: MSG, msg: string, site?: Site | null): void;
+    protected msg(msg: string, site?: Site | undefined, options?: LogOptions): void;
+    print(lvl: MSG, msg: string, site?: Site | undefined): void;
 }

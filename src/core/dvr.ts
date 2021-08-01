@@ -211,8 +211,8 @@ export abstract class Dvr {
 
         for (const ts of tsfiles.values()) {
             const capInfo: CapInfo = {
-                site:      null,
-                streamer:  null,
+                site:      undefined,
+                streamer:  undefined,
                 filename:  ts.slice(0, -3),
                 spawnArgs: [],
             };
@@ -268,7 +268,7 @@ export abstract class Dvr {
         }
     }
 
-    protected msg(msg: string, site?: Site | null, options?: LogOptions): void {
+    protected msg(msg: string, site?: Site | undefined, options?: LogOptions): void {
         const time: string = `[${this.getDateTime()}]`;
         if (site) {
             this.log(`${colors.time(time)} ${colors.site(site.padName)} ${msg}`, options);
@@ -279,7 +279,7 @@ export abstract class Dvr {
         }
     }
 
-    public print(lvl: MSG, msg: string, site?: Site | null): void {
+    public print(lvl: MSG, msg: string, site?: Site | undefined): void {
         let out: string = "";
         const options = {trace: false};
         if (lvl === MSG.ERROR) {

@@ -29,15 +29,15 @@ export class PostProcess {
 
     protected convert(): void {
 
-        const capInfo: CapInfo          = this.postProcessQ[0];
-        const site: Site | null         = capInfo.site;
-        const streamer: Streamer | null = capInfo.streamer;
-        const namePrint: string         = streamer ? `${colors.name(streamer.nm)}` : "";
-        const fileType: string          = this.config.recording.autoConvertType;
-        const completeDir: string       = this.getCompleteDir(site, streamer);
-        const completeFile: string      = this.uniqueFileName(completeDir, capInfo.filename, fileType) + "." + fileType;
-        const capPath: string           = path.join(this.config.recording.captureDirectory, capInfo.filename + ".ts");
-        const cmpPath: string           = path.join(completeDir, completeFile);
+        const capInfo: CapInfo               = this.postProcessQ[0];
+        const site: Site | undefined         = capInfo.site;
+        const streamer: Streamer | undefined = capInfo.streamer;
+        const namePrint: string              = streamer ? `${colors.name(streamer.nm)}` : "";
+        const fileType: string               = this.config.recording.autoConvertType;
+        const completeDir: string            = this.getCompleteDir(site, streamer);
+        const completeFile: string           = this.uniqueFileName(completeDir, capInfo.filename, fileType) + "." + fileType;
+        const capPath: string                = path.join(this.config.recording.captureDirectory, capInfo.filename + ".ts");
+        const cmpPath: string                = path.join(completeDir, completeFile);
 
         if (fileType === "ts") {
             this.dvr.print(MSG.DEBUG, `${namePrint} moving ${capPath} to ${cmpPath}`);
@@ -74,7 +74,7 @@ export class PostProcess {
         });
     }
 
-    protected postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string): void {
+    protected postScript(site: Site | undefined, streamer: Streamer | undefined, completeDir: string, completeFile: string): void {
         if (!this.config.postprocess) {
             this.nextConvert(site, streamer);
             return;
@@ -82,7 +82,7 @@ export class PostProcess {
 
         const script: string      = this.dvr.calcPath(this.config.postprocess);
         const args: Array<string> = [completeDir, completeFile];
-        const namePrint: string   = streamer === null ? "" : `${colors.name(streamer.nm)}`;
+        const namePrint: string   = streamer === undefined ? "" : `${colors.name(streamer.nm)}`;
 
         this.dvr.print(MSG.DEBUG, `${namePrint} running global postprocess script: ` +
             `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
@@ -98,7 +98,7 @@ export class PostProcess {
         });
     }
 
-    protected nextConvert(site: Site | null, streamer: Streamer | null): void {
+    protected nextConvert(site: Site | undefined, streamer: Streamer | undefined): void {
 
         if (site && streamer) {
             site.clearProcessing(streamer);
@@ -111,7 +111,7 @@ export class PostProcess {
         }
     }
 
-    protected getCompleteDir(site: Site | null, streamer: Streamer | null): string {
+    protected getCompleteDir(site: Site | undefined, streamer: Streamer | undefined): string {
         if (site && streamer) {
             return site.getCompleteDir(streamer);
         }

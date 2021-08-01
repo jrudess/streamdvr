@@ -8,7 +8,7 @@ export interface Streamer {
     site: string;
     state: string;
     filename: string;
-    capture: ChildProcessWithoutNullStreams | null;
+    capture: ChildProcessWithoutNullStreams | undefined;
     postProcess: boolean;
     filesize: number;
     stuckcounter: number;
@@ -20,8 +20,8 @@ export interface Id {
     nm: string;
 }
 export interface CapInfo {
-    site: Site | null;
-    streamer: Streamer | null;
+    site: Site | undefined;
+    streamer: Streamer | undefined;
     filename: string;
     spawnArgs: Array<string>;
 }
@@ -92,7 +92,7 @@ export declare abstract class Site {
     protected togglePause(streamer: Streamer): boolean;
     protected checkStreamerState(streamer: Streamer, options?: StreamerStateOptions): void;
     getStreamers(): Promise<boolean>;
-    storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean): void;
+    storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | undefined, isPostProcess: boolean): void;
     getNumCapsInProgress(): number;
     haltAllCaptures(): void;
     protected haltCapture(uid: string): void;

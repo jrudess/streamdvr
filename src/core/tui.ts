@@ -35,8 +35,8 @@ export class Tui {
     protected createTui() {
         this.screen = blessed.screen({smartCSR: true, autoPadding: true, dockBorders: true});
         this.screen.title = "streamdvr";
-        this.listSelect = null;
-        this.sitelistSelect = null;
+        this.listSelect = undefined;
+        this.sitelistSelect = undefined;
 
         this.list = blessed.listtable({
             top: 0,
@@ -269,7 +269,7 @@ export class Tui {
         this.list.on("selectrow", (item: any, index: number) => {
             this.listSelect = index < this.list.rows.length ?
                 this.list.rows[index] :
-                null;
+                undefined;
         });
 
         this.list.key(["j"], () => {
@@ -303,7 +303,7 @@ export class Tui {
         this.sitelist.on("selectrow", (item: any, index: number) => {
             this.sitelistSelect = index < this.sitelist.rows.length ?
                 this.sitelist.rows[index] :
-                null;
+                undefined;
         });
 
         this.sitelist.key(["j"], () => {
@@ -373,7 +373,7 @@ export class Tui {
                 this.list.focus();
                 this.render(true);
                 this.listSelect = this.list.rows.length <= 1 ?
-                    null :
+                    undefined :
                     this.list.rows[1];
                 break;
             default:

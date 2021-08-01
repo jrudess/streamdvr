@@ -7,9 +7,9 @@ export declare class PostProcess {
     constructor(dvr: Dvr);
     add(capInfo: CapInfo): void;
     protected convert(): void;
-    protected postScript(site: Site | null, streamer: Streamer | null, completeDir: string, completeFile: string): void;
-    protected nextConvert(site: Site | null, streamer: Streamer | null): void;
-    protected getCompleteDir(site: Site | null, streamer: Streamer | null): string;
+    protected postScript(site: Site | undefined, streamer: Streamer | undefined, completeDir: string, completeFile: string): void;
+    protected nextConvert(site: Site | undefined, streamer: Streamer | undefined): void;
+    protected getCompleteDir(site: Site | undefined, streamer: Streamer | undefined): string;
     protected uniqueFileName(completeDir: string, filename: string, fileType: string): string;
     protected mvSync(oldPath: string, newPath: string): void;
 }

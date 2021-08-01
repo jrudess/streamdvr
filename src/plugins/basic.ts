@@ -18,28 +18,12 @@ class Basic extends Site {
         this.urlback = urlback;
     }
 
-    protected convertFormat(streamerList: Array<any>): void {
-        const newList: Array<any> = [];
-        for (const streamer of streamerList.values()) {
-            newList.push([streamer, "unpaused"]);
-        }
-        this.config.streamers = newList;
-        this.writeConfig();
-    }
-
     protected createListItem(id: Id): Array<string> {
         return [id.nm, "unpaused"];
     }
 
     public start(): void {
         super.start();
-
-        if (this.config.streamers.length > 0) {
-            if (this.config.streamers[0].constructor !== Array) {
-                this.print(MSG.INFO, `Upgrading ${this.cfgFile} to new format, this is a one-time conversion.`);
-                this.convertFormat(this.config.streamers);
-            }
-        }
 
         for (const entry of this.config.streamers) {
             const nm: string = entry[0];
@@ -50,7 +34,7 @@ class Basic extends Site {
                     site: this.padName,
                     state: "Offline",
                     filename: "",
-                    capture: null,
+                    capture: undefined,
                     postProcess: false,
                     filesize: 0,
                     stuckcounter: 0,

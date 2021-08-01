@@ -15,7 +15,7 @@ export interface Streamer {
     site:         string;
     state:        string;
     filename:     string;
-    capture:      ChildProcessWithoutNullStreams | null;
+    capture:      ChildProcessWithoutNullStreams | undefined;
     postProcess:  boolean;
     filesize:     number;
     stuckcounter: number;
@@ -29,8 +29,8 @@ export interface Id {
 }
 
 export interface CapInfo {
-    site:      Site | null;
-    streamer:  Streamer | null;
+    site:      Site | undefined;
+    streamer:  Streamer | undefined;
     filename:  string;
     spawnArgs: Array<string>;
 }
@@ -163,7 +163,7 @@ export abstract class Site {
 
     protected processStreamers(): void {
         for (const streamer of this.streamerList.values()) {
-            if (streamer.capture === null || streamer.postProcess) {
+            if (streamer.capture === undefined || streamer.postProcess) {
                 continue;
             }
 
@@ -328,7 +328,7 @@ export abstract class Site {
                 site: this.padName,
                 state: "Offline",
                 filename: "",
-                capture: null,
+                capture: undefined,
                 postProcess: false,
                 filesize: 0,
                 stuckcounter: 0,
@@ -427,7 +427,7 @@ export abstract class Site {
             this.redrawList = true;
         }
 
-        if (streamer.postProcess === false && streamer.capture !== null && !options.isStreaming) {
+        if (streamer.postProcess === false && streamer.capture !== undefined && !options.isStreaming) {
             // This issue entirely depends on whether the youtube-dl and/or
             // streamlink process robustly ends when a broadcast stops
             // (normally or through some error case like internet disconnection).
@@ -484,7 +484,7 @@ export abstract class Site {
         return true;
     }
 
-    public storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | null, isPostProcess: boolean) {
+    public storeCapInfo(streamer: Streamer, filename: string, capture: ChildProcessWithoutNullStreams | undefined, isPostProcess: boolean) {
         streamer.filename = filename;
         streamer.capture = capture;
         if (isPostProcess) {
@@ -509,7 +509,7 @@ export abstract class Site {
     public haltAllCaptures(): void {
         for (const streamer of this.streamerList.values()) {
             // Don't kill post-process jobs, or recording can get lost.
-            if (streamer.capture !== null && streamer.postProcess === false) {
+            if (streamer.capture !== undefined && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
             }
         }
@@ -518,7 +518,7 @@ export abstract class Site {
     protected haltCapture(uid: string): void {
         if (this.streamerList.has(uid)) {
             const streamer: Streamer | undefined = this.streamerList.get(uid);
-            if (streamer && streamer.capture !== null && streamer.postProcess === false) {
+            if (streamer && streamer.capture !== undefined && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
             }
         }
@@ -536,7 +536,7 @@ export abstract class Site {
     protected canStartCap(uid: string): boolean {
         if (this.streamerList.has(uid)) {
             const streamer: Streamer | undefined = this.streamerList.get(uid);
-            if (streamer && streamer.capture !== null) {
+            if (streamer && streamer.capture !== undefined) {
                 this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is already capturing`);
                 return false;
             }
@@ -608,7 +608,7 @@ export abstract class Site {
                     this.print(MSG.INFO, `${colors.name(streamer.nm)} recording automatically deleted (size=${sizeMB.toString()}` +
                         ` < minSize=${this.dvr.config.recording.minSize.toString()})`);
                     fs.unlinkSync(path.join(this.dvr.config.recording.captureDirectory, fullname));
-                    this.storeCapInfo(streamer, "", null, false);
+                    this.storeCapInfo(streamer, "", undefined, false);
                 } else {
                     this.dvr.postProcess.add({
                         site: this,
@@ -625,14 +625,14 @@ export abstract class Site {
             } else {
                 this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);
             }
-            this.storeCapInfo(streamer, "", null, false);
+            this.storeCapInfo(streamer, "", undefined, false);
         }
         this.refresh(streamer);
     }
 
     public clearProcessing(streamer: Streamer): void {
         // Note: setting postProcess to undefined releases program to exit
-        this.storeCapInfo(streamer, "", null, false);
+        this.storeCapInfo(streamer, "", undefined, false);
         this.redrawList = true;
 
         streamer.postProcess = false;
