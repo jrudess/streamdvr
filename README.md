@@ -152,3 +152,6 @@ If you would like StreamDVR to support a new program and have written your own w
         * `errortrace`
           Include a stack-trace for each error message
 
+### TUI Screenshot ###
+
+![img](https://github.com/jrudess/streamdvr/blob/master/tui.png)
