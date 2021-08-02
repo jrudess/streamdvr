@@ -1,10 +1,12 @@
 name: PIXIV
 plugin: ./lib/plugins/basic
 siteUrl: https://sketch.pixiv.net/@
-urlback: ""
+urlback: "/lives"
 enable: true
 m3u8fetch: scripts/m3u8_streamlink.sh
+m3u8fetch_args: []
 recorder: scripts/record_streamlink.sh
+recorder_args: []
 username: ""
 password: ""
 scanInterval: 300

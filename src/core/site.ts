@@ -36,18 +36,20 @@ export interface CapInfo {
 }
 
 export interface SiteConfig {
-    name:         string;
-    enable:       boolean;
-    plugin:       string;
-    siteUrl:      string;
-    urlback:      string;
-    m3u8fetch:    string;
-    recorder:     string;
-    username:     string;
-    password:     string;
-    scanInterval: number;
-    batchSize:    number;
-    streamers:    Array<Array<string>>;
+    name:           string;
+    enable:         boolean;
+    plugin:         string;
+    siteUrl:        string;
+    urlback:        string;
+    m3u8fetch:      string;
+    m3u8fetch_args: string;
+    recorder:       string;
+    recorder_args:  string;
+    username:       string;
+    password:       string;
+    scanInterval:   number;
+    batchSize:      number;
+    streamers:      Array<Array<string>>;
 }
 
 export interface Updates {
@@ -223,6 +225,10 @@ export abstract class Site {
 
         if (this.config.password) {
             args.push(`--${this.listName}-password=${this.config.password}`);
+        }
+
+        if (this.config.recorder_args) {
+            args = args.concat(this.config.recorder_args)
         }
 
         if (params) {

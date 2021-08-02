@@ -32,7 +32,9 @@ export interface SiteConfig {
     siteUrl: string;
     urlback: string;
     m3u8fetch: string;
+    m3u8fetch_args: string;
     recorder: string;
+    recorder_args: string;
     username: string;
     password: string;
     scanInterval: number;
