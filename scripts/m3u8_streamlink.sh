@@ -12,7 +12,7 @@ if [ ! -z "$proxyserver" ]; then
     proxyserver="--https-proxy $proxyserver"
 fi
 
-streamlink --stream-url $proxyserver $username $password $site best > $tmp/stdout 2> $tmp/stderr
+streamlink --stream-url $proxyserver $username $password $extraargs $site best > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -eq 0 ]; then
     # Streamer is online, print the m3u8 URL

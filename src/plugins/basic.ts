@@ -75,6 +75,12 @@ class Basic extends Site {
             cmd = `${cmd} -p --${this.listName}-password=${this.config.password}`;
         }
 
+        if (this.config.m3u8fetch_args) {
+            for (let arg of this.config.m3u8fetch_args) {
+                cmd = cmd + " " + arg;
+            }
+        }
+
         this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(cmd)}`);
 
         // m3u8 url in stdout

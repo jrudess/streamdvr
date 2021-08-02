@@ -228,7 +228,7 @@ export abstract class Site {
         }
 
         if (this.config.recorder_args) {
-            args = args.concat(this.config.recorder_args)
+            args = args.concat(this.config.recorder_args);
         }
 
         if (params) {
