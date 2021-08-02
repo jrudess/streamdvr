@@ -202,7 +202,7 @@ module.exports = {
         "no-unsafe-finally": "error",
         "no-unused-expressions": "error",
         "no-unused-labels": "error",
-        "no-use-before-define": "error",
+        "no-use-before-define": "off",
         "no-var": "error",
         "prefer-arrow/prefer-arrow-functions": "error",
         "prefer-const": "error",
