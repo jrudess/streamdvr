@@ -12,7 +12,7 @@ if [ ! -z "$proxyserver" ]; then
     proxyserver="--proxy $proxyserver"
 fi
 
-youtube-dl -g $site $proxyserver > $tmp/stdout 2> $tmp/stderr
+youtube-dl -g $site $proxyserver $extraargs > $tmp/stdout 2> $tmp/stderr
 
 if [ "$?" -eq 0 ]; then
     # Streamer is online
