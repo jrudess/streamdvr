@@ -48,10 +48,11 @@ export class PostProcess {
 
         const script: string = this.dvr.calcPath(this.config.recording.postprocess);
         const args: Array<string> = [ capPath, cmpPath, fileType ];
-        const myCompleteProcess: ChildProcessWithoutNullStreams = spawn(script, args);
 
-        this.dvr.print(MSG.DEBUG, `${namePrint} converting to ${fileType}: ` +
-            `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
+        this.dvr.print(MSG.INFO, `${namePrint} converting recording to ${fileType}`, site);
+        this.dvr.print(MSG.DEBUG, `${namePrint} ${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
+
+        const myCompleteProcess: ChildProcessWithoutNullStreams = spawn(script, args);
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
         }
@@ -65,7 +66,7 @@ export class PostProcess {
                 }
             }
 
-            this.dvr.print(MSG.INFO, `${namePrint} done converting ${completeFile}`, site);
+            this.dvr.print(MSG.INFO, `${namePrint} done converting ${colors.file(completeFile)}`, site);
             this.postScript(site, streamer, completeDir, completeFile);
         });
 

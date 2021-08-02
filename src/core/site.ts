@@ -520,6 +520,7 @@ export abstract class Site {
             const streamer: Streamer | undefined = this.streamerList.get(uid);
             if (streamer && streamer.capture !== undefined && streamer.postProcess === false) {
                 streamer.capture.kill("SIGINT");
+                this.print(MSG.INFO, `${colors.name(streamer.nm)} recording stopped`);
             }
         }
     }
