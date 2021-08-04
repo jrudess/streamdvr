@@ -19,7 +19,11 @@ class Basic extends Site {
     }
 
     protected createListItem(id: Id): Array<string> {
-        return [id.nm, "unpaused"];
+        if (id.uid !== id.nm) {
+            return [id.uid + "," + id.nm, "unpaused"];
+        } else {
+            return [id.nm, "unpaused"];
+        }
     }
 
     public start(): void {
