@@ -27,10 +27,11 @@ class Basic extends Site {
 
         for (const entry of this.config.streamers) {
             const nm: string = entry[0];
-            if (!this.streamerList.has(nm)) {
+            const tokens = nm.split(/,/);
+            if (!this.streamerList.has(tokens[0])) {
                 const streamer: Streamer = {
-                    uid: nm,
-                    nm: nm,
+                    uid: tokens[0],
+                    nm: tokens.length > 1 ? tokens[1] : tokens[0],
                     site: this.padName,
                     state: "Offline",
                     filename: "",
@@ -41,7 +42,7 @@ class Basic extends Site {
                     paused: entry[this.pauseIndex] === "paused",
                     isTemp: false,
                 };
-                this.streamerList.set(nm, streamer);
+                this.streamerList.set(tokens[0], streamer);
             }
         }
         this.redrawList = true;
@@ -58,8 +59,8 @@ class Basic extends Site {
         return true;
     }
 
-    protected m3u8Script(nm: string) {
-        const streamerUrl = this.config.siteUrl + nm + this.urlback;
+    protected m3u8Script(uid: string, nm: string) {
+        const streamerUrl = this.config.siteUrl + uid + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
         let cmd           = `${script} -s ${streamerUrl}`;
 
@@ -102,7 +103,7 @@ class Basic extends Site {
 
     protected checkStreamerState(streamer: Streamer): void {
         // Detect if streamer is online or actively streaming
-        const stream = this.m3u8Script(streamer.nm);
+        const stream = this.m3u8Script(streamer.uid, streamer.nm);
         const options: StreamerStateOptions = {
             msg: "",
             isStreaming: stream.status,
@@ -114,11 +115,11 @@ class Basic extends Site {
         super.checkStreamerState(streamer, options);
     }
 
-    protected async checkBatch(batch: Array<string>): Promise<boolean> {
+    protected async checkBatch(batch: Array<Id>): Promise<boolean> {
         try {
             const queries = [];
             for (const item of batch) {
-                const streamer: Streamer | undefined = this.streamerList.get(item);
+                const streamer: Streamer | undefined = this.streamerList.get(item.uid);
                 if (streamer) {
                     queries.push(this.checkStreamerState(streamer));
                 }
@@ -132,24 +133,24 @@ class Basic extends Site {
         }
     }
 
-    protected serialize(nms: Array<string>): Array<Array<string>> {
+    protected serialize(ids: Array<Id>): Array<Array<Id>> {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
         // serial.  Set batchSize to 0 for full parallel, or 1 for full serial.
-        const serRuns: Array<Array<string>> = [];
+        const serRuns: Array<Array<Id>> = [];
         let count = 0;
         let batchSize = 5;
         if (typeof this.config.batchSize !== "undefined") {
-            batchSize = this.config.batchSize === 0 ? nms.length : this.config.batchSize;
+            batchSize = this.config.batchSize === 0 ? ids.length : this.config.batchSize;
         }
 
-        while (count < nms.length) {
-            const parBatch: Array<string> = [];
+        while (count < ids.length) {
+            const parBatch: Array<Id> = [];
             const limit = count + batchSize;
 
-            for (let i = count; (i < limit) && (i < nms.length); i++) {
-                parBatch.push(nms[i]);
+            for (let i = count; (i < limit) && (i < ids.length); i++) {
+                parBatch.push(ids[i]);
                 count++;
             }
             serRuns.push(parBatch);
@@ -162,12 +163,12 @@ class Basic extends Site {
             return false;
         }
 
-        const nms: Array<string> = [];
+        const ids: Array<Id> = [];
         for (const streamer of this.streamerList.values()) {
-            nms.push(streamer.nm);
+            ids.push({uid: streamer.uid, nm: streamer.nm});
         }
 
-        const serRuns: Array<Array<string>> = this.serialize(nms);
+        const serRuns: Array<Array<Id>> = this.serialize(ids);
 
         try {
             for (const item of serRuns) {
@@ -181,7 +182,7 @@ class Basic extends Site {
     }
 
     protected setupCapture(streamer: Streamer, url: string): CapInfo {
-        const newurl: string = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.nm : url;
+        const newurl: string = this.config.recorder === "scripts/record_streamlink.sh" ? this.config.siteUrl + streamer.uid : url;
 
         const filename: string = this.getFileName(streamer.nm);
         const capInfo: CapInfo = {

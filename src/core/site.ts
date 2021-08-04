@@ -299,9 +299,10 @@ export abstract class Site {
         let dirty = false;
 
         for (const entry of list) {
+            const tokens = entry.split(/,/);
             const id: Id = {
-                uid: entry,
-                nm: entry,
+                uid: tokens[0],
+                nm: tokens.length > 1 ? tokens[1] : tokens[0],
             };
             dirty = await this.updateList(id, cmd) || dirty;
         }
@@ -359,7 +360,8 @@ export abstract class Site {
         this.render(true);
 
         for (let i = 0; i < this.config.streamers.length; i++) {
-            if (this.config.streamers[i][0] === id.uid) {
+            const tokens = this.config.streamers[i][0].split(/,/);
+            if (tokens[0] === id.uid) {
                 this.config.streamers.splice(i, 1);
                 break;
             }
@@ -371,7 +373,7 @@ export abstract class Site {
         let dirty = false;
         let streamer: Streamer | undefined = this.streamerList.get(id.uid);
         if (streamer && pauseTimer && pauseTimer > 0) {
-            const print: string = streamer.paused ? " pausing for " : " unpausing for ";
+            const print: string = streamer.paused ? "pausing for " : " unpausing for";
             this.print(MSG.INFO, `${colors.name(id.nm)} ${print} ${pauseTimer.toString()} seconds`);
             await this.sleep(pauseTimer * 1000);
             this.print(MSG.INFO, `${colors.name(id.nm)} pause-timer expired`);

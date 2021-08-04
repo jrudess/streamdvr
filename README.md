@@ -61,13 +61,19 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * CLI:
 ```
-    add     [site] [streamer]
+    add     [site] [streamer] [alias]
     addtemp [site] [streamer]
     pause   [site] <streamer> <time in seconds>
     remove  [site] [streamer]
     reload
     help
 ```
+* Streamer aliases
+
+Some websites, such as youtube, will have channel names that are random characters.   For example, the URL to capture NBC News live streams is https://www.youtube.com/channel/UCeY0bbntWzzVIaj2z3QigXg.  An alias can be specified when adding the channel to give it a better name.
+```
+    add youtube UCeY0bbntWzzVIaj2z3QigXg nbc_news
+````
 * Custom Post Processing is enabled in `config.yml` with `postprocess: /path/to/script`
 ```bash
     #!/bin/bash

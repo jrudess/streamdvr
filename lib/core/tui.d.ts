@@ -26,6 +26,6 @@ export declare class Tui {
     protected rebuildList(): void;
     render(redrawList: boolean, site?: Site): void;
     protected sleep(time: number): Promise<number>;
-    protected updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
+    protected updateStreamerList(siteName: string, uid: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<void>;
     protected updateSiteList(siteName: string, cmd: UpdateCmd): Promise<void>;
 }

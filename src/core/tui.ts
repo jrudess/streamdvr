@@ -344,7 +344,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
-                    void this.updateStreamerList(site, name, UpdateCmd.PAUSE);
+                    void this.updateStreamerList(site, name, name, UpdateCmd.PAUSE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -360,7 +360,7 @@ export class Tui {
                 if (this.listSelect && this.listSelect.length >= 2) {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
-                    void this.updateStreamerList(site, name, UpdateCmd.REMOVE);
+                    void this.updateStreamerList(site, name, name, UpdateCmd.REMOVE);
                     this.listmenu.hide();
                     this.list.focus();
                     this.render(false);
@@ -479,8 +479,8 @@ export class Tui {
                     const site: string = blessed.helpers.stripTags(this.listSelect[2]).trim();
                     const name: string = blessed.helpers.stripTags(this.listSelect[0]).trim();
                     void new Promise<void>(async () => {
-                        await this.updateStreamerList(site, name, UpdateCmd.PAUSE);
-                        await this.updateStreamerList(site, name, UpdateCmd.PAUSE, false, Number(text));
+                        await this.updateStreamerList(site, name, name, UpdateCmd.PAUSE);
+                        await this.updateStreamerList(site, name, name, UpdateCmd.PAUSE, false, Number(text));
                     });
                 }
                 this.listmenu.hide();
@@ -490,7 +490,10 @@ export class Tui {
             } else if (this.sitelist.interactive) {
                 if (this.sitelistSelect) {
                     const site: string = blessed.helpers.stripTags(this.sitelistSelect[0]).trim();
-                    void this.updateStreamerList(site, text, UpdateCmd.ADD);
+                    const tokens: Array<string> = text.split(/,/);
+                    const uid: string = tokens[0];
+                    const nm:  string = tokens.length > 1 ? tokens[1] : tokens[0];
+                    void this.updateStreamerList(site, uid, nm, UpdateCmd.ADD);
                 }
                 this.sitemenu.focus();
                 this.render(false);
@@ -522,16 +525,35 @@ export class Tui {
             const cmd: UpdateCmd = add   ? UpdateCmd.ADD :
                                    pause ? UpdateCmd.PAUSE :
                                            UpdateCmd.REMOVE;
-            if (tokens.length >= 3) {
+            if (cmd === UpdateCmd.REMOVE && tokens.length >= 3) {
                 const nm: string = tokens[2];
                 void new Promise(async () => {
-                    await this.updateStreamerList(siteName, nm, cmd, temp);
-                    if (pause && tokens.length >= 4) {
-                        const pauseTimer: number = Number(tokens[3]);
-                        await this.updateStreamerList(siteName, nm, cmd, temp, pauseTimer);
-                    }
+                    await this.updateStreamerList(siteName, nm, nm, cmd, temp);
                     return true;
                 });
+            } else if (tokens.length >= 3) {
+                if (pause) {
+                    const nm: string = tokens[2];
+                    void new Promise(async () => {
+                        await this.updateStreamerList(siteName, nm, nm, cmd, temp);
+                        if (tokens.length >= 4) {
+                            const pauseTimer: number = Number(tokens[3]);
+                            await this.updateStreamerList(siteName, nm, nm, cmd, temp, pauseTimer);
+                        }
+                        return true;
+                    });
+                } else {
+                    const uid: string = tokens[2];
+                    const nm: string = tokens.length > 3 ? tokens[3] : tokens[2];
+                    void new Promise(async () => {
+                        await this.updateStreamerList(siteName, uid, nm, cmd, temp);
+                        if (pause && tokens.length >= 4) {
+                            const pauseTimer: number = Number(tokens[3]);
+                            await this.updateStreamerList(siteName, uid, nm, cmd, temp, pauseTimer);
+                        }
+                        return true;
+                    });
+                }
             } else if (tokens.length === 2) {
                 void new Promise(async () => {
                     await this.updateSiteList(siteName, cmd);
@@ -547,8 +569,8 @@ export class Tui {
 
         case "help":
             this.logbody.pushLine("Commands:");
-            this.logbody.pushLine("add     [site] [streamer]");
-            this.logbody.pushLine("addtemp [site] [streamer]");
+            this.logbody.pushLine("add     [site] [streamer] <alias>");
+            this.logbody.pushLine("addtemp [site] [streamer] <alias>");
             this.logbody.pushLine("pause   [site] <streamer>");
             this.logbody.pushLine("unpause [site] <streamer>");
             this.logbody.pushLine("remove  [site] [streamer]");
@@ -651,13 +673,23 @@ export class Tui {
     }
 
     // Add and remove streamers
-    protected async updateStreamerList(siteName: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
+    protected async updateStreamerList(siteName: string, uid: string, nm: string, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number) {
         const site: Site | undefined = this.SITES.get(siteName);
         if (!site) {
             return;
         }
+        if (cmd === UpdateCmd.PAUSE || cmd === UpdateCmd.REMOVE) {
+            // The TUI streamer list only stores the name, not UID, so need to
+            // scan the streamerList to find the UID
+            for (const streamer of site.streamerList.values()) {
+                if (streamer.nm === nm) {
+                    uid = streamer.uid;
+                    break;
+                }
+            }
+        }
         const id: Id = {
-            uid: nm,
+            uid: uid,
             nm: nm,
         };
         try {
