@@ -19,7 +19,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Supported sites: Twitch, Youtube, Pixiv, Picarto
 
-* Docker available at https://hub.docker.com/r/purrsevere/streamdvr-docker/
+* Docker available at https://ghcr.io/purrsevere/streamdvr
 
 ### Setup ###
 
