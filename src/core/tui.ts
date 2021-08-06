@@ -577,6 +577,10 @@ export class Tui {
             this.logbody.pushLine("reload");
             this.logbody.setScrollPerc(100);
             break;
+
+        case "":
+            break;
+
         default:
             this.dvr.print(MSG.ERROR, "Unknown command " + tokens[0]);
         }
