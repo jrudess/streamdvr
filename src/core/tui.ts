@@ -699,7 +699,7 @@ export class Tui {
         try {
             const dirty: boolean = await site.updateList(id, cmd, isTemp, pauseTimer) && !isTemp;
             if (dirty) {
-                site.writeConfig();
+                await site.writeConfig();
             }
         } catch (err) {
             this.dvr.print(MSG.ERROR, err.toString());
@@ -714,7 +714,7 @@ export class Tui {
 
         switch (cmd) {
         case UpdateCmd.PAUSE:
-            site.pause();
+            await site.pause();
             break;
         case UpdateCmd.EN_DIS:
             if (site.config.enable) {
@@ -731,7 +731,7 @@ export class Tui {
             }
             this.redrawSites();
             this.render(true);
-            site.writeConfig();
+            await site.writeConfig();
             break;
         default:
             site.print(MSG.ERROR, "Unexpected cmd");

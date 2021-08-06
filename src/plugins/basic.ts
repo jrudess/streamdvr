@@ -19,11 +19,8 @@ class Basic extends Site {
     }
 
     protected createListItem(id: Id): Array<string> {
-        if (id.uid !== id.nm) {
-            return [id.uid + "," + id.nm, "unpaused"];
-        } else {
-            return [id.nm, "unpaused"];
-        }
+        const prefix = id.uid !== id.nm ? id.uid + "," : "";
+        return [prefix + id.nm, "unpaused"];
     }
 
     public start(): void {
@@ -52,18 +49,18 @@ class Basic extends Site {
         this.redrawList = true;
     }
 
-    public async connect(): Promise<boolean> {
+    public async connect() {
         this.redrawList = true;
         this.print(MSG.DEBUG, "Site connected");
         return true;
     }
 
-    public async disconnect(): Promise<boolean> {
+    public async disconnect() {
         this.print(MSG.DEBUG, "Site disconnected");
         return true;
     }
 
-    protected m3u8Script(uid: string, nm: string) {
+    protected async m3u8Script(uid: string, nm: string) {
         const streamerUrl = this.config.siteUrl + uid + this.urlback;
         const script      = this.dvr.calcPath(this.config.m3u8fetch);
         let cmd           = `${script} -s ${streamerUrl}`;
@@ -81,7 +78,7 @@ class Basic extends Site {
         }
 
         if (this.config.m3u8fetch_args) {
-            for (let arg of this.config.m3u8fetch_args) {
+            for (const arg of this.config.m3u8fetch_args) {
                 cmd = cmd + " " + arg;
             }
         }
@@ -105,9 +102,9 @@ class Basic extends Site {
         return {status: false, m3u8: ""};
     }
 
-    protected checkStreamerState(streamer: Streamer): void {
+    protected async checkStreamerState(streamer: Streamer) {
         // Detect if streamer is online or actively streaming
-        const stream = this.m3u8Script(streamer.uid, streamer.nm);
+        const stream = await this.m3u8Script(streamer.uid, streamer.nm);
         const options: StreamerStateOptions = {
             msg: "",
             isStreaming: stream.status,
@@ -116,10 +113,10 @@ class Basic extends Site {
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
         options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
-        super.checkStreamerState(streamer, options);
+        await super.checkStreamerState(streamer, options);
     }
 
-    protected async checkBatch(batch: Array<Id>): Promise<boolean> {
+    protected async checkBatch(batch: Array<Id>) {
         try {
             const queries = [];
             for (const item of batch) {
@@ -162,8 +159,9 @@ class Basic extends Site {
         return serRuns;
     }
 
-    public async getStreamers(): Promise<boolean> {
-        if (!super.getStreamers()) {
+    public async getStreamers() {
+        const ret: boolean = await super.getStreamers();
+        if (!ret) {
             return false;
         }
 

@@ -10,6 +10,7 @@ import {Site, CapInfo, UpdateCmd} from "./site";
 import {Tui} from "./tui";
 
 const colors = require("colors");
+const fsp = require("fs/promises");
 
 export enum MSG {
     INFO  = 0,
@@ -206,7 +207,7 @@ export abstract class Dvr {
     public async start() {
         // Scan capture directory for leftover ts files to convert
         // in case of a bad shutdown
-        const allfiles: Array<string> = fs.readdirSync(this.config.recording.captureDirectory);
+        const allfiles: Array<string> = await fsp.readdir(this.config.recording.captureDirectory);
         const tsfiles: Array<string> = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
 
         for (const ts of tsfiles.values()) {
@@ -217,7 +218,7 @@ export abstract class Dvr {
                 spawnArgs: [],
             };
 
-            this.postProcess.add(capInfo);
+            await this.postProcess.add(capInfo);
         }
     }
 
