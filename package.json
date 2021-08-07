@@ -1,10 +1,10 @@
 {
     "name": "streamdvr",
-    "version": "0.14.0",
+    "version": "0.14.1",
     "description": "DVR for streaming entertainment",
     "main": "streamdvr",
     "engines": {
-        "node": ">=10.13.0"
+        "node": ">=12.0.0"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
