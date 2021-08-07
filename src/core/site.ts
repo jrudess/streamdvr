@@ -495,9 +495,7 @@ export abstract class Site {
             this.print(MSG.DEBUG, "Skipping lookup while exit in progress...");
             return false;
         }
-        this.print(MSG.DEBUG, "processing streamers");
         await this.processStreamers();
-        this.print(MSG.DEBUG, "done processing streamers");
         return true;
     }
 

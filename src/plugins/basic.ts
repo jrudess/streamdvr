@@ -3,9 +3,9 @@
 import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site";
 import {Dvr, MSG} from "../core/dvr";
 import {Tui} from "../core/tui";
-import {execSync} from "child_process";
 
 const colors = require("colors");
+const spawn = require("await-spawn");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
@@ -51,51 +51,51 @@ class Basic extends Site {
 
     public async connect() {
         this.redrawList = true;
-        this.print(MSG.DEBUG, "Site connected");
         return true;
     }
 
     public async disconnect() {
-        this.print(MSG.DEBUG, "Site disconnected");
         return true;
     }
 
     protected async m3u8Script(uid: string, nm: string) {
-        const streamerUrl = this.config.siteUrl + uid + this.urlback;
-        const script      = this.dvr.calcPath(this.config.m3u8fetch);
-        let cmd           = `${script} -s ${streamerUrl}`;
+        const streamerUrl: string = this.config.siteUrl + uid + this.urlback;
+        const script: string      = this.dvr.calcPath(this.config.m3u8fetch);
+        let args: Array<string>   = ["-s", streamerUrl];
 
         if (this.dvr.config.proxy.enable) {
-            cmd = `${cmd} -p ${this.dvr.config.proxy.server}`;
+            args.push("-p");
+            args.push(this.dvr.config.proxy.server);
         }
 
         if (this.config.username) {
-            cmd = `${cmd} -u --${this.listName}-username=${this.config.username}`;
+            args.push("-u");
+            args.push(`--${this.listName}-username=${this.config.username}`);
         }
 
         if (this.config.password) {
-            cmd = `${cmd} -p --${this.listName}-password=${this.config.password}`;
+            args.push("-p");
+            args.push(`--${this.listName}-password=${this.config.password}`);
         }
 
         if (this.config.m3u8fetch_args) {
-            for (const arg of this.config.m3u8fetch_args) {
-                cmd = cmd + " " + arg;
-            }
+            args.concat(this.config.m3u8fetch_args);
         }
 
-        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(cmd)}`);
+        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.toString())}`);
 
         // m3u8 url in stdout
         try {
-            const stdout = execSync(cmd, {stdio: ["pipe", "pipe", "ignore"]});
-            let url = stdout.toString();
-            if (url) {
-                url = url.replace(/\r?\n|\r/g, "");
-                return {status: true, m3u8: url};
-            }
+            const url = await spawn(script, args, {stdio: ["pipe", "pipe", "ignore"]});
+            let urlStr: string = url.toString().replace(/\r?\n|\r/g, "");
+            return {status: urlStr === "" ? false : true, m3u8: urlStr};
         } catch (err) {
+            this.print(MSG.ERROR, "m3u8 try fail");
             if (err.stdout) {
                 this.print(MSG.ERROR, err.stdout.toString());
+            }
+            if (err.stderr) {
+                this.print(MSG.ERROR, err.stderr.toString());
             }
         }
 

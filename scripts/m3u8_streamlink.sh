@@ -20,6 +20,12 @@ if [ "$?" -eq 0 ]; then
     exit 0
 else
 
+    grep "User is not online" $tmp/stdout > /dev/null 2> /dev/null
+    if [ "$?" -eq 0 ]; then
+        # This is an offline case for CB
+        exit 0
+    fi
+
     grep "No plugin" $tmp/stdout > /dev/null 2> /dev/null
     if [ "$?" -eq 0 ]; then
         # This is an offline case for CB
