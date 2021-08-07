@@ -64,7 +64,7 @@ class Basic extends Site {
         let args: Array<string>   = ["-s", streamerUrl];
 
         if (this.dvr.config.proxy.enable) {
-            args.push("-p");
+            args.push("-P");
             args.push(this.dvr.config.proxy.server);
         }
 
