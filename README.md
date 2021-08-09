@@ -27,7 +27,6 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
   * StreamDVR does not work in a windows command prompt.  Use WSL to run StreamDVR in Windows.
 * Optional Dependencies: `streamlink`, `youtube-dl`
 
-  * Using `streamlink` requires an additional streamlink plugin at https://github.com/back-to/generic
   * `streamlink` is used to fetch m3u8 URLs for Pixiv and Picarto by default
   * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Youtube by default
 
@@ -42,11 +41,9 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 * config files are loaded from the following paths (listed in precedence order):
   * $XDG_CONFIG_HOME/streamdvr/
   * $HOME/.config/streamdvr/
-    * %LOCALAPPDATA%/streamdvr/ on windows
   * $cwd/config/
 
 * To run: `streamdvr`
-* To suppress node warnings: `NODE_NO_WARNINGS=1 streamdvr`
 
 * Filename formatting:
   * `%s` Site Name
