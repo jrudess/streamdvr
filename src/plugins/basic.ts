@@ -79,7 +79,7 @@ class Basic extends Site {
         }
 
         if (this.config.m3u8fetch_args) {
-            args.concat(this.config.m3u8fetch_args);
+            args = args.concat(this.config.m3u8fetch_args);
         }
 
         this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.toString())}`);
