@@ -63,7 +63,7 @@ export class PostProcess {
                     try {
                         await fsp.access(args[0], fsp.F_OK);
                         await fsp.unlink(args[0]);
-                    } catch (error) {
+                    } catch (error: any) {
                         this.dvr.print(MSG.ERROR, `${args[0]} does not exist, cannot remove`);
                     }
                 }
@@ -138,7 +138,7 @@ export class PostProcess {
                 name = path.join(completeDir, fileinc + "." + fileType);
                 count++;
             }
-        } catch (err) {
+        } catch (err: any) {
         }
         return fileinc;
     }
@@ -147,13 +147,13 @@ export class PostProcess {
 
         try {
             await fsp.rename(oldPath, newPath);
-        } catch (err) {
+        } catch (err: any) {
             if (err) {
                 if (err.code === "EXDEV") {
                     try {
                         await fsp.copyFile(oldPath, newPath);
                         await fsp.unlink(oldPath);
-                    } catch (err) {
+                    } catch (err: any) {
                         if (err) {
                             this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
                         }

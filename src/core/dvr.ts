@@ -108,7 +108,7 @@ export abstract class Dvr {
         const name: string = fs.readFileSync(this.configfile, "utf8");
         try {
             this.config = yaml.load(name) as Config;
-        } catch (err) {
+        } catch (err: any) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);
         }
@@ -162,7 +162,7 @@ export abstract class Dvr {
     public loadConfig(): void {
         try {
             this.config = yaml.load(fs.readFileSync(this.configfile, "utf8")) as Config;
-        } catch (err) {
+        } catch (err: any) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);
         }
@@ -237,7 +237,7 @@ export abstract class Dvr {
                     await site.processUpdates(UpdateCmd.ADD);
                     await site.processUpdates(UpdateCmd.REMOVE);
                     await site.getStreamers();
-                } catch (err) {
+                } catch (err: any) {
                     site.print(MSG.ERROR, err.toString());
                     await site.disconnect();
                     init = true;

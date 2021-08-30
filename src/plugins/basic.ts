@@ -89,7 +89,7 @@ class Basic extends Site {
             const url = await spawn(script, args, {stdio: ["pipe", "pipe", "ignore"]});
             let urlStr: string = url.toString().replace(/\r?\n|\r/g, "");
             return {status: urlStr === "" ? false : true, m3u8: urlStr};
-        } catch (err) {
+        } catch (err: any) {
             this.print(MSG.ERROR, "m3u8 try fail");
             if (err.stdout) {
                 this.print(MSG.ERROR, err.stdout.toString());
@@ -128,7 +128,7 @@ class Basic extends Site {
 
             await Promise.all(queries);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             this.print(MSG.ERROR, err.toString());
             return false;
         }
@@ -177,7 +177,7 @@ class Basic extends Site {
                 await this.checkBatch(item);
             }
             return true;
-        } catch (err) {
+        } catch (err: any) {
             this.print(MSG.ERROR, err.toString());
             return false;
         }

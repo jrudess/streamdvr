@@ -100,8 +100,8 @@ export abstract class Site {
         this.updateName   = path.join(dvr.configdir, `${this.listName}_updates.yml`);
         try {
             this.config   = yaml.load(fs.readFileSync(this.cfgFile, "utf8")) as SiteConfig;
-        } catch (e) {
-            this.print(MSG.ERROR, e);
+        } catch (e: any) {
+            this.print(MSG.ERROR, e.toString());
             process.exit(1);
         }
         this.streamerList = new Map();
@@ -174,7 +174,7 @@ export abstract class Site {
             const file: string = path.join(this.dvr.config.recording.captureDirectory, streamer.filename);
             try {
                 await this.checkFileSize(streamer, file);
-            } catch (err) {
+            } catch (err: any) {
                 if (err.code === "ENOENT") {
                     this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(file)} not found ` +
                         "in capturing directory, cannot check file size");
@@ -253,8 +253,8 @@ export abstract class Site {
         try {
             const data: any = await fsp.readFile(this.updateName, "utf8");
             updates = yaml.load(data) as Updates;
-        } catch (e) {
-            this.print(MSG.ERROR, e);
+        } catch (e: any) {
+            this.print(MSG.ERROR, e.toString());
             return;
         }
         let list: Array<string> = [];
@@ -284,7 +284,7 @@ export abstract class Site {
             if (dirty) {
                 await this.writeConfig();
             }
-        } catch (err) {
+        } catch (err: any) {
             this.print(MSG.ERROR, err.toString());
         }
     }
@@ -634,7 +634,7 @@ export abstract class Site {
                     });
                 }
             }
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === "ENOENT") {
                 this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(capInfo.filename + ".ts")} not found ` +
                     `in capturing directory, cannot convert to ${this.dvr.config.recording.autoConvertType}`);

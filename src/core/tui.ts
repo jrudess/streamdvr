@@ -701,7 +701,7 @@ export class Tui {
             if (dirty) {
                 await site.writeConfig();
             }
-        } catch (err) {
+        } catch (err: any) {
             this.dvr.print(MSG.ERROR, err.toString());
         }
     }
