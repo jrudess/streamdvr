@@ -1,24 +1,24 @@
-"use strict";
+//"use strict";
 
-import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site";
-import {Dvr, MSG} from "../core/dvr";
-import {Tui} from "../core/tui";
+import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site.ts";
+import {Dvr, MSG} from "../core/dvr.ts";
+// import {Tui} from "../core/tui";
 
-const colors = require("colors");
-const spawn = require("await-spawn");
+//const colors = require("colors");
+//const spawn = require("await-spawn");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
-class Basic extends Site {
+export class Basic extends Site {
 
     protected urlback: string;
 
-    public constructor(siteName: string, dvr: Dvr, tui: Tui, urlback: string) {
-        super(siteName, dvr, tui);
+    public constructor(siteName: string, dvr: Dvr, /*tui: Tui,*/ urlback: string) {
+        super(siteName, dvr /*, tui*/);
         this.urlback = urlback;
     }
 
-    protected createListItem(id: Id): Array<string> {
+    protected createListItem(id: Id): string[] {
         const prefix = id.uid !== id.nm ? id.uid + "," : "";
         return [prefix + id.nm, "unpaused"];
     }
@@ -61,34 +61,44 @@ class Basic extends Site {
     protected async m3u8Script(uid: string, nm: string) {
         const streamerUrl: string = this.config.siteUrl + uid + this.urlback;
         const script: string      = this.dvr.calcPath(this.config.m3u8fetch);
-        let args: Array<string>   = ["-s", streamerUrl];
+        let cmd: string[]         = [script, "-s", streamerUrl];
 
         if (this.dvr.config.proxy.enable) {
-            args.push("-P");
-            args.push(this.dvr.config.proxy.server);
+            cmd.push("-P");
+            cmd.push(this.dvr.config.proxy.server);
         }
 
         if (this.config.username) {
-            args.push("-u");
-            args.push(`--${this.listName}-username=${this.config.username}`);
+            cmd.push("-u");
+            cmd.push(`--${this.listName}-username=${this.config.username}`);
         }
 
         if (this.config.password) {
-            args.push("-p");
-            args.push(`--${this.listName}-password=${this.config.password}`);
+            cmd.push("-p");
+            cmd.push(`--${this.listName}-password=${this.config.password}`);
         }
 
         if (this.config.m3u8fetch_args) {
-            args = args.concat(this.config.m3u8fetch_args);
+            cmd = cmd.concat(this.config.m3u8fetch_args);
         }
 
-        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.join(" "))}`);
+        // this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.toString())}`);
+        this.print(MSG.DEBUG, `${nm} running: ${cmd.join(" ")}`);
 
         // m3u8 url in stdout
         try {
-            const url = await spawn(script, args, {stdio: ["pipe", "pipe", "ignore"]});
-            let urlStr: string = url.toString().replace(/\r?\n|\r/g, "");
-            return {status: urlStr === "" ? false : true, m3u8: urlStr};
+            const p = Deno.run({cmd: cmd, stdout: "piped", stderr: "piped", stdin: "null"});
+            const rawOutput: Uint8Array = await p.output();
+            const rawError: Uint8Array = await p.stderrOutput();
+            const { code } = await p.status();
+            p.close();
+            if (code == 0) {
+                let urlStr: string = new TextDecoder().decode(rawOutput).replace(/\r?\n|\r/g, "");
+                return {status: urlStr === "" ? false : true, m3u8: urlStr};
+            } else {
+                this.print(MSG.ERROR, rawError.toString());
+                return {status: false, m3u8: ""};
+            }
         } catch (err: any) {
             this.print(MSG.ERROR, "m3u8 try fail");
             if (err.stdout) {
@@ -112,11 +122,12 @@ class Basic extends Site {
             m3u8: stream.m3u8,
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
-        options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
+        // options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
+        options.msg    = `${streamer.nm} is ${streamer.state}`;
         await super.checkStreamerState(streamer, options);
     }
 
-    protected async checkBatch(batch: Array<Id>) {
+    protected async checkBatch(batch: Id[]) {
         try {
             const queries = [];
             for (const item of batch) {
@@ -134,12 +145,12 @@ class Basic extends Site {
         }
     }
 
-    protected serialize(ids: Array<Id>): Array<Array<Id>> {
+    protected serialize(ids: Id[]): Id[][] {
         // Break the streamer list up into batches - this throttles the total
         // number of simultaneous lookups via streamlink/youtubedl by not being
         // fully parallel, and reduces the lookup latency by not being fully
         // serial.  Set batchSize to 0 for full parallel, or 1 for full serial.
-        const serRuns: Array<Array<Id>> = [];
+        const serRuns: Id[][] = [];
         let count = 0;
         let batchSize = 5;
         if (typeof this.config.batchSize !== "undefined") {
@@ -147,7 +158,7 @@ class Basic extends Site {
         }
 
         while (count < ids.length) {
-            const parBatch: Array<Id> = [];
+            const parBatch: Id[] = [];
             const limit = count + batchSize;
 
             for (let i = count; (i < limit) && (i < ids.length); i++) {
@@ -165,12 +176,12 @@ class Basic extends Site {
             return false;
         }
 
-        const ids: Array<Id> = [];
+        const ids: Id[] = [];
         for (const streamer of this.streamerList.values()) {
             ids.push({uid: streamer.uid, nm: streamer.nm});
         }
 
-        const serRuns: Array<Array<Id>> = this.serialize(ids);
+        const serRuns: Id[][] = this.serialize(ids);
 
         try {
             for (const item of serRuns) {
@@ -197,4 +208,3 @@ class Basic extends Site {
     }
 }
 
-exports.Plugin = Basic;

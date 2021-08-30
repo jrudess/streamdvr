@@ -1,16 +1,14 @@
-"use strict";
+//"use strict";
 
-import * as fs from "fs";
-import * as moment from "moment";
-import * as path from "path";
-import * as yaml from "js-yaml";
-
-import {PostProcess} from "./postprocess";
-import {Site, CapInfo, UpdateCmd} from "./site";
-import {Tui} from "./tui";
-
-const colors = require("colors");
-const fsp = require("fs/promises");
+import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as path from "https://deno.land/std/path/mod.ts";
+import * as yaml from "https://deno.land/std/encoding/yaml.ts";
+import * as log from "https://deno.land/std/log/mod.ts";
+import * as colors from "https://deno.land/std/fmt/colors.ts";
+import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
+import {PostProcess} from "./postprocess.ts";
+import {Site, CapInfo, UpdateCmd} from "./site.ts";
+// import {Tui} from "./tui.ts";
 
 export enum MSG {
     INFO  = 0,
@@ -89,14 +87,14 @@ export interface LogOptions {
 export abstract class Dvr {
 
     public config: Config;
-    public logger: Console | undefined;
+    public logger: log.Logger | undefined;
 
     public postProcess: PostProcess;
     public path: string;
     public tryingToExit: boolean;
-    public configdir: string;
+    public configdir: string | undefined;
     public configfile: string;
-    public tui: Tui | undefined;
+    // public tui: Tui | undefined;
 
     public constructor(dir: string) {
         this.path = dir;
@@ -105,25 +103,23 @@ export abstract class Dvr {
         this.configdir = "";
         this.configfile = this.findConfig();
 
-        const name: string = fs.readFileSync(this.configfile, "utf8");
         try {
             this.config = yaml.load(name) as Config;
         } catch (err: any) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             process.exit(1);
+            const name: string = Deno.readTextFileSync(this.configfile) as string;
+            this.config = yaml.parse(name) as Config;
+        } catch(err: any) {
+            console.log("ERROR: Failed to load config.yml: " + err.toString());
+            Deno.exit(1);
         }
         this.loadConfig();
 
-        if (this.config.log.enable) {
-            const {Console} = require("console");
-            const attr: string = this.config.log.append ? "a" : "w";
-            const logFile: fs.WriteStream = fs.createWriteStream("./streamdvr.log", {flags: attr});
-            this.logger = new Console({stdout: logFile, stderr: logFile});
-        }
 
-        if (this.config.tui.enable) {
-            this.tui = new Tui(this);
-        }
+        // if (this.config.tui.enable) {
+        //     this.tui = new Tui(this);
+        //  }
 
         this.postProcess = new PostProcess(this);
     }
@@ -135,64 +131,78 @@ export abstract class Dvr {
     protected findConfig(): string {
         let checkHome = 1;
 
-        if (process.env.XDG_CONFIG_HOME) {
-            this.configdir = path.join(process.env.XDG_CONFIG_HOME, "streamdvr");
+        let xdg_config: string | undefined = Deno.env.get("XDG_CONFIG_HOME");
+        if (xdg_config !== undefined) {
+            this.configdir = path.join(xdg_config, "streamdvr");
             if (fs.existsSync(path.join(this.configdir, "config.yml"))) {
                 checkHome = 0;
             }
         }
 
         if (checkHome) {
-            this.configdir = `${process.env.HOME}/.config/streamdvr`;
+            this.configdir = `${Deno.env.get("HOME")}/.config/streamdvr`;
         }
 
-        if (!fs.existsSync(path.join(this.configdir, "config.yml"))) {
-            this.configdir = "./config/";
-        }
-
-        const configfile: string = path.join(this.configdir, "config.yml");
-        if (!fs.existsSync(configfile)) {
+        if (this.configdir !== undefined) {
+            if (!fs.existsSync(path.join(this.configdir, "config.yml"))) {
+                this.configdir = "./config/";
+            }
+        } else {
             console.log("ERROR: Could not find config.yml");
-            process.exit(1);
+            Deno.exit(1);
         }
 
-        return configfile;
+        if (this.configdir !== undefined) {
+            const configfile: string = path.join(this.configdir, "config.yml");
+            if (!fs.existsSync(configfile)) {
+                console.log("ERROR: Could not find config.yml");
+                Deno.exit(1);
+            }
+            return configfile;
+        }
+
+        console.log("ERROR: Could not find config.yml");
+        Deno.exit(1);
     }
 
     public loadConfig(): void {
         try {
-            this.config = yaml.load(fs.readFileSync(this.configfile, "utf8")) as Config;
+            this.config = yaml.parse(Deno.readTextFileSync(this.configfile)) as Config;
         } catch (err: any) {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
-            process.exit(1);
+            Deno.exit(1);
         }
 
-        colors.setTheme({
-            name:    this.config.colors.name,
-            state:   this.config.colors.state,
-            offline: this.config.colors.offline,
-            prompt:  this.config.colors.prompt,
-            file:    this.config.colors.file,
-            time:    this.config.colors.time,
-            site:    this.config.colors.site,
-            cmd:     this.config.colors.cmd,
-            debug:   this.config.colors.debug,
-            error:   this.config.colors.error,
-        });
+        // colors.setTheme({
+        //     name:    this.config.colors.name,
+        //     state:   this.config.colors.state,
+        //     offline: this.config.colors.offline,
+        //     prompt:  this.config.colors.prompt,
+        //     file:    this.config.colors.file,
+        //     time:    this.config.colors.time,
+        //     site:    this.config.colors.site,
+        //     cmd:     this.config.colors.cmd,
+        //     debug:   this.config.colors.debug,
+        //     error:   this.config.colors.error,
+        // });
 
         this.config.recording.captureDirectory  = this.mkdir(this.config.recording.captureDirectory);
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
+        // fs.ensureDirSync(this.config.recording.captureDirectory);
+        // fs.ensureDirSync(this.config.recording.completeDirectory);
 
-        if (this.config.tui.enable && this.tui) {
-            this.tui.render(false);
-        }
+        // if (this.config.tui.enable && this.tui) {
+        //     this.tui.render(false);
+        // }
     }
 
     public abstract exit(): void;
 
     public mkdir(dir: string): string {
         const fulldir: string = path.resolve(dir);
-        fs.mkdirSync(fulldir, {recursive: true});
+        if (!fs.existsSync(fulldir)) {
+            fs.ensureDirSync(fulldir);
+        }
         return fulldir;
     }
 
@@ -207,8 +217,13 @@ export abstract class Dvr {
     public async start() {
         // Scan capture directory for leftover ts files to convert
         // in case of a bad shutdown
-        const allfiles: Array<string> = await fsp.readdir(this.config.recording.captureDirectory);
-        const tsfiles: Array<string> = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
+        const allfiles: string[] = [];
+        for await (const dirEntry of Deno.readDir(this.config.recording.captureDirectory)) {
+            if (dirEntry.isFile) {
+                allfiles.push(dirEntry.name);
+            }
+        }
+        const tsfiles: string[] = allfiles.filter((x: string) => x.match(/.*\.ts$/ig));
 
         for (const ts of tsfiles.values()) {
             const capInfo: CapInfo = {
@@ -238,7 +253,7 @@ export abstract class Dvr {
                     await site.processUpdates(UpdateCmd.REMOVE);
                     await site.getStreamers();
                 } catch (err: any) {
-                    site.print(MSG.ERROR, err.toString());
+                    this.print(MSG.ERROR, err.toString(), site);
                     await site.disconnect();
                     init = true;
                 }
@@ -256,45 +271,26 @@ export abstract class Dvr {
         return moment().format(this.config.recording.dateFormat);
     }
 
-    protected log(text: string, options?: LogOptions): void {
-        if (this.config.tui.enable && this.tui) {
-            this.tui.log(text);
-        } else if (options && options.trace && this.config.debug.errortrace) {
-            console.trace(text);
-        } else if (!this.config.enable.daemon) {
-            console.log(text);
-        }
+    public print(lvl: MSG, msg: string, site?: Site | undefined) : void {
+        let siteStr: string = site ? `${site.padName}` : "DVR     ";
         if (this.logger) {
-            this.logger.log(text);
-        }
-    }
-
-    protected msg(msg: string, site?: Site | undefined, options?: LogOptions): void {
-        const time: string = `[${this.getDateTime()}]`;
-        if (site) {
-            this.log(`${colors.time(time)} ${colors.site(site.padName)} ${msg}`, options);
-        } else {
-            let outmsg: string = "DVR".padEnd(8, " ");
-            outmsg = `${colors.time(time)} ${colors.site(outmsg)} ${msg}`;
-            this.log(outmsg, options);
-        }
-    }
-
-    public print(lvl: MSG, msg: string, site?: Site | undefined): void {
-        let out: string = "";
-        const options = {trace: false};
-        if (lvl === MSG.ERROR) {
-            out = `${colors.error("[ERROR]")} ${msg}`;
-            options.trace = true;
-        } else if (lvl === MSG.DEBUG) {
-            if (this.config.debug.log) {
-                out = `${colors.debug("[DEBUG]")} ${msg}`;
+            const m: string = `${siteStr} ${msg}`;
+            // this.logger.info(m);
+            if (lvl === MSG.INFO) {
+                this.logger.info(m);
+            } else if (lvl === MSG.DEBUG) {
+                this.logger.debug(m);
+            } else if (lvl === MSG.ERROR) {
+                this.logger.error(m);
             }
         } else {
-            out = msg;
-        }
-        if (out) {
-            this.msg(out, site, options);
+            if (lvl === MSG.INFO) {
+                console.log(`[INFO] ${siteStr} ${msg}`);
+            } else if (lvl === MSG.DEBUG) {
+                console.log(`[DEBUG] ${siteStr} ${msg}`);
+            } else if (lvl === MSG.ERROR) {
+                console.log(`[ERROR] ${siteStr} ${msg}`);
+            }
         }
     }
 

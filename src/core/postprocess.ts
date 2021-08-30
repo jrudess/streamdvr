@@ -1,18 +1,18 @@
-"use strict";
+//"use strict";
 
-import * as path from "path";
-import {spawn, ChildProcessWithoutNullStreams} from "child_process";
-import {Dvr, Config, MSG} from "../core/dvr.js";
-import {Site, Streamer, CapInfo} from "../core/site.js";
+import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as path from "https://deno.land/std/path/mod.ts";
+import * as colors from "https://deno.land/std/fmt/colors.ts"
+import {spawn, ChildProcess} from "https://deno.land/std/node/child_process.ts";
+import {Dvr, Config, MSG} from "./dvr.ts";
+import {Site, Streamer, CapInfo} from "./site.ts";
 
-const colors = require("colors");
-const fsp = require("fs/promises");
 
 export class PostProcess {
 
     protected dvr: Dvr;
     protected config: Config;
-    protected postProcessQ: Array<CapInfo>;
+    protected postProcessQ: CapInfo[];
 
     public constructor(dvr: Dvr) {
         this.dvr = dvr;
@@ -32,7 +32,8 @@ export class PostProcess {
         const capInfo: CapInfo               = this.postProcessQ[0];
         const site: Site | undefined         = capInfo.site;
         const streamer: Streamer | undefined = capInfo.streamer;
-        const namePrint: string              = streamer ? `${colors.name(streamer.nm)}` : "";
+        // const namePrint: string              = streamer ? `${colors.name(streamer.nm)}` : "";
+        const namePrint: string              = streamer ? `${streamer.nm}` : "";
         const fileType: string               = this.config.recording.autoConvertType;
         const completeDir: string            = await this.getCompleteDir(site, streamer);
         const completeFile: string           = await this.uniqueFileName(completeDir, capInfo.filename, fileType) + "." + fileType;
@@ -47,12 +48,13 @@ export class PostProcess {
         }
 
         const script: string = this.dvr.calcPath(this.config.recording.postprocess);
-        const args: Array<string> = [ capPath, cmpPath, fileType ];
+        const args: string[] = [ capPath, cmpPath, fileType ];
 
         this.dvr.print(MSG.INFO, `${namePrint} converting recording to ${fileType}`, site);
-        this.dvr.print(MSG.DEBUG, `${namePrint} ${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
+        // this.dvr.print(MSG.DEBUG, `${namePrint} ${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
+        this.dvr.print(MSG.DEBUG, `${namePrint} ${script} ${args.join(" ")}`, site);
 
-        const myCompleteProcess: ChildProcessWithoutNullStreams = spawn(script, args);
+        const myCompleteProcess: ChildProcess = spawn(script, args);
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
         }
@@ -61,14 +63,15 @@ export class PostProcess {
             void new Promise<void>(async () => {
                 if (!this.config.recording.keepTsFile) {
                     try {
-                        await fsp.access(args[0], fsp.F_OK);
-                        await fsp.unlink(args[0]);
+                        await fs.exists(args[0]);
+                        await Deno.remove(args[0]);
                     } catch (error: any) {
                         this.dvr.print(MSG.ERROR, `${args[0]} does not exist, cannot remove`);
                     }
                 }
 
-                this.dvr.print(MSG.INFO, `${namePrint} done converting ${colors.file(completeFile)}`, site);
+                // this.dvr.print(MSG.INFO, `${namePrint} done converting ${colors.file(completeFile)}`, site);
+                this.dvr.print(MSG.INFO, `${namePrint} done converting ${completeFile}`, site);
                 await this.postScript(site, streamer, completeDir, completeFile);
             });
         });
@@ -84,20 +87,23 @@ export class PostProcess {
             return;
         }
 
-        const script: string      = this.dvr.calcPath(this.config.postprocess);
-        const args: Array<string> = [completeDir, completeFile];
-        const namePrint: string   = streamer === undefined ? "" : `${colors.name(streamer.nm)}`;
+        const script: string    = this.dvr.calcPath(this.config.postprocess);
+        const args: string[]    = [completeDir, completeFile];
+        // const namePrint: string = streamer === undefined ? "" : `${colors.name(streamer.nm)}`;
+        const namePrint: string = streamer === undefined ? "" : `${streamer.nm}`;
 
         this.dvr.print(MSG.DEBUG, `${namePrint} running global postprocess script: ` +
-            `${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
-        const userPostProcess: ChildProcessWithoutNullStreams = spawn(script, args);
+            //`${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
+            `${script} ${args.join(" ")}`, site);
+        const userPostProcess: ChildProcess = spawn(script, args);
 
         if (site && streamer) {
             site.storeCapInfo(streamer, completeFile, userPostProcess, true);
         }
 
         userPostProcess.on("close", () => {
-            this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${colors.file(completeFile)}`, site);
+            // this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${colors.file(completeFile)}`, site);
+            this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${completeFile}`, site);
             void new Promise<void>(async () => {
                 await this.nextConvert(site, streamer);
             });
@@ -123,7 +129,9 @@ export class PostProcess {
             return dir;
         }
 
-        return this.dvr.mkdir(this.config.recording.completeDirectory + "/UNKNOWN");
+        const dir = this.config.recording.completeDirectory + "/UNKNOWN";
+        await fs.ensureDir(dir);
+        return dir;
     }
 
     protected async uniqueFileName(completeDir: string, filename: string, fileType: string) {
@@ -132,7 +140,7 @@ export class PostProcess {
         let fileinc = filename;
         let name = path.join(completeDir,  fileinc + "." + fileType);
         try {
-            while (await fsp.access(name, fsp.F_OK)) {
+            while (await fs.exists(name)) {
                 this.dvr.print(MSG.ERROR, name + " already exists");
                 fileinc = filename + " (" + count.toString() + ")";
                 name = path.join(completeDir, fileinc + "." + fileType);
@@ -146,20 +154,22 @@ export class PostProcess {
     protected async mv(oldPath: string, newPath: string) {
 
         try {
-            await fsp.rename(oldPath, newPath);
+            await fs.move(oldPath, newPath);
         } catch (err: any) {
             if (err) {
                 if (err.code === "EXDEV") {
                     try {
-                        await fsp.copyFile(oldPath, newPath);
-                        await fsp.unlink(oldPath);
+                        await fs.copy(oldPath, newPath);
+                        await Deno.remove(oldPath);
                     } catch (err: any) {
                         if (err) {
-                            this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                            // this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                            this.dvr.print(MSG.ERROR, `${oldPath}: ${err.toString()}`);
                         }
                     }
                 } else {
-                    this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                    // this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
+                    this.dvr.print(MSG.ERROR, `${oldPath}: ${err.toString()}`);
                 }
             }
         }
