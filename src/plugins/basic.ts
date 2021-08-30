@@ -82,7 +82,7 @@ class Basic extends Site {
             args = args.concat(this.config.m3u8fetch_args);
         }
 
-        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.toString())}`);
+        this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.join(" "))}`);
 
         // m3u8 url in stdout
         try {
