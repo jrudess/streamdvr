@@ -1,8 +1,8 @@
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as fs from "https://deno.land/std/fs/mod.ts";
-import * as yaml from "https://deno.land/std/encoding/yaml.ts";
-import {rgb24} from "https://deno.land/std/fmt/colors.ts";
-import {spawn, ChildProcess} from "https://deno.land/std/node/child_process.ts";
+import * as path from "https://deno.land/std@0.106.0/path/mod.ts";
+import * as fs from "https://deno.land/std@0.106.0/fs/mod.ts";
+import * as yaml from "https://deno.land/std@0.106.0/encoding/yaml.ts";
+import {rgb24} from "https://deno.land/std@0.106.0/fmt/colors.ts";
+import {spawn, ChildProcess} from "https://deno.land/std@0.106.0/node/child_process.ts";
 import * as Plugin from "../plugins/basic.ts";
 import {Dvr, MSG} from "./dvr.ts";
 // import {Tui} from "./tui.ts";
@@ -297,7 +297,7 @@ export abstract class Site {
     protected abstract createListItem(id: Id): string[];
 
     public async updateList(id: Id, cmd: UpdateCmd, isTemp?: boolean, pauseTimer?: number): Promise<boolean> {
-        let dirty: boolean = false;
+        let dirty = false;
         switch (cmd) {
         case UpdateCmd.PAUSE:  dirty = await this.pauseStreamer(id, pauseTimer); break;
         case UpdateCmd.ADD:    dirty = await this.addStreamer(id, isTemp); break;
@@ -323,7 +323,7 @@ export abstract class Site {
     }
 
     protected async addStreamer(id: Id, isTemp?: boolean) {
-        let added: boolean = true;
+        let added = true;
 
         for (const entry of this.config.streamers) {
             if (entry[0] === id.uid) {
@@ -615,7 +615,7 @@ export abstract class Site {
         }
 
         if (capture.pid) {
-            const filename: string = `${capInfo.filename}.ts`;
+            const filename = `${capInfo.filename}.ts`;
             this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} recording started: ${rgb24(filename, this.dvr.config.colors.file)}`);
             this.storeCapInfo(streamer, filename, capture, false);
         } else {
@@ -630,7 +630,7 @@ export abstract class Site {
     }
 
     protected async endCapture(streamer: Streamer, capInfo: CapInfo) {
-        const fullname: string = `${capInfo.filename}.ts`;
+        const fullname = `${capInfo.filename}.ts`;
         try {
             const stats: Deno.FileInfo = await Deno.stat(path.join(this.dvr.config.recording.captureDirectory, fullname));
             if (stats) {
@@ -670,7 +670,7 @@ export abstract class Site {
         await this.refresh(streamer);
     }
 
-    protected render(redrawList: boolean): void {
+    protected render(_redrawList: boolean): void {
         // if (this.dvr.config.tui.enable) {
         //     this.tui.render(redrawList || this.redrawList, this);
         // }

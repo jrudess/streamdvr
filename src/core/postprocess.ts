@@ -1,7 +1,7 @@
-import * as fs from "https://deno.land/std/fs/mod.ts";
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts"
-import {spawn, ChildProcess} from "https://deno.land/std/node/child_process.ts";
+import * as fs from "https://deno.land/std@0.106.0/fs/mod.ts";
+import * as path from "https://deno.land/std@0.106.0/path/mod.ts";
+import {spawn, ChildProcess} from "https://deno.land/std@0.106.0/node/child_process.ts";
+import {rgb24} from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import {Dvr, Config, MSG} from "./dvr.ts";
 import {Site, Streamer, CapInfo} from "./site.ts";
 
@@ -29,8 +29,7 @@ export class PostProcess {
         const capInfo: CapInfo               = this.postProcessQ[0];
         const site: Site | undefined         = capInfo.site;
         const streamer: Streamer | undefined = capInfo.streamer;
-        // const namePrint: string              = streamer ? `${colors.name(streamer.nm)}` : "";
-        const namePrint: string              = streamer ? `${streamer.nm}` : "";
+        const namePrint: string              = streamer ? `${rgb24(streamer.nm, this.config.colors.name)}` : "";
         const fileType: string               = this.config.recording.autoConvertType;
         const completeDir: string            = await this.getCompleteDir(site, streamer);
         const completeFile: string           = await this.uniqueFileName(completeDir, capInfo.filename, fileType) + "." + fileType;
@@ -48,8 +47,7 @@ export class PostProcess {
         const args: string[] = [ capPath, cmpPath, fileType ];
 
         this.dvr.print(MSG.INFO, `${namePrint} converting recording to ${fileType}`, site);
-        // this.dvr.print(MSG.DEBUG, `${namePrint} ${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
-        this.dvr.print(MSG.DEBUG, `${namePrint} ${script} ${args.join(" ")}`, site);
+        this.dvr.print(MSG.DEBUG, `${namePrint} ${rgb24(script, this.config.colors.cmd)} ${rgb24(args.join(" "), this.config.colors.cmd)}`, site);
 
         const myCompleteProcess: ChildProcess = spawn(script, args);
         if (site && streamer) {
@@ -67,8 +65,7 @@ export class PostProcess {
                     }
                 }
 
-                // this.dvr.print(MSG.INFO, `${namePrint} done converting ${colors.file(completeFile)}`, site);
-                this.dvr.print(MSG.INFO, `${namePrint} done converting ${completeFile}`, site);
+                this.dvr.print(MSG.INFO, `${namePrint} done converting ${rgb24(completeFile, this.config.colors.file)}`, site);
                 await this.postScript(site, streamer, completeDir, completeFile);
             });
         });
@@ -86,12 +83,10 @@ export class PostProcess {
 
         const script: string    = this.dvr.calcPath(this.config.postprocess);
         const args: string[]    = [completeDir, completeFile];
-        // const namePrint: string = streamer === undefined ? "" : `${colors.name(streamer.nm)}`;
-        const namePrint: string = streamer === undefined ? "" : `${streamer.nm}`;
+        const namePrint: string = streamer === undefined ? "" : `${rgb24(streamer.nm, this.config.colors.name)}`;
 
         this.dvr.print(MSG.DEBUG, `${namePrint} running global postprocess script: ` +
-            //`${colors.cmd(script)} ${colors.cmd(args.join(" "))}`, site);
-            `${script} ${args.join(" ")}`, site);
+            `${rgb24(script, this.config.colors.cmd)} ${rgb24(args.join(" "), this.config.colors.cmd)}`, site);
         const userPostProcess: ChildProcess = spawn(script, args);
 
         if (site && streamer) {
@@ -99,10 +94,9 @@ export class PostProcess {
         }
 
         userPostProcess.on("close", () => {
-            // this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${colors.file(completeFile)}`, site);
-            this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${completeFile}`, site);
-            void new Promise<void>(async () => {
-                await this.nextConvert(site, streamer);
+            this.dvr.print(MSG.INFO, `${namePrint} done post-processing ${rgb24(completeFile, this.config.colors.file)}`, site);
+            void new Promise<void>(() => {
+                this.nextConvert(site, streamer);
             });
         });
     }
@@ -143,7 +137,7 @@ export class PostProcess {
                 name = path.join(completeDir, fileinc + "." + fileType);
                 count++;
             }
-        } catch (err: any) {
+        } catch (_err: any) {
         }
         return fileinc;
     }
@@ -160,13 +154,11 @@ export class PostProcess {
                         await Deno.remove(oldPath);
                     } catch (err: any) {
                         if (err) {
-                            // this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
-                            this.dvr.print(MSG.ERROR, `${oldPath}: ${err.toString()}`);
+                            this.dvr.print(MSG.ERROR, `${rgb24(oldPath, this.config.colors.site)}: ${err.toString()}`);
                         }
                     }
                 } else {
-                    // this.dvr.print(MSG.ERROR, `${colors.site(oldPath)}: ${err.toString()}`);
-                    this.dvr.print(MSG.ERROR, `${oldPath}: ${err.toString()}`);
+                    this.dvr.print(MSG.ERROR, `${rgb24(oldPath, this.config.colors.site)}: ${err.toString()}`);
                 }
             }
         }

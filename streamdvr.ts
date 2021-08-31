@@ -1,9 +1,9 @@
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as yaml from "https://deno.land/std/encoding/yaml.ts";
-import {onSignal} from "https://deno.land/std/signal/mod.ts";
-import {format} from "https://deno.land/std/datetime/mod.ts";
-import * as log from "https://deno.land/std/log/mod.ts";
-import {rgb24} from "https://deno.land/std/fmt/colors.ts";
+import * as path from "https://deno.land/std@0.106.0/path/mod.ts";
+import * as yaml from "https://deno.land/std@0.106.0/encoding/yaml.ts";
+import {onSignal} from "https://deno.land/std@0.106.0/signal/mod.ts";
+import {format} from "https://deno.land/std@0.106.0/datetime/mod.ts";
+import * as log from "https://deno.land/std@0.106.0/log/mod.ts";
+import {rgb24} from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import * as Dvr from "./src/core/dvr.ts";
 import {SiteConfig} from "./src/core/site.ts";
 import * as Plugin from "./src/plugins/basic.ts";
@@ -62,7 +62,7 @@ class Streamdvr extends Dvr.Dvr {
                     console: new log.handlers.ConsoleHandler("DEBUG", {
                         // formatter: "{datetime} [{levelName}] {msg}"
                         formatter: (rec) => {
-                            let datetime: string = format(rec.datetime, this.config.recording.dateFormat);
+                            const datetime: string = format(rec.datetime, this.config.recording.dateFormat);
                             let levelName: string = `[${rec.levelName}]`.padEnd(7, " ");
                             switch (rec.level) {
                                 case log.LogLevels.INFO:
@@ -75,7 +75,7 @@ class Streamdvr extends Dvr.Dvr {
                                     levelName = rgb24(levelName, this.config.colors.error);
                                     break;
                             }
-                            let msg: string = `${rgb24(datetime, this.config.colors.time)} ${levelName} ${rec.msg}`;
+                            const msg = `${rgb24(datetime, this.config.colors.time)} ${levelName} ${rec.msg}`;
                             return msg;
                         }
                     }),

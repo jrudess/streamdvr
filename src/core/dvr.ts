@@ -1,9 +1,9 @@
-import * as fs from "https://deno.land/std/fs/mod.ts";
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as yaml from "https://deno.land/std/encoding/yaml.ts";
-import * as log from "https://deno.land/std/log/mod.ts";
-import {format} from "https://deno.land/std/datetime/mod.ts";
-import {rgb24} from "https://deno.land/std/fmt/colors.ts";
+import * as fs from "https://deno.land/std@0.106.0/fs/mod.ts";
+import * as path from "https://deno.land/std@0.106.0/path/mod.ts";
+import * as yaml from "https://deno.land/std@0.106.0/encoding/yaml.ts";
+import * as log from "https://deno.land/std@0.106.0/log/mod.ts";
+import {format} from "https://deno.land/std@0.106.0/datetime/mod.ts";
+import {rgb24} from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import {PostProcess} from "./postprocess.ts";
 import {Site, CapInfo, UpdateCmd} from "./site.ts";
 // import {Tui} from "./tui.ts";
@@ -125,9 +125,9 @@ export abstract class Dvr {
     protected findConfig(): string {
         let checkHome = 1;
 
-        let xdg_config: string | undefined = Deno.env.get("XDG_CONFIG_HOME");
-        if (xdg_config !== undefined) {
-            this.configdir = path.join(xdg_config, "streamdvr");
+        const xdgConfig: string | undefined = Deno.env.get("XDG_CONFIG_HOME");
+        if (xdgConfig !== undefined) {
+            this.configdir = path.join(xdgConfig, "streamdvr");
             if (fs.existsSync(path.join(this.configdir, "config.yml"))) {
                 checkHome = 0;
             }
@@ -219,7 +219,7 @@ export abstract class Dvr {
     }
 
     public async run(site: Site) {
-        let init: boolean = true;
+        let init = true;
         site.start();
         while (true) {
             if (site.config.enable) {
@@ -253,9 +253,9 @@ export abstract class Dvr {
     }
 
     public print(lvl: MSG, msg: string, site?: Site | undefined) : void {
-        let siteStr: string = site ? `${site.padName}` : "DVR     ";
+        const siteStr: string = site ? `${site.padName}` : "DVR     ";
         if (this.logger) {
-            const m: string = `${rgb24(siteStr, this.config.colors.site)} ${rgb24(msg, this.config.colors.info)}`;
+            const m = `${rgb24(siteStr, this.config.colors.site)} ${rgb24(msg, this.config.colors.info)}`;
             if (lvl === MSG.INFO) {
                 this.logger.info(m);
             } else if (lvl === MSG.DEBUG) {

@@ -1,4 +1,4 @@
-import {rgb24} from "https://deno.land/std/fmt/colors.ts";
+import {rgb24} from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site.ts";
 import {Dvr, MSG} from "../core/dvr.ts";
 // import {Tui} from "../core/tui";
@@ -118,7 +118,7 @@ export class Basic extends Site {
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
         options.msg    = `${rgb24(streamer.nm, this.dvr.config.colors.name)} is ${streamer.state}`;
-        await super.checkStreamerState(streamer, options);
+        super.checkStreamerState(streamer, options);
     }
 
     protected async checkBatch(batch: Id[]) {
