@@ -1,10 +1,9 @@
-//"use strict";
-
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import * as yaml from "https://deno.land/std/encoding/yaml.ts";
 import * as log from "https://deno.land/std/log/mod.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts";
+import {format} from "https://deno.land/std/datetime/mod.ts";
+import {rgb24} from "https://deno.land/std/fmt/colors.ts";
 import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
 import {PostProcess} from "./postprocess.ts";
 import {Site, CapInfo, UpdateCmd} from "./site.ts";
@@ -46,16 +45,17 @@ export interface TuiConfig {
 }
 
 export interface ColorConfig {
-    name:    string;
-    state:   string;
-    offline: string;
-    prompt:  string;
-    file:    string;
-    time:    string;
-    site:    string;
-    cmd:     string;
-    debug:   string;
-    error:   string;
+    name:    number;
+    state:   number;
+    offline: number;
+    prompt:  number;
+    file:    number;
+    time:    number;
+    site:    number;
+    cmd:     number;
+    info:    number;
+    debug:   number;
+    error:   number;
 }
 
 export interface ProxyConfig {
@@ -104,10 +104,6 @@ export abstract class Dvr {
         this.configfile = this.findConfig();
 
         try {
-            this.config = yaml.load(name) as Config;
-        } catch (err: any) {
-            console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
-            process.exit(1);
             const name: string = Deno.readTextFileSync(this.configfile) as string;
             this.config = yaml.parse(name) as Config;
         } catch(err: any) {
@@ -115,7 +111,6 @@ export abstract class Dvr {
             Deno.exit(1);
         }
         this.loadConfig();
-
 
         // if (this.config.tui.enable) {
         //     this.tui = new Tui(this);
@@ -172,19 +167,6 @@ export abstract class Dvr {
             console.log(`ERROR: Failed to load config.yml: ${err.toString()}`);
             Deno.exit(1);
         }
-
-        // colors.setTheme({
-        //     name:    this.config.colors.name,
-        //     state:   this.config.colors.state,
-        //     offline: this.config.colors.offline,
-        //     prompt:  this.config.colors.prompt,
-        //     file:    this.config.colors.file,
-        //     time:    this.config.colors.time,
-        //     site:    this.config.colors.site,
-        //     cmd:     this.config.colors.cmd,
-        //     debug:   this.config.colors.debug,
-        //     error:   this.config.colors.error,
-        // });
 
         this.config.recording.captureDirectory  = this.mkdir(this.config.recording.captureDirectory);
         this.config.recording.completeDirectory = this.mkdir(this.config.recording.completeDirectory);
@@ -268,13 +250,13 @@ export abstract class Dvr {
     }
 
     public getDateTime(): string {
-        return moment().format(this.config.recording.dateFormat);
+        return format(new Date(), this.config.recording.dateFormat);
     }
 
     public print(lvl: MSG, msg: string, site?: Site | undefined) : void {
         let siteStr: string = site ? `${site.padName}` : "DVR     ";
         if (this.logger) {
-            const m: string = `${siteStr} ${msg}`;
+            const m: string = `${rgb24(siteStr, this.config.colors.site)} ${rgb24(msg, this.config.colors.info)}`;
             // this.logger.info(m);
             if (lvl === MSG.INFO) {
                 this.logger.info(m);
@@ -287,9 +269,9 @@ export abstract class Dvr {
             if (lvl === MSG.INFO) {
                 console.log(`[INFO] ${siteStr} ${msg}`);
             } else if (lvl === MSG.DEBUG) {
-                console.log(`[DEBUG] ${siteStr} ${msg}`);
+                console.log(`${rgb24("[DEBUG]", this.config.colors.debug)} ${siteStr} ${msg}`);
             } else if (lvl === MSG.ERROR) {
-                console.log(`[ERROR] ${siteStr} ${msg}`);
+                console.log(`${rgb24("[ERROR]", this.config.colors.error)} ${siteStr} ${msg}`);
             }
         }
     }

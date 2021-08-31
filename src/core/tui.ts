@@ -1,5 +1,3 @@
-//"use strict";
-
 import {Dvr, Config, MSG} from "./dvr";
 import {Site, Id, Streamer, UpdateCmd} from "./site";
 const blessed = require("neo-blessed");

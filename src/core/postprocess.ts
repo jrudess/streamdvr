@@ -1,12 +1,9 @@
-//"use strict";
-
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts"
 import {spawn, ChildProcess} from "https://deno.land/std/node/child_process.ts";
 import {Dvr, Config, MSG} from "./dvr.ts";
 import {Site, Streamer, CapInfo} from "./site.ts";
-
 
 export class PostProcess {
 

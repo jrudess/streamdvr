@@ -103,7 +103,7 @@ If you would like StreamDVR to support a new program and have written your own w
         * `postprocess`
           Script to use to convert ts to mp4/mkv
         * `dateFormat`
-          Used for log output and filenames
+          Used for log output and filenames - refer to https://deno.land/std@0.106.0/datetime
         * `includeSiteInDir`
           This option only applies if `streamerSubdir` is set.
           Recordings are placed in `completeDir/streamer_site`.

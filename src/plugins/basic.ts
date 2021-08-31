@@ -1,11 +1,7 @@
-//"use strict";
-
+import {rgb24} from "https://deno.land/std/fmt/colors.ts";
 import {Site, Id, Streamer, CapInfo, StreamerStateOptions} from "../core/site.ts";
 import {Dvr, MSG} from "../core/dvr.ts";
 // import {Tui} from "../core/tui";
-
-//const colors = require("colors");
-//const spawn = require("await-spawn");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
 // streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
@@ -82,8 +78,7 @@ export class Basic extends Site {
             cmd = cmd.concat(this.config.m3u8fetch_args);
         }
 
-        // this.print(MSG.DEBUG, `${colors.name(nm)} running: ${colors.cmd(script + " " + args.toString())}`);
-        this.print(MSG.DEBUG, `${nm} running: ${cmd.join(" ")}`);
+        this.print(MSG.DEBUG, `${rgb24(nm, this.dvr.config.colors.name)} running: ${rgb24(cmd.join(" "), this.dvr.config.colors.cmd)}`);
 
         // m3u8 url in stdout
         try {
@@ -93,7 +88,7 @@ export class Basic extends Site {
             const { code } = await p.status();
             p.close();
             if (code == 0) {
-                let urlStr: string = new TextDecoder().decode(rawOutput).replace(/\r?\n|\r/g, "");
+                const urlStr: string = new TextDecoder().decode(rawOutput).replace(/\r?\n|\r/g, "");
                 return {status: urlStr === "" ? false : true, m3u8: urlStr};
             } else {
                 this.print(MSG.ERROR, rawError.toString());
@@ -122,8 +117,7 @@ export class Basic extends Site {
             m3u8: stream.m3u8,
         };
         streamer.state = stream.status ? "Streaming" : "Offline";
-        // options.msg    = `${colors.name(streamer.nm)} is ${streamer.state}`;
-        options.msg    = `${streamer.nm} is ${streamer.state}`;
+        options.msg    = `${rgb24(streamer.nm, this.dvr.config.colors.name)} is ${streamer.state}`;
         await super.checkStreamerState(streamer, options);
     }
 

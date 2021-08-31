@@ -1,17 +1,11 @@
-//"use strict";
-
 import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as yaml from "https://deno.land/std/encoding/yaml.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts";
+import {rgb24} from "https://deno.land/std/fmt/colors.ts";
 import {spawn, ChildProcess} from "https://deno.land/std/node/child_process.ts";
 import * as Plugin from "../plugins/basic.ts";
-
-// import {spawn, ChildProcessWithoutNullStreams} from "child_process";
 import {Dvr, MSG} from "./dvr.ts";
 // import {Tui} from "./tui.ts";
-
-// const fsp = require("fs").promises;
 
 export interface Streamer {
     uid:          string;
@@ -151,25 +145,21 @@ export abstract class Site {
         const stat: any = await Deno.stat(file);
         const sizeMB: number  = Math.round(stat.size / 1048576);
 
-        // this.print(MSG.DEBUG, `${colors.file(streamer.filename)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
-        this.print(MSG.DEBUG, `${streamer.filename}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
+        this.print(MSG.DEBUG, `${rgb24(streamer.filename, this.dvr.config.colors.file)}, size=${sizeMB.toString()}MB, maxSize=${maxSize.toString()}MB`);
         if (sizeMB === streamer.filesize) {
             streamer.stuckcounter++;
-            //this.print(MSG.INFO, `${colors.name(streamer.nm)} recording appears to be stuck (counter=` +
-            this.print(MSG.INFO, `${streamer.nm} recording appears to be stuck (counter=` +
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} recording appears to be stuck (counter=` +
                 `${streamer.stuckcounter.toString()}), file size is not increasing: ${sizeMB.toString()}MB`);
         } else {
             streamer.filesize = sizeMB;
         }
         if (streamer.stuckcounter >= 2) {
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} terminating stuck recording`);
-            this.print(MSG.INFO, `${streamer.nm} terminating stuck recording`);
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} terminating stuck recording`);
             this.haltCapture(streamer.uid);
             streamer.stuckcounter = 0;
             this.redrawList = true;
         } else if (maxSize !== 0 && sizeMB >= maxSize) {
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} recording has exceeded file size limit (size=` +
-            this.print(MSG.INFO, `${streamer.nm} recording has exceeded file size limit (size=` +
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} recording has exceeded file size limit (size=` +
                 `${sizeMB.toString()} > maxSize=${maxSize.toString()})`);
             this.haltCapture(streamer.uid);
             this.redrawList = true;
@@ -188,12 +178,10 @@ export abstract class Site {
                 await this.checkFileSize(streamer, file);
             } catch (err: any) {
                 if (err.code === "ENOENT") {
-                    // this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(file)} not found ` +
-                    this.print(MSG.ERROR, `${streamer.nm}, ${file} not found ` +
+                    this.print(MSG.ERROR, `${rgb24(streamer.nm, this.dvr.config.colors.name)}, ${file} not found ` +
                         "in capturing directory, cannot check file size");
                 } else {
-                    // this.print(MSG.ERROR, `${colors.name(streamer.nm)}: ${err.toString()}`);
-                    this.print(MSG.ERROR, `${streamer.nm}: ${err.toString()}`);
+                    this.print(MSG.ERROR, `${rgb24(streamer.nm, this.dvr.config.colors.name)}: ${err.toString()}`);
                 }
             }
         }
@@ -339,16 +327,14 @@ export abstract class Site {
 
         for (const entry of this.config.streamers) {
             if (entry[0] === id.uid) {
-                // this.print(MSG.ERROR, `${colors.name(id.nm)} is already in the capture list`);
-                this.print(MSG.ERROR, `${id.nm} is already in the capture list`);
+                this.print(MSG.ERROR, `${rgb24(id.nm, this.dvr.config.colors.name)} is already in the capture list`);
                 added = false;
                 break;
             }
         }
 
         if (added) {
-            // this.print(MSG.INFO, `${colors.name(id.nm)} added to capture list` + (isTemp ? " (temporarily)" : ""));
-            this.print(MSG.INFO, `${id.nm} added to capture list` + (isTemp ? " (temporarily)" : ""));
+            this.print(MSG.INFO, `${rgb24(id.nm, this.dvr.config.colors.name)} added to capture list` + (isTemp ? " (temporarily)" : ""));
             if (!isTemp) {
                 this.config.streamers.push(this.createListItem(id));
             }
@@ -377,12 +363,10 @@ export abstract class Site {
 
     protected removeStreamer(id: Id): boolean {
         if (!this.streamerList.has(id.uid)) {
-            // this.print(MSG.ERROR, `${colors.name(id.nm)} not in capture list.`);
-            this.print(MSG.ERROR, `${id.nm} not in capture list.`);
+            this.print(MSG.ERROR, `${rgb24(id.nm, this.dvr.config.colors.name)} not in capture list.`);
             return false;
         }
-        // this.print(MSG.INFO, `${colors.name(id.nm)} removed from capture list.`);
-        this.print(MSG.INFO, `${id.nm} removed from capture list.`);
+        this.print(MSG.INFO, `${rgb24(id.nm, this.dvr.config.colors.name)} removed from capture list.`);
         this.haltCapture(id.uid);
         this.streamerList.delete(id.uid); // Note: deleting before recording/post-processing finishes
         this.render(true);
@@ -402,11 +386,9 @@ export abstract class Site {
         let streamer: Streamer | undefined = this.streamerList.get(id.uid);
         if (streamer && pauseTimer && pauseTimer > 0) {
             const print: string = streamer.paused ? "pausing for " : " unpausing for";
-            // this.print(MSG.INFO, `${colors.name(id.nm)} ${print} ${pauseTimer.toString()} seconds`);
-            this.print(MSG.INFO, `${id.nm} ${print} ${pauseTimer.toString()} seconds`);
+            this.print(MSG.INFO, `${rgb24(id.nm, this.dvr.config.colors.name)} ${print} ${pauseTimer.toString()} seconds`);
             await this.sleep(pauseTimer * 1000);
-            // this.print(MSG.INFO, `${colors.name(id.nm)} pause-timer expired`);
-            this.print(MSG.INFO, `${id.nm} pause-timer expired`);
+            this.print(MSG.INFO, `${rgb24(id.nm, this.dvr.config.colors.name)} pause-timer expired`);
             streamer = this.streamerList.get(id.uid);
         }
         if (streamer) {
@@ -431,13 +413,11 @@ export abstract class Site {
 
     protected async togglePause(streamer: Streamer) {
         if (streamer.paused) {
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} is unpaused.`);
-            this.print(MSG.INFO, `${streamer.nm} is unpaused.`);
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} is unpaused.`);
             streamer.paused = false; // must be set before calling refresh()
             await this.refresh(streamer);
         } else {
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} is paused.`);
-            this.print(MSG.INFO, `${streamer.nm} is paused.`);
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} is paused.`);
             streamer.paused = true;
             this.haltCapture(streamer.uid);
         }
@@ -458,8 +438,7 @@ export abstract class Site {
         }
 
         if (this.dvr.tryingToExit) {
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} skipping lookup due to shutdown request`);
-            this.print(MSG.INFO, `${streamer.nm} skipping lookup due to shutdown request`);
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} skipping lookup due to shutdown request`);
             return;
         }
 
@@ -499,8 +478,7 @@ export abstract class Site {
             // get killed due to the m3u8 lookup even though the broadcast is
             // running fine.  Handling for the website being broken like this is
             // rare enough to justify not supporting.
-            // this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is no longer broadcasting, ` +
-            this.print(MSG.DEBUG, `${streamer.nm} is no longer broadcasting, ` +
+            this.print(MSG.DEBUG, `${rgb24(streamer.nm, this.dvr.config.colors.name)} is no longer broadcasting, ` +
                 `terminating capture process (pid=${streamer.capture.pid.toString()})`);
             this.haltCapture(streamer.uid);
             this.redrawList = true;
@@ -508,8 +486,7 @@ export abstract class Site {
 
         if (options.isStreaming) {
             if (streamer.paused) {
-                // this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is paused, recording not started.`);
-                this.print(MSG.DEBUG, `${streamer.nm} is paused, recording not started.`);
+                this.print(MSG.DEBUG, `${rgb24(streamer.nm, this.dvr.config.colors.name)} is paused, recording not started.`);
             } else if (this.canStartCap(streamer.uid)) {
                 await this.startCapture(this.setupCapture(streamer, options.m3u8));
             }
@@ -584,8 +561,7 @@ export abstract class Site {
         if (this.streamerList.has(uid)) {
             const streamer: Streamer | undefined = this.streamerList.get(uid);
             if (streamer && streamer.capture !== undefined) {
-                // this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is already capturing`);
-                this.print(MSG.DEBUG, `${streamer.nm} is already capturing`);
+                this.print(MSG.DEBUG, `${rgb24(streamer.nm, this.dvr.config.colors.name)} is already capturing`);
                 return false;
             }
             return true;
@@ -625,8 +601,7 @@ export abstract class Site {
         const script: string = this.dvr.calcPath(this.config.recorder);
         const capture: ChildProcess = spawn(script, capInfo.spawnArgs);
 
-        // this.print(MSG.DEBUG, `Starting recording: ${colors.cmd(script)} ${colors.cmd(capInfo.spawnArgs.join(" "))}`);
-        this.print(MSG.DEBUG, `Starting recording: ${script} ${capInfo.spawnArgs.join(" ")}`);
+        this.print(MSG.DEBUG, `Starting recording: ${rgb24(script, this.dvr.config.colors.cmd)} ${rgb24(capInfo.spawnArgs.join(" "), this.dvr.config.colors.cmd)}`);
 
         if (this.dvr.config.debug.recorder) {
             // TODO:
@@ -641,12 +616,10 @@ export abstract class Site {
 
         if (capture.pid) {
             const filename: string = `${capInfo.filename}.ts`;
-            // this.print(MSG.INFO, `${colors.name(streamer.nm)} recording started: ${colors.file(filename)}`);
-            this.print(MSG.INFO, `${streamer.nm} recording started: ${filename}`);
+            this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} recording started: ${rgb24(filename, this.dvr.config.colors.file)}`);
             this.storeCapInfo(streamer, filename, capture, false);
         } else {
-            // this.print(MSG.ERROR, `${colors.name(streamer.nm)} capture failed to start`);
-            this.print(MSG.ERROR, `${streamer.nm} capture failed to start`);
+            this.print(MSG.ERROR, `${rgb24(streamer.nm, this.dvr.config.colors.name)} capture failed to start`);
         }
 
         capture.on("close", () => {
@@ -663,8 +636,7 @@ export abstract class Site {
             if (stats) {
                 const sizeMB: number = stats.size / 1048576;
                 if (sizeMB < this.dvr.config.recording.minSize) {
-                    // this.print(MSG.INFO, `${colors.name(streamer.nm)} recording automatically deleted (size=${sizeMB.toString()}` +
-                    this.print(MSG.INFO, `${streamer.nm} recording automatically deleted (size=${sizeMB.toString()}` +
+                    this.print(MSG.INFO, `${rgb24(streamer.nm, this.dvr.config.colors.name)} recording automatically deleted (size=${sizeMB.toString()}` +
                         ` < minSize=${this.dvr.config.recording.minSize.toString()})`);
                     await Deno.remove(path.join(this.dvr.config.recording.captureDirectory, fullname));
                     this.storeCapInfo(streamer, "", undefined, false);
@@ -679,8 +651,7 @@ export abstract class Site {
             }
         } catch (err: any) {
             if (err.code === "ENOENT") {
-                // this.print(MSG.ERROR, `${colors.name(streamer.nm)}, ${colors.file(capInfo.filename + ".ts")} not found ` +
-                this.print(MSG.ERROR, `${streamer.nm}, ${capInfo.filename + ".ts"} not found ` +
+                this.print(MSG.ERROR, `${rgb24(streamer.nm, this.dvr.config.colors.name)}, ${rgb24(capInfo.filename + ".ts", this.dvr.config.colors.file)} not found ` +
                     `in capturing directory, cannot convert to ${this.dvr.config.recording.autoConvertType}`);
             } else {
                 this.print(MSG.ERROR, `${streamer.nm}: ${err.toString()}`);

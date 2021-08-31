@@ -15,6 +15,6 @@ fi
 streamlink --stream-sorting-excludes live -o "$output" $proxyserver $username $password $extraargs $debugargs "$site" best,best-unfiltered &
 record_pid=$!
 
-killarg="" # Note: Streamlink does not respond to SIGINT
+killarg="-9" # Note: Streamlink does not respond to SIGINT
 source $DIR/record_cleanup.sh
 
