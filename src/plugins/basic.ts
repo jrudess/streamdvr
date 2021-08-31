@@ -87,7 +87,7 @@ class Basic extends Site {
         // m3u8 url in stdout
         try {
             const url = await spawn(script, args, {stdio: ["pipe", "pipe", "ignore"]});
-            let urlStr: string = url.toString().replace(/\r?\n|\r/g, "");
+            const urlStr: string = url.toString().replace(/\r?\n|\r/g, "");
             return {status: urlStr === "" ? false : true, m3u8: urlStr};
         } catch (err: any) {
             this.print(MSG.ERROR, "m3u8 try fail");
