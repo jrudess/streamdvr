@@ -54,20 +54,18 @@ export class PostProcess {
             site.storeCapInfo(streamer, completeFile, myCompleteProcess, true);
         }
 
-        myCompleteProcess.on("close", () => {
-            void new Promise<void>(async () => {
-                if (!this.config.recording.keepTsFile) {
-                    try {
-                        await fs.exists(args[0]);
-                        await Deno.remove(args[0]);
-                    } catch (error: any) {
-                        this.dvr.print(MSG.ERROR, `${args[0]} does not exist, cannot remove`);
-                    }
+        myCompleteProcess.on("close", async () => {
+            if (!this.config.recording.keepTsFile) {
+                try {
+                    await fs.exists(args[0]);
+                    await Deno.remove(args[0]);
+                } catch (error: any) {
+                    this.dvr.print(MSG.ERROR, `${args[0]} does not exist, cannot remove`);
                 }
+            }
 
-                this.dvr.print(MSG.INFO, `${namePrint} done converting ${rgb24(completeFile, this.config.colors.file)}`, site);
-                await this.postScript(site, streamer, completeDir, completeFile);
-            });
+            this.dvr.print(MSG.INFO, `${namePrint} done converting ${rgb24(completeFile, this.config.colors.file)}`, site);
+            await this.postScript(site, streamer, completeDir, completeFile);
         });
 
         myCompleteProcess.on("error", (err: Error) => {

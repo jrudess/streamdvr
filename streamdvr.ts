@@ -52,15 +52,9 @@ class Streamdvr extends Dvr.Dvr {
 
     public async start() {
         if (this.config.log.enable) {
-            // TODO:
-            // const {Console} = require("console");
-            // const attr: string = this.config.log.append ? "a" : "w";
-            // const logFile: fs.WriteStream = fs.createWriteStream("./streamdvr.log", {flags: attr});
-            // var obj: Record<string,any> = {}
             await log.setup({
                 handlers: {
                     console: new log.handlers.ConsoleHandler("DEBUG", {
-                        // formatter: "{datetime} [{levelName}] {msg}"
                         formatter: (rec) => {
                             const datetime: string = format(rec.datetime, this.config.recording.dateFormat);
                             let levelName: string = `[${rec.levelName}]`.padEnd(7, " ");
