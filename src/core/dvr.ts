@@ -265,13 +265,18 @@ export abstract class Dvr {
             }
         } else {
             const dateTime: string = rgb24(this.getDateTime(), this.config.colors.time);
+            const site: string = rgb24(siteStr, this.config.colors.site)
+            let level: string;
             if (lvl === MSG.INFO) {
-                console.log(`${dateTime} ${rgb24("[INFO] ", this.config.colors.info)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
+                level = rgb24("[INFO] ", this.config.colors.info);
             } else if (lvl === MSG.DEBUG) {
-                console.log(`${dateTime} ${rgb24("[DEBUG]", this.config.colors.debug)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
+                level = rgb24("[DEBUG]", this.config.colors.debug);
             } else if (lvl === MSG.ERROR) {
-                console.log(`${dateTime} ${rgb24("[ERROR]", this.config.colors.error)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
+                level = rgb24("[ERROR]", this.config.colors.error);
+            } else {
+                level = "       ";
             }
+            console.log(`${dateTime} ${level} ${site} ${msg}`);
         }
     }
 

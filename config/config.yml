@@ -5,7 +5,7 @@ recording:
   captureDirectory: capturing
   completeDirectory: captured
   postprocess: "scripts/postprocess_ffmpeg.sh"
-  dateFormat: "YYYYMMDD_HHmmss"
+  dateFormat: "yyyyMMdd_HHmmss"
   fileNameFormat: "%n_%s_%d"
   includeSiteInDir: false
   streamerSubdir: true
@@ -21,16 +21,17 @@ tui:
   enable: false
   allowUnicode: false
 colors:
-  name: magenta
-  state: yellow
-  offline: blue
-  prompt: blue
-  file: green
-  time: grey
-  site: green
-  cmd: grey
-  debug: yellow
-  error: red
+  name: 0xa660c3
+  state: 0xfdc35f
+  offline: 0x8ca9bf
+  prompt: 0x8ca9bf
+  file: 0x5ca75b
+  time: 0x616981
+  site: 0x5ca75b
+  cmd: 0x616981
+  info: 0xa9a9aa
+  debug: 0xf6ab32
+  error: 0xe14245
 proxy:
   enable: false
   server: socks5://127.0.0.1:1080

@@ -17,7 +17,9 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
     * generate thumbnail previews
     * do anything you want
 
-* Supported sites: Twitch, Youtube, Pixiv, Picarto
+* Supported sites out of the box: Twitch, Youtube, Pixiv, Picarto
+
+* See `Adding new plugins` to use StreamDVR with other sites that are supported by youtube-dl or streamlink.
 
 * Docker available at https://ghcr.io/purrsevere/streamdvr
 
@@ -58,7 +60,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * CLI:
 ```
-    add     [site] [streamer] [alias]
+    add     [site] [streamer] <alias>
     addtemp [site] [streamer]
     pause   [site] <streamer> <time in seconds>
     remove  [site] [streamer]
