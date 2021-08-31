@@ -4,7 +4,6 @@ import * as yaml from "https://deno.land/std/encoding/yaml.ts";
 import * as log from "https://deno.land/std/log/mod.ts";
 import {format} from "https://deno.land/std/datetime/mod.ts";
 import {rgb24} from "https://deno.land/std/fmt/colors.ts";
-import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
 import {PostProcess} from "./postprocess.ts";
 import {Site, CapInfo, UpdateCmd} from "./site.ts";
 // import {Tui} from "./tui.ts";
@@ -257,7 +256,6 @@ export abstract class Dvr {
         let siteStr: string = site ? `${site.padName}` : "DVR     ";
         if (this.logger) {
             const m: string = `${rgb24(siteStr, this.config.colors.site)} ${rgb24(msg, this.config.colors.info)}`;
-            // this.logger.info(m);
             if (lvl === MSG.INFO) {
                 this.logger.info(m);
             } else if (lvl === MSG.DEBUG) {
@@ -266,12 +264,13 @@ export abstract class Dvr {
                 this.logger.error(m);
             }
         } else {
+            const dateTime: string = rgb24(this.getDateTime(), this.config.colors.time);
             if (lvl === MSG.INFO) {
-                console.log(`[INFO] ${siteStr} ${msg}`);
+                console.log(`${dateTime} ${rgb24("[INFO] ", this.config.colors.info)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
             } else if (lvl === MSG.DEBUG) {
-                console.log(`${rgb24("[DEBUG]", this.config.colors.debug)} ${siteStr} ${msg}`);
+                console.log(`${dateTime} ${rgb24("[DEBUG]", this.config.colors.debug)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
             } else if (lvl === MSG.ERROR) {
-                console.log(`${rgb24("[ERROR]", this.config.colors.error)} ${siteStr} ${msg}`);
+                console.log(`${dateTime} ${rgb24("[ERROR]", this.config.colors.error)} ${rgb24(siteStr, this.config.colors.site)} ${msg}`);
             }
         }
     }
