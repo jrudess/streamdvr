@@ -1,5 +1,5 @@
-import { Dvr, Config } from "../core/dvr.js";
-import { Site, Streamer, CapInfo } from "../core/site.js";
+import { Dvr, Config } from "./dvr";
+import { Site, Streamer, CapInfo } from "./site";
 export declare class PostProcess {
     protected dvr: Dvr;
     protected config: Config;

@@ -2,8 +2,8 @@
 
 import * as path from "path";
 import {spawn, ChildProcessWithoutNullStreams} from "child_process";
-import {Dvr, Config, MSG} from "../core/dvr.js";
-import {Site, Streamer, CapInfo} from "../core/site.js";
+import {Dvr, Config, MSG} from "./dvr";
+import {Site, Streamer, CapInfo} from "./site";
 
 const colors = require("colors");
 const fsp = require("fs/promises");

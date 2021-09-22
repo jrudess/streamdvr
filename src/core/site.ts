@@ -3,8 +3,8 @@
 import * as path from "path";
 import * as yaml from "js-yaml";
 import {spawn, ChildProcessWithoutNullStreams} from "child_process";
-import {Dvr, MSG} from "../core/dvr.js";
-import {Tui} from "../core/tui.js";
+import {Dvr, MSG} from "./dvr";
+import {Tui} from "./tui";
 
 const colors = require("colors");
 const fs = require("fs");
@@ -433,7 +433,7 @@ export abstract class Site {
         }
 
         if (this.dvr.tryingToExit) {
-            this.print(MSG.INFO, `${colors.name(streamer.nm)} skipping lookup due to shutdown request`);
+            this.print(MSG.DEBUG, `${colors.name(streamer.nm)} skipping lookup due to shutdown request`);
             return;
         }
 

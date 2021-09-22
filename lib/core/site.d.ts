@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { ChildProcessWithoutNullStreams } from "child_process";
-import { Dvr, MSG } from "../core/dvr.js";
-import { Tui } from "../core/tui.js";
+import { Dvr, MSG } from "./dvr";
+import { Tui } from "./tui";
 export interface Streamer {
     uid: string;
     nm: string;
