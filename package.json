@@ -20,12 +20,12 @@
     },
     "homepage": "https://github.com/jrudess/streamdvr",
     "dependencies": {
-        "@types/js-yaml": "^4.0.3",
-        "@types/node": "^16.11.2",
+        "@types/js-yaml": "^4.0.5",
+        "@types/node": "^17.0.38",
         "await-spawn": "^4.0.2",
         "colors": "^1.4.0",
         "js-yaml": "^4.1.0",
-        "moment": "^2.29.1",
+        "moment": "^2.29.3",
         "neo-blessed": "github:embarklabs/neo-blessed"
     },
     "devDependencies": {
