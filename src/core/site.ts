@@ -474,7 +474,7 @@ export abstract class Site {
             // running fine.  Handling for the website being broken like this is
             // rare enough to justify not supporting.
             this.print(MSG.DEBUG, `${colors.name(streamer.nm)} is no longer broadcasting, ` +
-                `terminating capture process (pid=${streamer.capture.pid.toString()})`);
+                `terminating capture process`);
             this.haltCapture(streamer.uid);
             this.redrawList = true;
         }
