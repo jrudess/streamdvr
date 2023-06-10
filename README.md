@@ -19,7 +19,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Supported sites out of the box: Twitch, Youtube, Pixiv, Picarto
 
-* See `Adding new plugins` to use StreamDVR with other sites that are supported by youtube-dl or streamlink.
+* See `Adding new plugins` to use StreamDVR with other sites that are supported by yt-dlp or streamlink.
 
 * Docker available at https://ghcr.io/purrsevere/streamdvr
 
@@ -27,10 +27,10 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 
 * Dependencies: `bash`, `node.js >= 14.0.0`, `npm`, `git`, and `ffmpeg`
   * StreamDVR does not work in a windows command prompt.  Use WSL to run StreamDVR in Windows.
-* Optional Dependencies: `streamlink`, `youtube-dl`
+* Optional Dependencies: `streamlink`, `yt-dlp`
 
   * `streamlink` is used to fetch m3u8 URLs for Pixiv and Picarto by default
-  * `youtube-dl` is used to fetch m3u8 URLs for Twitch and Youtube by default
+  * `yt-dlp` is used to fetch m3u8 URLs for Twitch and Youtube by default
 
 * Install StreamDVR
   >On GitHub, click `Clone or download`, `Download ZIP`.
@@ -69,7 +69,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 ```
 * Streamer aliases
 
-Some websites, such as youtube, will have channel names that are random characters.   For example, the URL to capture NBC News live streams is https://www.youtube.com/channel/UCeY0bbntWzzVIaj2z3QigXg.  An alias can be specified when adding the channel to give it a better name.
+Some websites, such as yt-dlp, will have channel names that are random characters.   For example, the URL to capture NBC News live streams is https://www.youtube.com/channel/UCeY0bbntWzzVIaj2z3QigXg.  An alias can be specified when adding the channel to give it a better name.
 ```
     add youtube UCeY0bbntWzzVIaj2z3QigXg nbc_news
 ````
@@ -82,13 +82,13 @@ Some websites, such as youtube, will have channel names that are random characte
 ```
 * Adding new plugins
 
-Every site that is supported by either streamlink or youtube-dl will work with StreamDVR.  All that is necessary is to create a new configuration file with the site's details.  Refer to any existing yml file in the config directory for an example.
+Every site that is supported by either streamlink or yt-dlp will work with StreamDVR.  All that is necessary is to create a new configuration file with the site's details.  Refer to any existing yml file in the config directory for an example.
 
 If you have created a <site>.yml for StreamDVR and would like to share it, please submit a pull request to include the new yml files in the repo.
 
 All support for streaming sites is handled by 3rd party programs.  The site configuration yml files specify the m3u8 lookup and record scripts to use.   Adding support for new programs requires adding new wrapper scripts and using those scripts in the yml configuration file.
 
-If you would like StreamDVR to support a new program and have written your own wrapper scripts, pull requests are welcome.  If you're just aware of other programs similar to youtube-dl or streamlink, please open an issue and provide the program's name/info.  If the program looks promising (e.g. works for at least one of the existing sites), then I'll probably add support for it.
+If you would like StreamDVR to support a new program and have written your own wrapper scripts, pull requests are welcome.  If you're just aware of other programs similar to yt-dlp or streamlink, please open an issue and provide the program's name/info.  If the program looks promising (e.g. works for at least one of the existing sites), then I'll probably add support for it.
 
 * Configuration Options for `config.yml`
 
