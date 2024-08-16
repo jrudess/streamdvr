@@ -23,7 +23,7 @@ class Basic extends Site {
         return [prefix + id.nm, "unpaused"];
     }
 
-    public start(): void {
+    public override start(): void {
         super.start();
 
         for (const entry of this.config.streamers) {
@@ -102,7 +102,7 @@ class Basic extends Site {
         return {status: false, m3u8: ""};
     }
 
-    protected async checkStreamerState(streamer: Streamer) {
+    protected override async checkStreamerState(streamer: Streamer) {
         // Detect if streamer is online or actively streaming
         const stream = await this.m3u8Script(streamer.uid, streamer.nm);
         const options: StreamerStateOptions = {
@@ -159,7 +159,7 @@ class Basic extends Site {
         return serRuns;
     }
 
-    public async getStreamers() {
+    public override async getStreamers() {
         const ret: boolean = await super.getStreamers();
         if (!ret) {
             return false;
