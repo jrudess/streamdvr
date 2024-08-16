@@ -69,7 +69,7 @@ https://en.wikipedia.org/wiki/Sony_Corp._of_America_v._Universal_City_Studios,_I
 ```
 * Streamer aliases
 
-Some websites, such as yt-dlp, will have channel names that are random characters.   For example, the URL to capture NBC News live streams is https://www.youtube.com/channel/UCeY0bbntWzzVIaj2z3QigXg.  An alias can be specified when adding the channel to give it a better name.
+Some websites, such as youtube, will have channel names that are random characters.  For example, the URL to capture NBC News live streams is https://www.youtube.com/channel/UCeY0bbntWzzVIaj2z3QigXg.  An alias can be specified when adding the channel to give it a better name.
 ```
     add youtube UCeY0bbntWzzVIaj2z3QigXg nbc_news
 ````
