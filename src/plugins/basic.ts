@@ -8,7 +8,7 @@ const colors = require("colors");
 const spawn = require("await-spawn");
 
 // Basic-site uses external scripts/programs to find m3u8 URLs and to record
-// streams.  The scripts currently wrap youtube-dl, streamlink, and ffmpeg.
+// streams.  The scripts currently wrap yt-dlp, streamlink, and ffmpeg.
 class Basic extends Site {
 
     protected urlback: string;

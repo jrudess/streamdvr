@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { Dvr, MSG } from "./dvr";
 import { Tui } from "./tui";
