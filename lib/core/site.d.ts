@@ -38,6 +38,7 @@ export interface SiteConfig {
     password: string;
     scanInterval: number;
     batchSize: number;
+    noTerminateOffline: boolean;
     streamers: Array<Array<string>>;
 }
 export interface Updates {

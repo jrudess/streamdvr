@@ -11,4 +11,5 @@ username: ""
 password: ""
 scanInterval: 300
 batchSize: 5
+noTerminateOffline: false
 streamers: []

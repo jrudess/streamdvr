@@ -37,20 +37,21 @@ export interface CapInfo {
 }
 
 export interface SiteConfig {
-    name:           string;
-    enable:         boolean;
-    plugin:         string;
-    siteUrl:        string;
-    urlback:        string;
-    m3u8fetch:      string;
-    m3u8fetch_args: string;
-    recorder:       string;
-    recorder_args:  string;
-    username:       string;
-    password:       string;
-    scanInterval:   number;
-    batchSize:      number;
-    streamers:      Array<Array<string>>;
+    name:               string;
+    enable:             boolean;
+    plugin:             string;
+    siteUrl:            string;
+    urlback:            string;
+    m3u8fetch:          string;
+    m3u8fetch_args:     string;
+    recorder:           string;
+    recorder_args:      string;
+    username:           string;
+    password:           string;
+    scanInterval:       number;
+    batchSize:          number;
+    noTerminateOffline: boolean;
+    streamers:          Array<Array<string>>;
 }
 
 export interface Updates {
@@ -442,7 +443,7 @@ export abstract class Site {
             this.redrawList = true;
         }
 
-        if (streamer.postProcess === false && streamer.capture !== undefined && !options.isStreaming) {
+        if (streamer.postProcess === false && streamer.capture !== undefined && !options.isStreaming && !this.config.noTerminateOffline) {
             // This issue entirely depends on whether the yt-dlp and/or
             // streamlink process robustly ends when a broadcast stops
             // (normally or through some error case like internet disconnection).
